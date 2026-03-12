@@ -243,29 +243,17 @@
             backdrop-filter: blur(2px);
             animation: 
                 bubbleFadeIn 0.8s ease-out forwards,
-                floatDrift 8s linear forwards,
+                floatInPlace 6s ease-in-out infinite,
                 bubblePulse 3s ease-in-out 0.8s infinite;
             opacity: 0;
         }
 
-        /* 持续漂浮动画 - 所有气泡速度一致，向上飘出视口 */
-        @keyframes floatDrift {
-            0% { 
-                transform: translate(0, 0) scale(1);
-            }
-            25% {
-                transform: translate(20px, -100px) scale(1.02);
-            }
-            50% {
-                transform: translate(-15px, -220px) scale(0.98);
-            }
-            75% {
-                transform: translate(25px, -360px) scale(1.01);
-            }
-            100% {
-                transform: translate(-20px, -520px) scale(0.9);
-                opacity: 0;
-            }
+        /* 在原位漂浮动画 - 不离开视口 */
+        @keyframes floatInPlace {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(15px, -10px) scale(1.03); }
+            50% { transform: translate(-10px, -20px) scale(0.98); }
+            75% { transform: translate(20px, -5px) scale(1.02); }
         }
 
         /* 气泡淡入 */
@@ -796,7 +784,7 @@
             'rgba(100, 200, 200, 0.5)',
         ];
 
-        let duration = 60, timeLeft = 60, timer = null, bubbleTimer = null;
+        let duration = 60, timeLeft = 60, timer = null, bubbleTimer = null, physicsTimer = null;
         let poppedEmotions = [], isPlaying = false, audioContext = null;
         let currentTheme = 'healing';
         let history = JSON.parse(localStorage.getItem('emotionBubbleHistory') || '[]');
@@ -1043,6 +1031,79 @@
                     if (count < 10) createBubble();
                 }, 1500);
             }, 4500);
+            
+            // 启动物理引擎循环
+            physicsTimer = setInterval(updatePhysics, 50);
+        }
+
+        // 物理引擎 - 处理气泡碰撞和边界反弹
+        function updatePhysics() {
+            const bubbles = Array.from(document.querySelectorAll('.bubble:not(.popping)'));
+            const bounds = {
+                width: window.innerWidth,
+                height: window.innerHeight - 120
+            };
+            
+            bubbles.forEach(bubble => {
+                let x = parseFloat(bubble.style.left);
+                let y = parseFloat(bubble.style.top);
+                let vx = parseFloat(bubble.dataset.vx) || 0;
+                let vy = parseFloat(bubble.dataset.vy) || 0;
+                const radius = parseFloat(bubble.dataset.radius) || 40;
+                
+                // 更新位置
+                x += vx;
+                y += vy;
+                
+                // 边界反弹
+                if (x <= 20 || x >= bounds.width - radius * 2 - 20) {
+                    vx *= -0.8;
+                    x = Math.max(20, Math.min(x, bounds.width - radius * 2 - 20));
+                }
+                if (y <= 60 || y >= bounds.height - radius * 2 - 60) {
+                    vy *= -0.8;
+                    y = Math.max(60, Math.min(y, bounds.height - radius * 2 - 60));
+                }
+                
+                // 气泡之间碰撞检测和弹开
+                bubbles.forEach(other => {
+                    if (other === bubble) return;
+                    
+                    let ox = parseFloat(other.style.left);
+                    let oy = parseFloat(other.style.top);
+                    const or = parseFloat(other.dataset.radius) || 40;
+                    
+                    const dx = x - ox;
+                    const dy = y - oy;
+                    const dist = Math.hypot(dx, dy);
+                    const minDist = radius + or;
+                    
+                    if (dist < minDist && dist > 0) {
+                        // 碰撞 - 弹开
+                        const overlap = minDist - dist;
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        
+                        // 分离气泡
+                        x += nx * overlap * 0.5;
+                        y += ny * overlap * 0.5;
+                        
+                        // 交换速度（弹性碰撞）
+                        const ovx = parseFloat(other.dataset.vx) || 0;
+                        const ovy = parseFloat(other.dataset.vy) || 0;
+                        bubble.dataset.vx = ovx * 0.8 + (Math.random() - 0.5) * 0.5;
+                        bubble.dataset.vy = ovy * 0.8 + (Math.random() - 0.5) * 0.3;
+                        other.dataset.vx = vx * 0.8 + (Math.random() - 0.5) * 0.5;
+                        other.dataset.vy = vy * 0.8 + (Math.random() - 0.5) * 0.3;
+                    }
+                });
+                
+                // 更新位置
+                bubble.style.left = x + 'px';
+                bubble.style.top = y + 'px';
+                bubble.dataset.vx = vx;
+                bubble.dataset.vy = vy;
+            });
         }
 
         function updateTimerDisplay() {
@@ -1085,6 +1146,11 @@
             
             bubble.style.left = x + 'px';
             bubble.style.top = y + 'px';
+            
+            // 物理属性 - 随机初始速度
+            bubble.dataset.vx = (Math.random() - 0.5) * 2;
+            bubble.dataset.vy = (Math.random() - 0.5) * 1.5 - 0.5;
+            bubble.dataset.radius = size / 2;
             
             // 更多颜色选项
             const colors = [
@@ -1150,13 +1216,6 @@
             }
             
             bubbleContainer.appendChild(bubble);
-            
-            // 安全移除 - 动画结束后（8秒）确保气泡被移除
-            setTimeout(() => {
-                if (bubble.parentNode && !bubble.classList.contains('popping')) {
-                    bubble.remove();
-                }
-            }, 8000);
         }
 
         function popBubble(bubble, emotion, event) {
@@ -1220,6 +1279,7 @@
             isPlaying = false;
             clearInterval(timer);
             clearInterval(bubbleTimer);
+            clearInterval(physicsTimer);
             stopAmbientSound(); // 停止背景音效
             playEndSound();
             saveHistory();
@@ -1637,6 +1697,7 @@
             isPlaying = false;
             clearInterval(timer);
             clearInterval(bubbleTimer);
+            clearInterval(physicsTimer);
         }
     </script>
 </body>
