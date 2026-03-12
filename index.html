@@ -1285,6 +1285,9 @@
             const depth = parseInt(bubble.dataset.depth || 0);
             const parentEmotion = bubble.dataset.parentEmotion || '';
             
+            // 获取当前情绪所属类别
+            const currentCategory = getEmotionCategory(emotion);
+            
             poppedEmotions.push(emotion);
             bubble.classList.add('popping');
             playPopSound();
@@ -1292,6 +1295,9 @@
             const x = event.clientX || parseFloat(bubble.style.left) + parseFloat(bubble.style.width) / 2;
             const y = event.clientY || parseFloat(bubble.style.top) + parseFloat(bubble.style.height) / 2;
             createParticles(x, y, bubble.style.background);
+            
+            // 移除其他类别的气泡（只保留同类别和子情绪）
+            removeOtherCategoryBubbles(currentCategory, depth);
             
             // 检查是否可以挖掘更深层的情绪（最多2层）
             const maxDepth = 2;
@@ -1318,6 +1324,24 @@
             }
             
             setTimeout(() => bubble.remove(), 400);
+        }
+
+        // 移除其他类别的气泡
+        function removeOtherCategoryBubbles(keepCategory, currentDepth) {
+            const bubbles = document.querySelectorAll('.bubble:not(.popping)');
+            bubbles.forEach(b => {
+                const depth = parseInt(b.dataset.depth || 0);
+                const text = b.textContent;
+                const category = getEmotionCategory(text);
+                
+                // 保留：同类别气泡 或 深层气泡（子情绪）
+                if (category !== keepCategory && depth <= currentDepth) {
+                    b.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                    b.style.opacity = '0';
+                    b.style.transform = 'scale(0.5)';
+                    setTimeout(() => b.remove(), 300);
+                }
+            });
         }
 
         // 显示鼓励气泡
