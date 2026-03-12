@@ -787,6 +787,44 @@
             'rgba(100, 200, 200, 0.5)',
         ];
 
+        // 情绪分类树 - 用于挖掘细分情绪
+        const emotionTree = {
+            '开心': ['窃喜', '小鹿乱撞', '心动', '脸红', '爽', '嗨', '暗爽', '自信'],
+            '幸福': ['小确幸', '满足', '被爱', '被需要', '成就感', '充实', '通透', '轻盈'],
+            '平静': ['释然', '踏实', 'Relax', '想开了', '清醒了', '想独处', '想安静', '心软'],
+            '惊讶': ['意外', '震惊', '心跳加速', '加载中', '措手不及'],
+            '难过': ['悲伤', '心痛', '心酸', '心寒', '心塞', '委屈', '失落', '想哭'],
+            '愤怒': ['抓狂', '窝火', '恼怒', '烦躁', '糟心', '闹心', '心累', '窝囊'],
+            '焦虑': ['担心', '紧张', '害怕', '恐惧', '成长焦虑', '职业倦怠', '社交疲惫', '选择困难'],
+            '迷茫': ['疲惫', '孤独', '压抑', '无奈', '纠结', '拧巴', '逃避', '想躺平'],
+            '恶心': ['厌恶', '膈应', '看不惯', '烦死了', '想吐'],
+            '羞耻': ['尴尬', '社死', '脚趾抠地', '想消失', '想钻地缝', '自责', '愧疚'],
+            '羡慕': ['眼红', '眼热', '吃醋', '嫉妒', '不甘', '想要被理解'],
+            '想念': ['挂念', '放不下', '舍不得', '想一个人', '夜深了', '孤单'],
+            '怀念': ['过去', '回忆', '时光', '遗憾', '如果当时'],
+            '累': ['电量低', '需要充电', '能量耗尽', '卡住了', '倦了', '疲惫不堪'],
+            '饿': ['嘴馋', '暴食', '想吃', '控制不住', '满足'],
+            '后悔': ['自责', '遗憾', '如果', '当初', '错过'],
+            '怨恨': ['不公平', '凭什么', '凭什么是我', '不甘', '愤怒'],
+            '绝望': ['崩溃', '破防', '绷不住', '撑不住了', '看不到希望'],
+            '无力感': ['自我怀疑', '不被理解', '空洞', '空落落', '虚无'],
+            '失眠': ['想太多', '网抑云', 'emo时间', '夜深了', '焦虑'],
+        };
+
+        // 最底层情绪的鼓励文案
+        const encouragingMessages = {
+            'default': '每一种情绪都值得被看见。你已经很勇敢了。🌸',
+            '开心': '真好，你能感受到这么多美好的情绪！',
+            '难过': '难过的时候，允许自己难过。这会过去的。',
+            '焦虑': '焦虑是在提醒你关注自己。深呼吸，慢慢来。',
+            '迷茫': '迷茫是成长的开始，你已经在路上了。',
+            '愤怒': '愤怒在保护你的边界。先深呼吸~',
+            '累': '累了就休息，你不需要一直坚强。',
+            '想念': '想念是美好的，说明你心里有珍视的人。',
+            '后悔': '过去的已经过去，把握当下才更重要。',
+            '绝望': '黑夜总会过去黎明会来。请相信一切会好起来。',
+        };
+
         let duration = 60, timeLeft = 60, timer = null, bubbleTimer = null, physicsTimer = null;
         let poppedEmotions = [], isPlaying = false, audioContext = null;
         let currentTheme = 'healing';
@@ -1119,11 +1157,14 @@
             progressBar.style.width = ((duration - timeLeft) / duration * 100) + '%';
         }
 
-        function createBubble(specificEmotion = null) {
+        function createBubble(specificEmotion = null, parentEmotion = null, depth = 0) {
             if (!isPlaying) return;
             
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
+            bubble.dataset.depth = depth;
+            bubble.dataset.parentEmotion = parentEmotion || '';
+            
             const size = Math.random() * 50 + 55;
             bubble.style.width = bubble.style.height = size + 'px';
             
@@ -1239,13 +1280,78 @@
 
         function popBubble(bubble, emotion, event) {
             if (bubble.classList.contains('popping')) return;
+            
+            const depth = parseInt(bubble.dataset.depth || 0);
+            const parentEmotion = bubble.dataset.parentEmotion || '';
+            
             poppedEmotions.push(emotion);
             bubble.classList.add('popping');
             playPopSound();
+            
             const x = event.clientX || parseFloat(bubble.style.left) + parseFloat(bubble.style.width) / 2;
             const y = event.clientY || parseFloat(bubble.style.top) + parseFloat(bubble.style.height) / 2;
             createParticles(x, y, bubble.style.background);
+            
+            // 检查是否可以挖掘更深层的情绪（最多2层）
+            const maxDepth = 2;
+            const canDigDeeper = depth < maxDepth && emotionTree[emotion];
+            
+            if (canDigDeeper) {
+                // 有子情绪，生成细分气泡
+                const subEmotions = emotionTree[emotion];
+                const count = Math.min(3, subEmotions.length); // 每次生成3个细分情绪
+                
+                // 延迟一点生成，让戳破效果先出来
+                setTimeout(() => {
+                    for (let i = 0; i < count; i++) {
+                        setTimeout(() => createBubble(subEmotions[i], emotion, depth + 1), i * 200);
+                    }
+                }, 300);
+            } else {
+                // 没有子情绪了，显示鼓励文案（作为临时气泡）
+                if (depth > 0) {
+                    const category = getEmotionCategory(parentEmotion);
+                    const msg = encouragingMessages[category] || encouragingMessages['default'];
+                    showEncouragingBubble(msg, x, y);
+                }
+            }
+            
             setTimeout(() => bubble.remove(), 400);
+        }
+
+        // 显示鼓励气泡
+        function showEncouragingBubble(message, x, y) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble encouraging';
+            bubble.style.width = '200px';
+            bubble.style.height = '80px';
+            bubble.style.borderRadius = '20px';
+            bubble.style.background = 'rgba(255, 255, 255, 0.9)';
+            bubble.style.color = '#333';
+            bubble.style.left = Math.max(20, Math.min(x - 100, window.innerWidth - 220)) + 'px';
+            bubble.style.top = Math.max(80, Math.min(y - 40, window.innerHeight - 180)) + 'px';
+            bubble.style.zIndex = '1000';
+            bubble.style.animation = 'fadeIn 0.5s ease-out forwards';
+            bubble.innerHTML = `<span class="bubble-text" style="font-size: 0.9rem;">${message}</span>`;
+            
+            bubbleContainer.appendChild(bubble);
+            
+            // 5秒后自动消失
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.style.transition = 'opacity 1s ease-out';
+                    bubble.style.opacity = '0';
+                    setTimeout(() => bubble.remove(), 1000);
+                }
+            }, 5000);
+        }
+
+        // 获取情绪大类
+        function getEmotionCategory(emotion) {
+            for (const [key, values] of Object.entries(emotionTree)) {
+                if (values.includes(emotion) || key === emotion) return key;
+            }
+            return 'default';
         }
 
         function createParticles(x, y, color) {
