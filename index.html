@@ -1334,8 +1334,8 @@
                 const text = b.textContent;
                 const category = getEmotionCategory(text);
                 
-                // 移除：不同类别的气泡，或者同类别但同层/更浅层的气泡
-                if (category !== keepCategory || depth <= currentDepth) {
+                // 移除：不同类别 且 同层/更浅层的气泡
+                if (category !== keepCategory && depth <= currentDepth) {
                     b.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
                     b.style.opacity = '0';
                     b.style.transform = 'scale(0.5)';
