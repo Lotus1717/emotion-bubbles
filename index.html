@@ -242,8 +242,28 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             backdrop-filter: blur(2px);
-            animation: bubbleFadeIn 0.8s ease-out forwards, floatBubbleX 4s ease-in-out 0.8s infinite, floatBubbleY 5s ease-in-out 0.8s infinite, bubblePulse 3s ease-in-out 0.8s infinite;
-            opacity: 0; /* 初始透明 */
+            animation: 
+                bubbleFadeIn 0.8s ease-out forwards,
+                floatX var(--float-duration-x, 4s) ease-in-out var(--float-delay-x, 0s) infinite,
+                floatY var(--float-duration-y, 5s) ease-in-out var(--float-delay-y, 0s) infinite,
+                bubblePulse 3s ease-in-out 0.8s infinite;
+            opacity: 0;
+        }
+
+        /* 水平漂浮 - 使用变量 */
+        @keyframes floatX {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(calc(var(--float-amplitude-x, 15px) * 0.8)); }
+            50% { transform: translateX(calc(var(--float-amplitude-x, 15px) * -0.5)); }
+            75% { transform: translateX(calc(var(--float-amplitude-x, 15px) * 0.6)); }
+        }
+
+        /* 垂直漂浮 - 持续向上飘 */
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(calc(var(--float-amplitude-y, 10px) * -1.2)); }
+            50% { transform: translateY(calc(var(--float-amplitude-y, 10px) * -0.8)); }
+            75% { transform: translateY(calc(var(--float-amplitude-y, 10px) * -1.5)); }
         }
 
         /* 气泡淡入 */
@@ -276,20 +296,6 @@
                 opacity: 0; 
                 transform: scale(0.8) translateY(-30px);
             }
-        }
-
-        @keyframes floatBubbleX {
-            0%, 100% { transform: translateX(0) rotate(0deg); }
-            25% { transform: translateX(15px) rotate(3deg); }
-            50% { transform: translateX(-10px) rotate(-2deg); }
-            75% { transform: translateX(8px) rotate(2deg); }
-        }
-
-        @keyframes floatBubbleY {
-            0%, 100% { transform: translateY(0); }
-            25% { transform: translateY(-15px); }
-            50% { transform: translateY(-8px); }
-            75% { transform: translateY(-20px); }
         }
 
         @keyframes bubblePulse {
@@ -1039,8 +1045,41 @@
             bubble.className = 'bubble';
             const size = Math.random() * 50 + 55;
             bubble.style.width = bubble.style.height = size + 'px';
-            bubble.style.left = (Math.random() * (window.innerWidth - size - 40) + 20) + 'px';
-            bubble.style.top = (Math.random() * (window.innerHeight - size - 100) + 60) + 'px';
+            
+            // 防重叠：尝试多次找到不与现有气泡重叠的位置
+            let x, y, attempts = 0;
+            const existingBubbles = Array.from(document.querySelectorAll('.bubble:not(.popping):not(.fading)'));
+            
+            do {
+                x = Math.random() * (window.innerWidth - size - 80) + 40;
+                y = Math.random() * (window.innerHeight - size - 150) + 80;
+                attempts++;
+            } while (attempts < 20 && existingBubbles.some(b => {
+                const bx = parseFloat(b.style.left);
+                const by = parseFloat(b.style.top);
+                const bsize = parseFloat(b.style.width) || 80;
+                const dist = Math.hypot(x - bx, y - by);
+                return dist < (size + bsize) * 0.6; // 保持60%间距
+            }));
+            
+            bubble.style.left = x + 'px';
+            bubble.style.top = y + 'px';
+            
+            // 为每个气泡设置独立的运动速度和方向
+            const speedX = (Math.random() - 0.5) * 30; // 随机X速度
+            const speedY = -Math.random() * 15 - 5;    // 向上漂浮
+            bubble.dataset.speedX = speedX;
+            bubble.dataset.speedY = speedY;
+            bubble.dataset.baseX = x;
+            bubble.dataset.baseY = y;
+            
+            // 使用CSS变量实现独立运动轨迹
+            bubble.style.setProperty('--float-amplitude-x', (15 + Math.random() * 20) + 'px');
+            bubble.style.setProperty('--float-amplitude-y', (10 + Math.random() * 15) + 'px');
+            bubble.style.setProperty('--float-duration-x', (4 + Math.random() * 3) + 's');
+            bubble.style.setProperty('--float-duration-y', (5 + Math.random() * 4) + 's');
+            bubble.style.setProperty('--float-delay-x', (Math.random() * -4) + 's');
+            bubble.style.setProperty('--float-delay-y', (Math.random() * -5) + 's');
             
             // 更多颜色选项
             const colors = [
