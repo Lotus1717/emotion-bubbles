@@ -1335,6 +1335,14 @@
             const y = event.clientY || parseFloat(bubble.style.top) + parseFloat(bubble.style.height) / 2;
             createParticles(x, y, bubble.style.background);
             
+            // 暂停补充逻辑，避免时序冲突
+            let wasSupplementPaused = false;
+            if (bubbleTimer) {
+                clearInterval(bubbleTimer);
+                bubbleTimer = null;
+                wasSupplementPaused = true;
+            }
+            
             // 根据情绪关系处理其他气泡：对立面消失，相近面保留
             handleEmotionRelations(currentCategory, depth);
             
@@ -1356,7 +1364,17 @@
             }
             // 没有子情绪了，不做处理
             
-            setTimeout(() => bubble.remove(), 400);
+            setTimeout(() => {
+                bubble.remove();
+                
+                // 恢复补充逻辑
+                if (wasSupplementPaused && isPlaying) {
+                    bubbleTimer = setInterval(() => {
+                        const count = document.querySelectorAll('.bubble:not(.popping)').length;
+                        if (count < 10) createBubble();
+                    }, 1500);
+                }
+            }, 400);
         }
 
         // 处理情绪关系：对立面渐隐消失，相近面保留并补充
