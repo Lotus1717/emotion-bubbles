@@ -859,19 +859,10 @@
             '失眠': ['想太多', '网抑云', '夜深了'],
         };
 
-        // 最底层情绪的鼓励文案
-        const encouragingMessages = {
-            'default': '每一种情绪都值得被看见。你已经很勇敢了。🌸',
-            '开心': '真好，你能感受到这么多美好的情绪！',
-            '难过': '难过的时候，允许自己难过。这会过去的。',
-            '焦虑': '焦虑是在提醒你关注自己。深呼吸，慢慢来。',
-            '迷茫': '迷茫是成长的开始，你已经在路上了。',
-            '愤怒': '愤怒在保护你的边界。先深呼吸~',
-            '累': '累了就休息，你不需要一直坚强。',
-            '想念': '想念是美好的，说明你心里有珍视的人。',
-            '后悔': '过去的已经过去，把握当下才更重要。',
-            '绝望': '黑夜总会过去黎明会来。请相信一切会好起来。',
-        };
+        // 最底层情绪的鼓励文案（已禁用）
+        /*
+        const encouragingMessages = { ... };
+        */
 
         let duration = 60, timeLeft = 60, timer = null, bubbleTimer = null, physicsTimer = null;
         let poppedEmotions = [], isPlaying = false, audioContext = null;
@@ -1362,14 +1353,8 @@
                         setTimeout(() => createBubble(subEmotions[i], emotion, depth + 1), i * 200);
                     }
                 }, 300);
-            } else {
-                // 没有子情绪了，显示鼓励文案
-                if (depth > 0) {
-                    const category = getEmotionCategory(parentEmotion);
-                    const msg = encouragingMessages[category] || encouragingMessages['default'];
-                    showEncouragingBubble(msg, x, y);
-                }
             }
+            // 没有子情绪了，不做处理
             
             setTimeout(() => bubble.remove(), 400);
         }
@@ -1408,33 +1393,6 @@
                     });
                 }, 1000);
             }
-        }
-
-        // 显示鼓励气泡
-        function showEncouragingBubble(message, x, y) {
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble encouraging';
-            bubble.style.width = '200px';
-            bubble.style.height = '80px';
-            bubble.style.borderRadius = '20px';
-            bubble.style.background = 'rgba(255, 255, 255, 0.9)';
-            bubble.style.color = '#333';
-            bubble.style.left = Math.max(20, Math.min(x - 100, window.innerWidth - 220)) + 'px';
-            bubble.style.top = Math.max(80, Math.min(y - 40, window.innerHeight - 180)) + 'px';
-            bubble.style.zIndex = '1000';
-            bubble.style.animation = 'fadeIn 0.5s ease-out forwards';
-            bubble.innerHTML = `<span class="bubble-text" style="font-size: 0.9rem;">${message}</span>`;
-            
-            bubbleContainer.appendChild(bubble);
-            
-            // 5秒后自动消失
-            setTimeout(() => {
-                if (bubble.parentNode) {
-                    bubble.style.transition = 'opacity 1s ease-out';
-                    bubble.style.opacity = '0';
-                    setTimeout(() => bubble.remove(), 1000);
-                }
-            }, 5000);
         }
 
         // 获取情绪大类
