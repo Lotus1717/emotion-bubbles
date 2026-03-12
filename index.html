@@ -238,22 +238,48 @@
             border-radius: 50%;
             cursor: pointer;
             pointer-events: auto;
-            transition: transform 0.1s ease;
+            transition: transform 0.15s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             backdrop-filter: blur(2px);
-            animation: floatBubble 8s ease-in-out infinite;
+            animation: floatBubbleX 4s ease-in-out infinite, floatBubbleY 5s ease-in-out infinite, bubblePulse 3s ease-in-out infinite;
         }
 
-        @keyframes floatBubble {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            25% { transform: translateY(-10px) rotate(2deg); }
-            50% { transform: translateY(-5px) rotate(-1deg); }
-            75% { transform: translateY(-15px) rotate(1deg); }
+        @keyframes floatBubbleX {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(15px) rotate(3deg); }
+            50% { transform: translateX(-10px) rotate(-2deg); }
+            75% { transform: translateX(8px) rotate(2deg); }
         }
 
-        .bubble:hover { transform: scale(1.08); }
-        .bubble:active { transform: scale(0.95); }
+        @keyframes floatBubbleY {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-15px); }
+            50% { transform: translateY(-8px); }
+            75% { transform: translateY(-20px); }
+        }
+
+        @keyframes bubblePulse {
+            0%, 100% { 
+                opacity: 0.85;
+                box-shadow: 0 0 20px var(--bubble-color, rgba(102, 126, 234, 0.4)), 
+                            inset 0 0 15px rgba(255,255,255,0.3);
+            }
+            50% { 
+                opacity: 1;
+                box-shadow: 0 0 35px var(--bubble-color, rgba(102, 126, 234, 0.6)), 
+                            inset 0 0 20px rgba(255,255,255,0.4);
+            }
+        }
+
+        .bubble:hover { 
+            transform: scale(1.12) !important;
+            animation-play-state: paused;
+        }
+        
+        .bubble:active { 
+            transform: scale(0.85); 
+        }
 
         .bubble-text {
             color: #fff;
@@ -264,13 +290,20 @@
             word-wrap: break-word;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             font-weight: 500;
+            animation: textFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes textFloat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .bubble.popping { animation: pop 0.4s ease-out forwards !important; }
 
         @keyframes pop {
             0% { transform: scale(1); opacity: 1; }
-            40% { transform: scale(1.4); opacity: 0.8; }
+            30% { transform: scale(1.35); opacity: 0.8; }
+            60% { transform: scale(1.1); opacity: 0.5; }
             100% { transform: scale(0); opacity: 0; }
         }
 
@@ -279,11 +312,22 @@
             border-radius: 50%;
             pointer-events: none;
             animation: particleFade 0.8s ease-out forwards;
+            box-shadow: 0 0 6px currentColor;
         }
 
         @keyframes particleFade {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+            0% { 
+                transform: translate(0, 0) scale(1) rotate(0deg); 
+                opacity: 1; 
+            }
+            50% {
+                transform: translate(var(--tx), var(--ty)) scale(0.6) rotate(180deg);
+                opacity: 0.7;
+            }
+            100% { 
+                transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg); 
+                opacity: 0; 
+            }
         }
 
         .result-panel, .stats-panel {
@@ -767,10 +811,35 @@
             bubble.style.left = (Math.random() * (window.innerWidth - size - 40) + 20) + 'px';
             bubble.style.top = (Math.random() * (window.innerHeight - size - 100) + 60) + 'px';
             
-            const colors = ['rgba(255, 107, 107, 0.5)', 'rgba(78, 205, 196, 0.5)', 'rgba(150, 100, 255, 0.5)', 'rgba(255, 207, 100, 0.5)', 'rgba(100, 220, 255, 0.5)', 'rgba(255, 140, 180, 0.5)', 'rgba(120, 220, 150, 0.5)'];
+            // 更多颜色选项
+            const colors = [
+                'rgba(255, 107, 107, 0.5)',   // 珊瑚红
+                'rgba(78, 205, 196, 0.5)',    // 青绿
+                'rgba(150, 100,255, 0.5)',    // 紫色
+                'rgba(255, 207, 100, 0.5)',   // 金黄
+                'rgba(100, 220, 255, 0.5)',   // 天蓝
+                'rgba(255, 140, 180, 0.5)',   // 粉色
+                'rgba(120, 220, 150, 0.5)',   // 薄荷绿
+                'rgba(255, 180, 100, 0.5)',   // 橙色
+                'rgba(180, 150, 255, 0.5)',   // 淡紫
+                'rgba(100, 200, 200, 0.5)',   // 蓝绿
+            ];
             const color = colors[Math.floor(Math.random() * colors.length)];
+            const glowColor = color.replace('0.5', '0.35');
             bubble.style.background = color;
-            bubble.style.boxShadow = `0 0 20px ${color.replace('0.5', '0.3')}, inset 0 0 15px rgba(255,255,255,0.2)`;
+            bubble.style.setProperty('--bubble-color', glowColor);
+            bubble.style.boxShadow = `0 0 25px ${glowColor}, inset 0 0 18px rgba(255,255,255,0.3), inset 0 0 8px rgba(255,255,255,0.15)`;
+            
+            // 随机动画延迟，让气泡运动不同步
+            const animDelayX = (Math.random() * -4) + 's';
+            const animDelayY = (Math.random() * -5) + 's';
+            const animDelayPulse = (Math.random() * -3) + 's';
+            bubble.style.animationDelay = `${animDelayX}, ${animDelayY}, ${animDelayPulse}`;
+            
+            // 随机动画持续时间
+            const durationX = 3 + Math.random() * 3;
+            const durationY = 4 + Math.random() * 3;
+            bubble.style.animationDuration = `${durationX}s, ${durationY}s, 3s`;
             
             const emotion = emotions[Math.floor(Math.random() * emotions.length)];
             bubble.innerHTML = `<span class="bubble-text">${emotion}</span>`;
@@ -812,19 +881,48 @@
         }
 
         function createParticles(x, y, color) {
-            for (let i = 0; i < 8; i++) {
+            // 增加粒子数量和变化
+            for (let i = 0; i < 12; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
-                const angle = (i / 8) * Math.PI * 2;
-                const distance = 50 + Math.random() * 50;
+                // 随机角度和距离
+                const angle = (Math.random() * Math.PI * 2);
+                const distance = 40 + Math.random() * 60;
+                const size = 4 + Math.random() * 12;
                 particle.style.left = x + 'px';
                 particle.style.top = y + 'px';
-                particle.style.width = particle.style.height = (5 + Math.random() * 10) + 'px';
-                particle.style.background = color || 'rgba(255,255,255,0.7)';
+                particle.style.width = particle.style.height = size + 'px';
+                // 提取颜色并添加发光效果
+                const particleColor = color || 'rgba(255,255,255,0.8)';
+                particle.style.background = particleColor;
+                particle.style.color = particleColor; // 用于 box-shadow
                 particle.style.setProperty('--tx', (Math.cos(angle) * distance) + 'px');
                 particle.style.setProperty('--ty', (Math.sin(angle) * distance) + 'px');
+                
+                // 随机动画持续时间
+                const duration = 0.5 + Math.random() * 0.5;
+                particle.style.animationDuration = duration + 's';
+                
                 document.body.appendChild(particle);
-                setTimeout(() => particle.remove(), 800);
+                setTimeout(() => particle.remove(), duration * 1000);
+            }
+            
+            // 添加一些小的扩散圈效果
+            for (let i = 0; i < 3; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'particle';
+                const angle = (Math.random() * Math.PI * 2);
+                const distance = 20 + Math.random() * 30;
+                ring.style.left = x + 'px';
+                ring.style.top = y + 'px';
+                ring.style.width = ring.style.height = (15 + Math.random() * 15) + 'px';
+                ring.style.background = 'transparent';
+                ring.style.border = `2px solid ${color || 'rgba(255,255,255,0.5)'}`;
+                ring.style.setProperty('--tx', (Math.cos(angle) * distance) + 'px');
+                ring.style.setProperty('--ty', (Math.sin(angle) * distance) + 'px');
+                ring.style.animationDuration = '0.6s';
+                document.body.appendChild(ring);
+                setTimeout(() => ring.remove(), 600);
             }
         }
 
