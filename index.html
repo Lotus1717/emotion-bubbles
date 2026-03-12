@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>情绪气泡 - 释放你的情绪</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d1b2a 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        /* 星空背景 */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* 光晕 */
+        .glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -100px;
+            right: -100px;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .glow-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--secondary);
+            bottom: -50px;
+            left: -50px;
+            animation: float 20s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 30px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+            font-weight: 300;
+            letter-spacing: 0.3em;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+            transition: width 1s linear;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1rem;
+            font-weight: 200;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .time-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90%;
+        }
+
+        .time-btn {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 25px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 80px;
+        }
+
+        .time-btn.active {
+            background: rgba(102, 126, 234, 0.5);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .theme-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .theme-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-btn.healing { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .theme-btn.cyber { background: linear-gradient(135deg, #00f5ff, #ff00ff); }
+        .theme-btn.minimal { background: linear-gradient(135deg, #f5f5f5, #e0e0e0); }
+        
+        .theme-btn.active { border-color: #fff; transform: scale(1.1); }
+
+        .bubble-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 120px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: transform 0.1s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(2px);
+            animation: floatBubble 8s ease-in-out infinite;
+        }
+
+        @keyframes floatBubble {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(2deg); }
+            50% { transform: translateY(-5px) rotate(-1deg); }
+            75% { transform: translateY(-15px) rotate(1deg); }
+        }
+
+        .bubble:hover { transform: scale(1.08); }
+        .bubble:active { transform: scale(0.95); }
+
+        .bubble-text {
+            color: #fff;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 0.5rem;
+            max-width: 80%;
+            word-wrap: break-word;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            font-weight: 500;
+        }
+
+        .bubble.popping { animation: pop 0.4s ease-out forwards !important; }
+
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            40% { transform: scale(1.4); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFade 0.8s ease-out forwards;
+        }
+
+        @keyframes particleFade {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .result-panel, .stats-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 26, 0.95);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .result-panel.show, .stats-panel.show {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .result-title { font-size: 1.8rem; color: #fff; margin-bottom: 0.5rem; }
+        .result-subtitle { color: rgba(255, 255, 255, 0.6); margin-bottom: 1.5rem; font-size: 0.9rem; }
+
+        .emotion-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            justify-content: center;
+            max-width: 500px;
+            margin-bottom: 1.5rem;
+        }
+
+        .emotion-tag {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(236, 72, 153, 0.3));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        .ai-suggestion {
+            max-width: 450px;
+            padding: 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-suggestion-title { color: var(--primary); margin-bottom: 0.5rem; font-size: 0.85rem; }
+        .ai-suggestion-text { color: rgba(255, 255, 255, 0.9); line-height: 1.6; font-size: 0.9rem; }
+
+        .result-buttons { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+        .hint-top {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+
+        .play-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 10;
+            background: linear-gradient(to top, rgba(10,10,26,0.8), transparent);
+        }
+
+        .start-panel, .stats-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .start-panel.hidden, .stats-panel.hidden { display: none; }
+
+        .countdown {
+            font-size: 5rem;
+            color: #fff;
+            animation: pulse 1s ease-in-out infinite;
+            text-shadow: 0 0 40px var(--primary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .stats-title { font-size: 1.5rem; color: #fff; margin-bottom: 1rem; }
+        .stats-list { max-height: 300px; overflow-y: auto; margin-bottom: 1rem; }
+        .stats-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; color: rgba(255, 255, 255, 0.8); font-size: 0.85rem; }
+        .stats-count { background: rgba(102, 126, 234, 0.3); padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.75rem; }
+
+        /* 极简主题 */
+        body.theme-minimal { background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); }
+        body.theme-minimal .title, body.theme-minimal .timer-display, body.theme-minimal .result-title { color: #333; text-shadow: none; }
+        body.theme-minimal .btn-secondary, body.theme-minimal .time-btn { border-color: rgba(0, 0, 0, 0.2); color: #333; }
+        body.theme-minimal .bubble-text, body.theme-minimal .emotion-tag, body.theme-minimal .ai-suggestion-text { color: #333; text-shadow: none; }
+
+        @media (max-width: 600px) {
+            .title { font-size: 1.6rem; }
+            .timer-display { font-size: 2rem; }
+            .btn { padding: 0.7rem 1.5rem; font-size: 0.9rem; }
+            .time-btn { 
+                padding: 0.5rem 1rem; 
+                min-width: 70px; 
+                font-size: 0.85rem;
+            }
+            .time-options { gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    
+    <div class="container">
+        <div class="start-panel" id="startPanel">
+            <h1 class="title">情绪气泡</h1>
+            <p style="color: rgba(255,255,255,0.5); margin-bottom: 1.5rem; text-align: center; max-width: 350px; font-size: 0.9rem;">
+                戳破气泡，释放情绪<br>让真实的感受浮出水面
+            </p>
+            
+            <div class="theme-options">
+                <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
+                <div class="theme-btn cyber" data-theme="cyber" title="赛博朋克"></div>
+                <div class="theme-btn minimal" data-theme="minimal" title="极简白"></div>
+            </div>
+            
+            <div class="time-options">
+                <button class="time-btn active" data-time="60">1分钟</button>
+                <button class="time-btn" data-time="180">3分钟</button>
+                <button class="time-btn" data-time="300">5分钟</button>
+            </div>
+            
+            <button class="btn btn-primary" id="startBtn">开始</button>
+            <button class="btn btn-secondary btn-small" id="statsBtn" style="margin-top: 1rem;">查看历史</button>
+        </div>
+
+        <div class="play-panel" id="playPanel" style="display: none;">
+            <p class="hint-top">长按或点击戳破气泡</p>
+            <div class="bubble-container" id="bubbleContainer"></div>
+            <div class="play-footer">
+                <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+                <div class="timer-display" id="timerDisplay">3:00</div>
+            </div>
+        </div>
+
+        <div class="countdown-panel" id="countdownPanel" style="display: none;">
+            <div class="countdown" id="countdownText">3</div>
+        </div>
+        
+        <div class="stats-panel" id="statsPanel" style="display: none;">
+            <h2 class="stats-title">戳破历史</h2>
+            <div class="stats-list" id="statsList"></div>
+            <button class="btn btn-secondary btn-small" id="clearStatsBtn">清空历史</button>
+            <button class="btn btn-primary btn-small" id="backBtn" style="margin-top: 1rem;">返回</button>
+        </div>
+    </div>
+
+    <div class="result-panel" id="resultPanel">
+        <h2 class="result-title">你戳破的情绪</h2>
+        <p class="result-subtitle">这些都是你当下最真实的感受</p>
+        <div class="emotion-tags" id="emotionTags"></div>
+        <div class="ai-suggestion">
+            <div class="ai-suggestion-title">✨ 小花的建议</div>
+            <div class="ai-suggestion-text" id="aiSuggestion">谢谢你的信任。每一种情绪都值得被看见。记住，情绪没有好坏，它们只是你内心的信使。好好照顾自己。🌸</div>
+        </div>
+        <div class="result-buttons">
+            <button class="btn btn-primary" id="restartBtn">再来一轮</button>
+            <button class="btn btn-secondary" id="closeResultBtn">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        const emotions = [
+            '开心', '难过', '愤怒', '恐惧', '惊讶', '恶心', '羞耻', '焦虑',
+            '悲伤', '喜悦', '恼怒', '害怕', '疑惑', '厌恶', '愧疚', '担心',
+            '紧张', 'Relax', '无奈', '抓狂', '窃喜', '眼红', '眼热', '窝火',
+            '心疼', '心痛', '心酸', '心寒', '窝心', '堵心', '膈应',
+            '迷茫', '疲惫', '孤独', '失落', '压抑', '烦躁', '委屈', '怀念',
+            '期待', '安心', '温暖', '感动', '治愈', '平静', '释然', '心塞',
+            '憋屈', '纠结', '拧巴', '不得劲', '闹心', '空落落', '空洞', '虚无',
+            '无力感', '自我怀疑', '不被理解', '渴望认可', '逃避', '不甘',
+            '成长焦虑', '选择困难', '社交疲惫', '意义感缺失', '职业倦怠',
+            '小确幸', '满足', '自信', '充实', '被爱', '被需要', '成就感', '幸福感',
+            '爽', '嗨', '通透', '轻盈', '底气', '松弛感', '心流', '暗爽',
+            '崩溃', '绝望', '怨恨', '嫉妒', '自责', '后悔', '患得患失', '破防',
+            '绷不住', '上头', '下头', '意难平', '窝囊', '烦躁', '糟心', '心累',
+            '想一个人', '想念', '挂念', '放不下', '舍不得', '如释重负', '踏实',
+            '小鹿乱撞', '心动', '心跳加速', '脸红', '嘴硬', '心软', '吃醋', '羡慕',
+            '尴尬', '脚趾抠地', '社死', '想消失', '想钻地缝',
+            '不想上班', '卷不动了', '倦了', '烦死了', '周一综合症', '想躺平', '想摆烂',
+            '就这样吧', '随便吧', '爱咋咋地', '无所谓', '想开了', '看开了', '悟了', '清醒了',
+            '想要被理解', '想要被爱', '想要休息', '缺钱', '缺爱', '缺安全感',
+            '夜深了', 'emo时间', '网抑云', '失眠', '想太多',
+            '饿', '嘴馋', '暴食', '满足', '幸福',
+            '不想回消息', '已读不回', '想独处', '想安静',
+            '电量低', '需要充电', '能量耗尽', '卡住了', '加载中',
+        ];
+
+        let duration = 60, timeLeft = 60, timer = null, bubbleTimer = null;
+        let poppedEmotions = [], isPlaying = false, audioContext = null;
+        let currentTheme = 'healing';
+        let history = JSON.parse(localStorage.getItem('emotionBubbleHistory') || '[]');
+        let ambientSource = null;
+        let ambientGain = null;
+
+        const startPanel = document.getElementById('startPanel');
+        const playPanel = document.getElementById('playPanel');
+        const countdownPanel = document.getElementById('countdownPanel');
+        const resultPanel = document.getElementById('resultPanel');
+        const statsPanel = document.getElementById('statsPanel');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const progressBar = document.getElementById('progressBar');
+        const bubbleContainer = document.getElementById('bubbleContainer');
+        const emotionTags = document.getElementById('emotionTags');
+        const aiSuggestion = document.getElementById('aiSuggestion');
+
+        // 初始化星空
+        function initStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = Math.random() * 2 + 1 + 'px';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        initStars();
+
+        // 主题切换
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTheme = btn.dataset.theme;
+                document.body.classList.remove('theme-minimal');
+                
+                if (currentTheme === 'minimal') {
+                    document.body.classList.add('theme-minimal');
+                } else if (currentTheme === 'cyber') {
+                    document.documentElement.style.setProperty('--primary', '#00f5ff');
+                    document.documentElement.style.setProperty('--secondary', '#ff00ff');
+                } else {
+                    document.documentElement.style.setProperty('--primary', '#667eea');
+                    document.documentElement.style.setProperty('--secondary', '#764ba2');
+                }
+            });
+        });
+
+        // 时间选择
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                duration = parseInt(btn.dataset.time);
+                timeLeft = duration;
+            });
+        });
+
+        // 音频
+        function initAudio() {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            return audioContext;
+        }
+
+        // 背景音效 - 蝉鸣/白噪音
+        function startAmbientSound() {
+            try {
+                stopAmbientSound();
+                const ctx = initAudio();
+                
+                ambientGain = ctx.createGain();
+                ambientGain.gain.setValueAtTime(0.03, ctx.currentTime);
+                ambientGain.connect(ctx.destination);
+                
+                // 创建多个频率模拟蝉鸣/白噪音
+                const frequencies = [2000, 2500, 3000, 3500, 4000];
+                frequencies.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const oscGain = ctx.createGain();
+                    osc.connect(oscGain);
+                    oscGain.connect(ambientGain);
+                    
+                    // 随机频率波动模拟蝉鸣
+                    osc.frequency.setValueAtTime(freq + Math.random() * 200, ctx.currentTime);
+                    oscGain.gain.setValueAtTime(0.02 + Math.random() * 0.02, ctx.currentTime);
+                    
+                    // 添加随机调制
+                    const lfo = ctx.createOscillator();
+                    const lfoGain = ctx.createGain();
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(oscGain.gain);
+                    lfo.frequency.setValueAtTime(2 + Math.random() * 3, ctx.currentTime);
+                    lfoGain.gain.setValueAtTime(0.01, ctx.currentTime);
+                    
+                    osc.type = 'sine';
+                    lfo.type = 'sine';
+                    osc.start(ctx.currentTime);
+                    lfo.start(ctx.currentTime);
+                });
+            } catch (e) {}
+        }
+
+        function stopAmbientSound() {
+            if (ambientGain) {
+                try {
+                    ambientGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                } catch (e) {}
+                ambientGain = null;
+            }
+        }
+
+        function playPopSound() {
+            try {
+                const ctx = initAudio();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                const baseFreq = 300 + Math.random() * 200;
+                osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.type = 'sine';
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
+        function playEndSound() {
+            try {
+                const ctx = initAudio();
+                [523.25, 659.25, 783.99].forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.15);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.15 + 0.5);
+                    osc.type = 'sine';
+                    osc.start(ctx.currentTime + i * 0.15);
+                    osc.stop(ctx.currentTime + i * 0.15 + 0.5);
+                });
+            } catch (e) {}
+        }
+
+        function playTickSound() {
+            try {
+                const ctx = initAudio();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.type = 'sine';
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.1);
+            } catch (e) {}
+        }
+
+        // 按钮事件
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', () => { 
+            resultPanel.style.display = 'none';
+            resultPanel.classList.remove('show'); 
+            resetGame(); 
+            startGame(); 
+        });
+        document.getElementById('closeResultBtn').addEventListener('click', () => { 
+            resultPanel.style.display = 'none';
+            resultPanel.classList.remove('show'); 
+            resetGame(); 
+        });
+        document.getElementById('statsBtn').addEventListener('click', () => {
+            startPanel.style.display = 'none';
+            statsPanel.style.display = 'flex';
+        });
+        document.getElementById('clearStatsBtn').addEventListener('click', clearStats);
+        document.getElementById('backBtn').addEventListener('click', () => { 
+            statsPanel.style.display = 'none';
+            startPanel.style.display = 'flex';
+        });
+
+        function startGame() {
+            startPanel.style.display = 'none';
+            countdownPanel.style.display = 'flex';
+            let count = 3;
+            const countdownText = document.getElementById('countdownText');
+            countdownText.textContent = count;
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                playTickSound();
+                if (count > 0) countdownText.textContent = count;
+                else {
+                    clearInterval(countdownInterval);
+                    countdownPanel.style.display = 'none';
+                    playPanel.style.display = 'block';
+                    startPlay();
+                }
+            }, 1000);
+        }
+
+        function startPlay() {
+            isPlaying = true;
+            timeLeft = duration;
+            poppedEmotions = [];
+            updateTimerDisplay();
+            updateProgress();
+            startAmbientSound(); // 开始背景音效
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                updateProgress();
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+            
+            for (let i = 0; i < 12; i++) setTimeout(() => createBubble(), i * 150);
+            
+            bubbleTimer = setInterval(() => {
+                if (document.querySelectorAll('.bubble').length < 18) createBubble();
+            }, 600);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgress() {
+            progressBar.style.width = ((duration - timeLeft) / duration * 100) + '%';
+        }
+
+        function createBubble() {
+            if (!isPlaying) return;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 50 + 55;
+            bubble.style.width = bubble.style.height = size + 'px';
+            bubble.style.left = (Math.random() * (window.innerWidth - size - 40) + 20) + 'px';
+            bubble.style.top = (Math.random() * (window.innerHeight - size - 100) + 60) + 'px';
+            
+            const colors = ['rgba(255, 107, 107, 0.5)', 'rgba(78, 205, 196, 0.5)', 'rgba(150, 100, 255, 0.5)', 'rgba(255, 207, 100, 0.5)', 'rgba(100, 220, 255, 0.5)', 'rgba(255, 140, 180, 0.5)', 'rgba(120, 220, 150, 0.5)'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            bubble.style.background = color;
+            bubble.style.boxShadow = `0 0 20px ${color.replace('0.5', '0.3')}, inset 0 0 15px rgba(255,255,255,0.2)`;
+            
+            const emotion = emotions[Math.floor(Math.random() * emotions.length)];
+            bubble.innerHTML = `<span class="bubble-text">${emotion}</span>`;
+            
+            // 点击和长按
+            bubble.addEventListener('click', (e) => popBubble(bubble, emotion, e));
+            bubble.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                popBubble(bubble, emotion, e.touches[0]);
+            });
+            let longPressTimer;
+            bubble.addEventListener('mousedown', () => {
+                longPressTimer = setTimeout(() => popBubble(bubble, emotion, {clientX: parseFloat(bubble.style.left), clientY: parseFloat(bubble.style.top)}), 500);
+            });
+            bubble.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+            bubble.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+            
+            bubbleContainer.appendChild(bubble);
+            
+            const lifeTime = Math.random() * 7000 + 10000;
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.style.transition = 'opacity 2s ease-out';
+                    bubble.style.opacity = '0';
+                    setTimeout(() => bubble.remove(), 2000);
+                }
+            }, lifeTime);
+        }
+
+        function popBubble(bubble, emotion, event) {
+            if (bubble.classList.contains('popping')) return;
+            poppedEmotions.push(emotion);
+            bubble.classList.add('popping');
+            playPopSound();
+            const x = event.clientX || parseFloat(bubble.style.left) + parseFloat(bubble.style.width) / 2;
+            const y = event.clientY || parseFloat(bubble.style.top) + parseFloat(bubble.style.height) / 2;
+            createParticles(x, y, bubble.style.background);
+            setTimeout(() => bubble.remove(), 400);
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const angle = (i / 8) * Math.PI * 2;
+                const distance = 50 + Math.random() * 50;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.width = particle.style.height = (5 + Math.random() * 10) + 'px';
+                particle.style.background = color || 'rgba(255,255,255,0.7)';
+                particle.style.setProperty('--tx', (Math.cos(angle) * distance) + 'px');
+                particle.style.setProperty('--ty', (Math.sin(angle) * distance) + 'px');
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 800);
+            }
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(timer);
+            clearInterval(bubbleTimer);
+            stopAmbientSound(); // 停止背景音效
+            playEndSound();
+            saveHistory();
+            showResult();
+        }
+
+        function showResult() {
+            const counts = {};
+            poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([e]) => e);
+            
+            emotionTags.innerHTML = sorted.map(e => `<span class="emotion-tag">${e}</span>`).join('');
+            generateAISuggestion(sorted);
+            resultPanel.classList.add('show');
+        }
+
+        // AI 建议模板库
+        const aiSuggestionTemplates = {
+            // 负面情绪 - 焦虑类
+            anxiety: [
+                '深呼吸几次，感受当下的平静。你已经很努力了。',
+                '焦虑往往来自于对未来的不确定。试着把注意力放在今天能做的事情上。',
+                '，给自己一点时间。你不需要马上解决所有问题。',
+                '感觉焦虑时，可以试试54321 grounding练习：说出5样你看到的、4样摸到的、3样听到的、2样闻到的、1样尝到的。'
+            ],
+            // 负面情绪 - 疲惫类
+            exhausted: [
+                '允许自己休息，这不是懒惰，而是必要的恢复。',
+                '你的身体在提醒你需要暂停了。给自己充充电吧。',
+                '累了就歇一歇，这世界不会因为你的暂停而崩塌。',
+                '有时候，最勇敢的事情就是承认自己需要休息。'
+            ],
+            // 负面情绪 - 悲伤类
+            sad: [
+                '悲伤是需要被承认的情绪。允许自己难过，这没什么不好。',
+                '眼泪有时候是最好的疗愈。给自己一个拥抱吧。',
+                '难过的感觉会过去的，就像黑夜总会迎来黎明。',
+                '如果想哭就哭出来，这不代表软弱，而是你真实地在活着。'
+            ],
+            // 负面情绪 - 愤怒类
+            angry: [
+                '愤怒是在保护你的边界。先深呼吸，让自己冷静下来。',
+                '愤怒是一种能量，把它转化为行动的动力，而不是自我消耗。',
+                '如果感到愤怒，试着把让你生气的事情写下来，有时候文字比情绪更诚实。',
+                '愤怒完了之后，给自己一点时间恢复。你不需要一直那么坚强。'
+            ],
+            // 负面情绪 - 恐惧类
+            fearful: [
+                '恐惧往往来自未知。试着把让你害怕的事情具体化，你会发现很多担忧是多余的。',
+                '害怕是人类正常的本能。承认它，然后问自己：最坏的结果是什么？',
+                '每一次你面对恐惧，都是一次成长。哪怕只是一小步。',
+                '恐惧的时候，深呼吸，告诉自己：我现在很安全。'
+            ],
+            // 负面情绪 - 迷茫类
+            confused: [
+                '给自己一点时间，不需要马上做决定。',
+                '迷茫是探索的开始。你正在寻找答案，这本身就很勇敢。',
+                '不知道方向时，就做好眼前的小事。路会在脚下慢慢展开。',
+                '迷茫是正常的，每个人都会有不知道该往哪里走的时候。'
+            ],
+            // 负面情绪 - 孤独类
+            lonely: [
+                '表达出来很重要，哪怕只是写下来。你不是一个人。',
+                '孤独是一种感受，但不是永恒的事实。给自己一些时间，也给自己一些耐心。',
+                '如果你想找人聊聊，记得我在这里。或者，给很久没联系的朋友发个消息？',
+                '孤独的时候，可以试着做一些让你感到连接的事情，比如听喜欢的播客，或者出门走走。'
+            ],
+            // 负面情绪 - 失落类
+            lost: [
+                '失去某些东西的时候，也在为新的可能腾出空间。',
+                '失落是正常的情绪反应。给自己一点时间去消化。',
+                '当你觉得失去方向时，也许只是需要停下来，喘口气。',
+                'Every ending is a new beginning. 新的故事正在等着你。'
+            ],
+            // 负面情绪 - 委屈类
+            wronged: [
+                '你的感受是有效的。被误解、被委屈，都是很痛的体验。',
+                '如果觉得委屈，找个信任的人说说，或者写下来。情绪需要被看见。',
+                '委屈不需要独自吞下。表达出来，不是为了指责，而是为了被理解。',
+                '有时候，委屈是因为期待落空了。允许自己失望，然后继续向前。'
+            ],
+            // 负面情绪 - 崩溃/绝望类
+            broken: [
+                '如果你现在感觉很差，请记住：这种感觉不会永远持续。',
+                '崩溃是身体和心理在告诉你，需要停下来了。现在，立刻，去做一些让自己舒服的事情。',
+                '你不需要每时每刻都坚强。脆弱也没关系。',
+                '如果感觉难以承受，请寻求帮助。可以找信任的人，或者拨打心理援助热线。'
+            ],
+            // 负面情绪 - 自我怀疑类
+            selfDoubt: [
+                '你的价值不是由别人的评价决定的。你本来就很好。',
+                '自我怀疑是每个人都会有的时刻。试着回想一下你曾经做到的事情。',
+                '不要让内心的批评声音太大。你值得被温柔对待，包括来自你自己的。',
+                '你不需要向任何人证明什么。做你自己，就足够了。'
+            ],
+            // 负面情绪 - 嫉妒类
+            jealous: [
+                '嫉妒是在提醒你，你也有想要的东西。这可以是动力，而不是负担。',
+                '把注意力从别人身上收回到自己身上。你有自己的节奏和道路。',
+                '嫉妒是正常的情绪，但不要让它吞噬了你。深呼吸，然后专注于你能控制的事情。',
+                '每个人都有属于自己的幸福，你的也在路上。'
+            ],
+            // 负面情绪 - 后悔类
+            regretful: [
+                '过去的已经过去了。重要的是现在和未来。',
+                '后悔是在提醒你，未来可以做不同的选择。',
+                '没有所谓正确的选择，只有选择后的行动让它变得正确。',
+                '原谅自己，然后继续前进。你已经在成长了。'
+            ],
+            // 负面情绪 - 拧巴/纠结类
+            twisted: [
+                '纠结的时候，做任何一个选择都比不做好。',
+                '有些事情没有完美答案，接受不确定性也是一种成长。',
+                '如果实在不知道选哪个，就抛硬币吧——不是因为它会给你答案，而是让你看清自己的心意。',
+                'Life is short. 跟着直觉走，哪怕错了也是经验。'
+            ],
+            // 负面情绪 - 无力感类
+            helpless: [
+                '无力感会过去的。你现在只需要照顾好自己。',
+                '即使感觉帮不了自己，也要记得：你不是一个人。',
+                '无力感往往是因为太累了。休息一下，然后重新开始。',
+                '小小的进步也是进步。今天能做的事情，哪怕很小，也值得骄傲。'
+            ],
+            // 负面情绪 - 逃避类
+            escaping: [
+                '逃避有时是身体在保护你。但如果可以，试着面对一点点，就好。',
+                '暂时的逃避是可以的，但记得回来面对。',
+                '如果你还没准备好面对，没关系。但不要永远躲着。',
+                '直面问题需要勇气，如果你现在没有，没关系，下次再说。'
+            ],
+            // 负面情绪 - 失眠/夜深 emo 类
+            nightEmotion: [
+                '夜深了，情绪容易被放大。这是正常的，明天会不一样的。',
+                '睡不着的时候，不要强迫自己。起来喝杯热牛奶，或者听些舒缓的音乐。',
+                '深夜的想法不一定是真的。睡一觉，明天再想。',
+                '夜晚是用来休息的，不是用来难过的。晚安，你值得被善待。'
+            ],
+            // 负面情绪 - 社交疲惫类
+            socialFatigue: [
+                '社交疲惫是真实的。你不需要每场社交都参加。',
+                '给自己一些独处的时间，这没什么不好意思的。',
+                '如果不想聊天，就直接说吧。真正的朋友会理解的。',
+                '独处是给自己充电的机会。好好利用它。'
+            ],
+            // 负面情绪 - 职业倦怠类
+            burnout: [
+                '职业倦怠是身体在报警。你需要停下来，重新审视你的工作节奏。',
+                '工作是生活的一部分，但不是全部。记得为什么出发。',
+                '如果可以，给自己放个假。哪怕只是一天。',
+                '你值得拥有工作之外的生活。'
+            ],
+            // 负面情绪 - 想躺平/摆烂类
+            lazy: [
+                '躺平也是一种选择，如果你需要的话。',
+                '不想努力的时候，就允许自己不努力。这不代表你失败了。',
+                '每个人都会有想停下来的时候。这不是懒惰，是人类正常的周期。',
+                '如果只是短暂的休息，那就好好休息。然后再出发。'
+            ],
+            // 负面情绪 - 缺爱/缺安全感类
+            lackingLove: [
+                '你值得被爱。这不是你的错。',
+                '如果没人爱你，记得自己爱自己。你是自己最亲密的朋友。',
+                '缺安全感的时候，抱抱自己。你已经做得很好了。',
+                '爱自己，是终身浪漫的开始。'
+            ],
+            // 中性/平静类
+            calm: [
+                '享受这份平静。这是努力的成果。',
+                '平静是最珍贵的状态之一。好好珍惜。',
+                '在平静中积蓄能量，然后继续前行。'
+            ],
+            // 正面情绪 - 开心/满足类
+            happy: [
+                '很高兴你有这么多美好的感受，珍惜它们，然后在需要时回忆。',
+                '快乐的时候，尽情享受！这是生活的美好时刻。',
+                '美好时光总是短暂的，但它们会成为你内心的力量。',
+                '感恩这些开心的时刻。它们是生活的礼物。'
+            ],
+            // 正面情绪 - 治愈/温暖类
+            healed: [
+                '被治愈的感觉真好。愿这样的时刻更多一些。',
+                '温暖是一种力量。你也可以把这份温暖传递给别人。',
+                '生活总有不期而遇的美好。',
+                '治愈自己，是一种能力。你正在做得很好。'
+            ],
+            // 正面情绪 - 自信/成就感类
+            confident: [
+                '你真的很棒！自信的你最美/最帅。',
+                '成就感是努力的回报。你配得上这份荣耀。',
+                '相信自己的力量。你可以做到！',
+                '这种充满底气的感觉，正是你应得的。'
+            ],
+            // 正面情绪 - 期待类
+            hopeful: [
+                '有期待是最美好的事情之一。愿你的期待都能实现。',
+                '期待让生活有盼头。好好享受这种美好的感觉。',
+                '带着期待前进吧！美好的事情正在等着你。'
+            ],
+            // 正面情绪 - 放松类
+            relaxed: [
+                '放松是一种能力。你现在做得很好。',
+                '好好享受这份松弛感。你值得拥有。',
+                '在忙碌的生活中，能有这样的时刻，很珍贵。'
+            ],
+            // 正面情绪 - 心动类
+            crush: [
+                '小鹿乱撞的感觉，真美好。',
+                '心动是人类最美好的情感之一。好好享受。',
+                '如果你喜欢，就去表达吧！不留遗憾。',
+                '这种甜蜜又紧张的感觉，是青春的味道。'
+            ],
+            // 正面情绪 - 释然/通透类
+            enlightened: [
+                '看开了，就是成长。恭喜你。',
+                '通透的人，最快乐。',
+                '放下执念，是一种智慧。你做得很好。',
+                '悟了的感觉，真好。继续前行吧。'
+            ],
+            // 正面情绪 - 爽/暗爽类
+           爽: [
+                '爽就对了！人生需要这样的时刻。',
+                '暗爽也是一种快乐。好好享受。',
+                '这种畅快的感觉，正是努力的意义。'
+            ],
+            // 负面情绪 - 眼红/眼热类
+            envious: [
+                '眼红是正常的，说明你有欲望。把它转化为动力。',
+                '每个人都有自己的节奏。专注自己的路。',
+                '与其羡慕别人，不如创造自己的幸福。',
+                '你也可以的。加油！'
+            ],
+            // 负面情绪 - 想一个人/想念类
+            missing: [
+                '想念是因为在乎。这是美好的情感。',
+                '如果可以，去联系吧。主动一点，也许故事就开始了。',
+                '想念一个人，是幸福的烦恼。',
+                '如果见不到，就把这份思念写下来。'
+            ],
+            // 负面情绪 - 尴尬/社死类
+            embarrassed: [
+                '尴尬是每个人都会有的。过了就好了。',
+                '社死不可怕，可怕的是你还记得。实际上大家转头就忘了。',
+                '尴尬的时刻，也是成长的黑料。若干年后再想起来，你会笑出声。',
+                '没关系的，大家都有尴尬的瞬间。'
+            ],
+            // 负面情绪 - 闹心/烦躁类
+            irritated: [
+                '烦躁的时候，深呼吸，让自己平静下来。',
+                '闹心是因为太在意了。试着放下一些。',
+                '如果无法改变，就接受。接受是最好的解药。',
+                '给自己一点时间，烦躁会过去的。'
+            ],
+            // 负面情绪 - 绷不住类
+            cantHold: [
+                '绷不住的时候，就哭出来吧。这不是软弱。',
+                '压抑太久是需要释放的。你已经做得很努力了。',
+                '如果太累了，就停下来。不要逼自己。',
+                '你不需要每时每刻都撑着。'
+            ],
+            // 负面情绪 - 破防类
+           防线崩溃: [
+                '破防是因为你在乎。这不代表你脆弱。',
+                '每个人都会有防线崩塌的时刻。这很正常。',
+                '破防之后，是重建。给自己一些时间。',
+                '你已经很努力了。真的。'
+            ],
+            // 负面情绪 - 不甘类
+            unwilling: [
+                '不甘是向上的力量。但不要让它变成执念。',
+                '有时候，接受也是一种勇气。',
+                '如果不甘心，就再努力一次。哪怕失败了，至少你尝试过。',
+                '把不甘转化为动力，而不是自我消耗。'
+            ],
+            // 默认/通用
+            default: [
+                '每一种情绪都值得被看见。记住，情绪没有好坏，它们只是你内心的信使。好好照顾自己。🌸',
+                '你今天戳破了这些情绪，很棒！情绪释放是一种疗愈。',
+                '无论是好情绪还是坏情绪，它们都是你真实的一部分。接受它们。',
+                '谢谢你信任这个过程。情绪被看见，就是疗愈的开始。'
+            ]
+        };
+
+        // 情绪关键词映射到建议类别
+        const emotionCategoryMap = {
+            anxiety: ['焦虑', '紧张', '担心', '不安', '慌', '怕', '压力', 'Growth焦虑', '选择困难'],
+            exhausted: ['疲惫', '无力', '累', '倦', '倦了', '能量耗尽', '电量低', '需要充电', '卡住了', '加载中'],
+            sad: ['悲伤', '难过', '哭', '心痛', '心酸', '心寒', '想哭', 'Sad'],
+            angry: ['愤怒', '恼怒', '窝火', '抓狂', '烦死了', '生气', '窝囊', '窝心', '堵心'],
+            fearful: ['恐惧', '害怕', '怕', '慌'],
+            confused: ['迷茫', '困惑', '疑惑', '不确定', '不知道', '纠结', '拧巴', '选择困难'],
+            lonely: ['孤独', '独处', '想独处', '想安静', '一个人', '不被理解'],
+            lost: ['失落', '空落落', '空洞', '虚无', '失去', '怀念', '放不下'],
+            wronged: ['委屈', '被误解', '不公平', '憋屈', '不得劲', '闹心'],
+            broken: ['崩溃', '绝望', '绷不住', '破防', '上头', '想不开'],
+            selfDoubt: ['自我怀疑', '怀疑自己', '不自信', '不够好', '患得患失'],
+            jealous: ['眼红', '眼热', '羡慕', '嫉妒', '酸'],
+            regretful: ['后悔', '自责', '如果当时', '遗憾'],
+            twisted: ['纠结', '拧巴', '矛盾', '左右为难', '纠结'],
+            helpless: ['无力感', '无助', '帮不了自己', '没用'],
+            escaping: ['逃避', '不敢面对', '想逃', '想消失'],
+            nightEmotion: ['夜深了', 'emo时间', '网抑云', '失眠', '想太多', '夜深'],
+            socialFatigue: ['社交疲惫', '不想回消息', '已读不回', '不想社交', '心累'],
+            burnout: ['职业倦怠', '不想上班', '卷不动了', '周一综合症', '倦怠'],
+            lazy: ['想躺平', '想摆烂', '就这样吧', '随便吧', '无所谓', '卷不动'],
+            lackingLove: ['缺爱', '缺安全感', '想要被爱', '想要被理解', '不被爱', '渴望认可'],
+            calm: ['平静', '安心', '踏实', 'Relax', '放松'],
+            happy: ['开心', '快乐', '喜悦', '满足', '幸福', '爽', '嗨', '幸福', '小确幸'],
+            healed: ['治愈', '温暖', '感动', '被爱', '被需要', '安心'],
+            confident: ['自信', '成就感', '底气', '充实', '通透', '轻盈', '底气', '松弛感'],
+            hopeful: ['期待', '希望', '盼望', '向往'],
+            relaxed: ['Relax', '松弛感', '放松', '轻松'],
+            crush: ['心动', '小鹿乱撞', '心跳加速', '脸红', '喜欢', '想一个人', '想念', '挂念'],
+            enlightened: ['看开了', '想开了', '悟了', '清醒了', '释然', '通透'],
+            爽: ['爽', '暗爽', '嗨', '通透'],
+            envious: ['眼红', '眼热', '羡慕', '眼馋'],
+            missing: ['想一个人', '想念', '挂念', '放不下', '舍不得'],
+            embarrassed: ['尴尬', '脚趾抠地', '社死', '想消失', '想钻地缝'],
+            irritated: ['烦躁', '闹心', '糟心', '烦', '膈应', '拧巴', '不得劲'],
+            cantHold: ['绷不住', '崩溃', '哭', '难受'],
+            防线崩溃: ['破防', '绷不住', '防线崩溃', '忍不住'],
+            unwilling: ['不甘', '意难平', '凭什么', '不服']
+        };
+
+        function getEmotionCategory(emotion) {
+            for (const [category, keywords] of Object.entries(emotionCategoryMap)) {
+                for (const keyword of keywords) {
+                    if (emotion.includes(keyword)) return category;
+                }
+            }
+            return null;
+        }
+
+        function getRandomSuggestion(category) {
+            const templates = aiSuggestionTemplates[category] || aiSuggestionTemplates.default;
+            return templates[Math.floor(Math.random() * templates.length)];
+        }
+
+        function generateAISuggestion(emotions) {
+            const suggestions = [];
+            const usedCategories = new Set();
+
+            // 遍历用户戳破的情绪，匹配对应的建议类别
+            for (const emotion of emotions) {
+                const category = getEmotionCategory(emotion);
+                if (category && !usedCategories.has(category)) {
+                    suggestions.push(getRandomSuggestion(category));
+                    usedCategories.add(category);
+                }
+            }
+
+            // 如果没有匹配到任何类别，使用默认建议
+            if (suggestions.length === 0) {
+                suggestions.push(getRandomSuggestion('default'));
+            }
+
+            // 限制建议数量，最多4条
+            const finalSuggestions = suggestions.slice(0, 4);
+            
+            // 如果只有一条，加上通用的鼓励
+            if (finalSuggestions.length === 1) {
+                finalSuggestions.push(getRandomSuggestion('default'));
+            }
+
+            aiSuggestion.textContent = finalSuggestions.join('\n\n');
+        }
+
+        function saveHistory() {
+            const today = new Date().toLocaleDateString();
+            const counts = {};
+            poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+            
+            const existing = history.findIndex(h => h.date === today);
+            if (existing >= 0) {
+                Object.entries(counts).forEach(([e, c]) => {
+                    history[existing].emotions[e] = (history[existing].emotions[e] || 0) + c;
+                });
+            } else {
+                history.push({ date: today, emotions: counts });
+            }
+            history = history.slice(-30);
+            localStorage.setItem('emotionBubbleHistory', JSON.stringify(history));
+        }
+
+        function showStats() {
+            const statsList = document.getElementById('statsList');
+            
+            if (history.length === 0) {
+                statsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">暂无历史记录</p>';
+                return;
+            }
+            
+            const allEmotions = {};
+            history.forEach(h => {
+                Object.entries(h.emotions).forEach(([e, c]) => {
+                    allEmotions[e] = (allEmotions[e] || 0) + c;
+                });
+            });
+            
+            const sorted = Object.entries(allEmotions).sort((a, b) => b[1] - a[1]).slice(0, 20);
+            statsList.innerHTML = sorted.map(([e, c]) => 
+                `<div class="stats-item"><span>${e}</span><span class="stats-count">${c}</span></div>`
+            ).join('');
+        }
+
+        function clearStats() {
+            if (confirm('确定清空所有历史记录？')) {
+                history = [];
+                localStorage.setItem('emotionBubbleHistory', '[]');
+                showStats();
+            }
+        }
+
+        function resetGame() {
+            bubbleContainer.innerHTML = '';
+            isPlaying = false;
+            clearInterval(timer);
+            clearInterval(bubbleTimer);
+        }
+    </script>
+</body>
+</html>
