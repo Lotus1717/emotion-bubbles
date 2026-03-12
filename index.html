@@ -839,12 +839,24 @@
         const similarCategories = {
             '开心': ['幸福', '平静', '满足'],
             '幸福': ['开心', '满足', '被爱'],
-            '平静': ['放松', '踏实', 'Relax'],
-            '惊讶': ['好奇', '期待', '意外'],
-            '难过': ['悲伤', '失落', '委屈'],
-            '愤怒': ['烦躁', '抓狂', '窝火'],
-            '焦虑': ['担心', '紧张', '恐惧'],
-            '迷茫': ['疲惫', '无奈', '纠结'],
+            '平静': ['开心', '幸福', '放松', '踏实', 'Relax'],
+            '惊讶': ['好奇', '期待', '意外', '开心'],
+            '难过': ['悲伤', '失落', '委屈', '绝望'],
+            '愤怒': ['烦躁', '抓狂', '窝火', '焦虑'],
+            '焦虑': ['担心', '紧张', '恐惧', '愤怒'],
+            '迷茫': ['疲惫', '无奈', '纠结', '累'],
+            '恶心': ['厌恶', '膈应', '烦'],
+            '羞耻': ['尴尬', '社死', '自责'],
+            '羡慕': ['嫉妒', '不甘', '眼红'],
+            '想念': ['挂念', '放不下', '舍不得'],
+            '怀念': ['回忆', '过去', '时光'],
+            '累': ['疲惫', '电量低', '需要充电'],
+            '饿': ['嘴馋', '暴食', '想吃'],
+            '后悔': ['自责', '遗憾', '错过'],
+            '怨恨': ['愤怒', '不甘', '不公平'],
+            '绝望': ['崩溃', '破防', '难过'],
+            '无力感': ['自我怀疑', '空洞', '空落落'],
+            '失眠': ['想太多', '网抑云', '夜深了'],
         };
 
         // 最底层情绪的鼓励文案
@@ -1380,27 +1392,22 @@
                     b.style.transform = 'scale(0.3)';
                     setTimeout(() => b.remove(), 1500);
                 }
-                // 同类别深层气泡：保留
-                else if (cat === category && depth > currentDepth) {
-                    // 保留，不做处理
-                }
-                // 相近类别：保留
-                else if (similar.includes(cat)) {
-                    // 保留，不做处理
-                }
-                // 其他类别：暂不处理（可以根据需要调整）
+                // 其他类别（没有在对立列表）：保留
             });
             
-            // 补充相近类别的气泡
-            setTimeout(() => {
-                similar.forEach(simCat => {
-                    if (emotionTree[simCat] && Math.random() > 0.5) {
-                        const subEmoitons = emotionTree[simCat];
-                        const randomSub = subEmoitons[Math.floor(Math.random() * subEmoitons.length)];
-                        createBubble(randomSub, simCat, 0);
-                    }
-                });
-            }, 1000);
+            // 补充相近类别的气泡（只在同类和相近类别中补充）
+            if (similar.length > 0) {
+                setTimeout(() => {
+                    const targetCategories = [category, ...similar].slice(0, 3); // 最多补充3个类别
+                    targetCategories.forEach(cat => {
+                        if (emotionTree[cat] && Math.random() > 0.4) {
+                            const subEmotions = emotionTree[cat];
+                            const randomSub = subEmotions[Math.floor(Math.random() * subEmotions.length)];
+                            createBubble(randomSub, cat, 0);
+                        }
+                    });
+                }, 1000);
+            }
         }
 
         // 显示鼓励气泡
