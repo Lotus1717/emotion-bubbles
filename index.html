@@ -1061,7 +1061,7 @@
             ];
             
             for (let i = 0; i < initialEmotions.length; i++) {
-                setTimeout(() => createBubble(initialEmotions[i]), i * 500);
+                setTimeout(() => createBubble(initialEmotions[i], null, 0), i * 500);
             }
             
             // 补充逻辑 - 等待初始化完成（4.5 秒后）再开始，保持 10 个气泡
