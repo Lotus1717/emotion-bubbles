@@ -932,46 +932,55 @@
             return audioContext;
         }
 
-        // 背景音效 - 篝火白噪音
+        // 背景音效 - 舒缓 ambient 轻音乐
         function startAmbientSound() {
             try {
                 stopAmbientSound();
                 const ctx = initAudio();
                 
                 ambientGain = ctx.createGain();
-                ambientGain.gain.setValueAtTime(0.15, ctx.currentTime);
+                ambientGain.gain.setValueAtTime(0.08, ctx.currentTime);
                 ambientGain.connect(ctx.destination);
                 
-                // 创建篝火的低频轰鸣声
-                const lowOsc = ctx.createOscillator();
-                const lowGain = ctx.createGain();
-                lowOsc.connect(lowGain);
-                lowGain.connect(ambientGain);
-                lowOsc.frequency.setValueAtTime(80, ctx.currentTime);
-                lowGain.gain.setValueAtTime(0.3, ctx.currentTime);
-                lowOsc.type = 'sawtooth';
-                lowOsc.start(ctx.currentTime);
+                // 创建柔和的 ambient 和弦 pad
+                const baseFreqs = [130.81, 164.81, 196.00, 246.94]; // C3, E3, G3, B3 和弦
                 
-                // 创建噼啪声（随机爆裂）
-                for (let i = 0; i < 5; i++) {
-                    setInterval(() => {
-                        if (!isPlaying) return;
-                        try {
-                            const crackle = ctx.createOscillator();
-                            const crackleGain = ctx.createGain();
-                            crackle.connect(crackleGain);
-                            crackleGain.connect(ambientGain);
-                            crackle.frequency.setValueAtTime(100 + Math.random() * 200, ctx.currentTime);
-                            crackleGain.gain.setValueAtTime(0.1 + Math.random() * 0.15, ctx.currentTime);
-                            crackleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05 + Math.random() * 0.05);
-                            crackle.type = 'square';
-                            crackle.start(ctx.currentTime);
-                            crackle.stop(ctx.currentTime + 0.1);
-                        } catch(e) {}
-                    }, 200 + Math.random() * 800);
-                }
+                baseFreqs.forEach((freq, i) => {
+                    // 主振荡器
+                    const osc = ctx.createOscillator();
+                    const oscGain = ctx.createGain();
+                    
+                    // 添加轻微的频率调制（LFO）
+                    const lfo = ctx.createOscillator();
+                    const lfoGain = ctx.createGain();
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(osc.frequency);
+                    lfo.frequency.setValueAtTime(0.1 + i * 0.05, ctx.currentTime);
+                    lfoGain.gain.setValueAtTime(2 + Math.random() * 2, ctx.currentTime);
+                    
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                    oscGain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    
+                    osc.connect(oscGain);
+                    oscGain.connect(ambientGain);
+                    
+                    osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+                    lfo.type = 'sine';
+                    osc.start(ctx.currentTime);
+                    lfo.start(ctx.currentTime);
+                    
+                    // 添加泛音
+                    const harmonic = ctx.createOscillator();
+                    const harmGain = ctx.createGain();
+                    harmonic.frequency.setValueAtTime(freq * 2, ctx.currentTime);
+                    harmonic.type = 'sine';
+                    harmGain.gain.setValueAtTime(0.05, ctx.currentTime);
+                    harmonic.connect(harmGain);
+                    harmGain.connect(ambientGain);
+                    harmonic.start(ctx.currentTime);
+                });
                 
-                // 创建柔和的噼啪白噪音
+                // 添加柔和的白噪音作为背景
                 const bufferSize = 2 * ctx.sampleRate;
                 const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                 const output = noiseBuffer.getChannelData(0);
@@ -983,13 +992,13 @@
                 whiteNoise.buffer = noiseBuffer;
                 whiteNoise.loop = true;
                 
-                // 低通滤波使声音更柔和
+                // 强低通滤波使噪音变得非常柔和
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'lowpass';
-                filter.frequency.value = 400;
+                filter.frequency.value = 200;
                 
                 const noiseGain = ctx.createGain();
-                noiseGain.gain.setValueAtTime(0.08, ctx.currentTime);
+                noiseGain.gain.setValueAtTime(0.03, ctx.currentTime);
                 
                 whiteNoise.connect(filter);
                 filter.connect(noiseGain);
