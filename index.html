@@ -1038,10 +1038,10 @@
             // 补充逻辑 - 等待初始化完成（4.5 秒后）再开始，保持 10 个气泡
             setTimeout(() => {
                 bubbleTimer = setInterval(() => {
-                    if (document.querySelectorAll('.bubble:not(.popping)').length < 10) {
-                        createBubble();
-                    }
-                }, 1000);
+                    // 只计算正常气泡（不包括 popping 的）
+                    const count = document.querySelectorAll('.bubble:not(.popping)').length;
+                    if (count < 10) createBubble();
+                }, 800);
             }, 4500);
         }
 
