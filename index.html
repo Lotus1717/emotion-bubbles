@@ -1133,8 +1133,7 @@
             bubble.addEventListener('mouseup', () => clearTimeout(longPressTimer));
             bubble.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
             
-            // 限制最多10个气泡
-            const existingBubbles = document.querySelectorAll('.bubble:not(.popping):not(.fading)');
+            // 限制最多10个气泡（已在前面声明）
             if (existingBubbles.length >= 10) {
                 // 移除最早的气泡
                 existingBubbles[0]?.remove();
