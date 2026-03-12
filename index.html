@@ -811,6 +811,42 @@
             '失眠': ['想太多', '网抑云', 'emo时间', '夜深了', '焦虑'],
         };
 
+        // 情绪对立关系 - 点击某情绪时，这些类别会消失
+        const oppositeCategories = {
+            '开心': ['难过', '悲伤', '绝望', '无力感'],
+            '幸福': ['绝望', '无力感', '难过'],
+            '平静': ['焦虑', '愤怒', '恐惧', '紧张'],
+            '惊讶': ['平静', '麻木'],
+            '难过': ['开心', '幸福', '喜悦'],
+            '愤怒': ['平静', '平静', '满足'],
+            '焦虑': ['平静', '放松', '踏实'],
+            '迷茫': ['坚定', '清晰', '目标明确'],
+            '恶心': ['喜欢', '爱', '接纳'],
+            '羞耻': ['自信', '自豪', '骄傲'],
+            '羡慕': ['满足', '珍惜', '感恩'],
+            '想念': ['放下', '释然', '遗忘'],
+            '怀念': ['当下', '向前看', '接受'],
+            '累': ['精力充沛', '充满能量', '休息'],
+            '饿': ['饱', '满足', '充实'],
+            '后悔': ['接受', '放下', '向前看'],
+            '怨恨': ['释然', '原谅', '放下'],
+            '绝望': ['希望', '期待', '信心'],
+            '无力感': ['力量', '自信', '有能力'],
+            '失眠': ['放松', '平静', '入睡'],
+        };
+
+        // 情绪相近关系 - 点击某情绪时，这些类别会保留并补充
+        const similarCategories = {
+            '开心': ['幸福', '平静', '满足'],
+            '幸福': ['开心', '满足', '被爱'],
+            '平静': ['放松', '踏实', 'Relax'],
+            '惊讶': ['好奇', '期待', '意外'],
+            '难过': ['悲伤', '失落', '委屈'],
+            '愤怒': ['烦躁', '抓狂', '窝火'],
+            '焦虑': ['担心', '紧张', '恐惧'],
+            '迷茫': ['疲惫', '无奈', '纠结'],
+        };
+
         // 最底层情绪的鼓励文案
         const encouragingMessages = {
             'default': '每一种情绪都值得被看见。你已经很勇敢了。🌸',
@@ -1296,8 +1332,8 @@
             const y = event.clientY || parseFloat(bubble.style.top) + parseFloat(bubble.style.height) / 2;
             createParticles(x, y, bubble.style.background);
             
-            // 移除其他类别的气泡（只保留同类别和子情绪）
-            removeOtherCategoryBubbles(currentCategory, depth);
+            // 根据情绪关系处理其他气泡：对立面消失，相近面保留
+            handleEmotionRelations(currentCategory, depth);
             
             // 检查是否可以挖掘更深层的情绪（最多2层）
             const maxDepth = 2;
@@ -1315,7 +1351,7 @@
                     }
                 }, 300);
             } else {
-                // 没有子情绪了，显示鼓励文案（作为临时气泡）
+                // 没有子情绪了，显示鼓励文案
                 if (depth > 0) {
                     const category = getEmotionCategory(parentEmotion);
                     const msg = encouragingMessages[category] || encouragingMessages['default'];
@@ -1326,22 +1362,45 @@
             setTimeout(() => bubble.remove(), 400);
         }
 
-        // 移除其他类别的气泡
-        function removeOtherCategoryBubbles(keepCategory, currentDepth) {
+        // 处理情绪关系：对立面渐隐消失，相近面保留并补充
+        function handleEmotionRelations(category, currentDepth) {
+            const opposite = oppositeCategories[category] || [];
+            const similar = similarCategories[category] || [];
+            
             const bubbles = document.querySelectorAll('.bubble:not(.popping)');
             bubbles.forEach(b => {
                 const depth = parseInt(b.dataset.depth || 0);
                 const text = b.textContent;
-                const category = getEmotionCategory(text);
+                const cat = getEmotionCategory(text);
                 
-                // 移除：不同类别 且 同层/更浅层的气泡
-                if (category !== keepCategory && depth <= currentDepth) {
-                    b.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                // 对立面：渐隐消失
+                if (opposite.includes(cat)) {
+                    b.style.transition = 'opacity 1.5s ease-out, transform 1.5s ease-out';
                     b.style.opacity = '0';
-                    b.style.transform = 'scale(0.5)';
-                    setTimeout(() => b.remove(), 300);
+                    b.style.transform = 'scale(0.3)';
+                    setTimeout(() => b.remove(), 1500);
                 }
+                // 同类别深层气泡：保留
+                else if (cat === category && depth > currentDepth) {
+                    // 保留，不做处理
+                }
+                // 相近类别：保留
+                else if (similar.includes(cat)) {
+                    // 保留，不做处理
+                }
+                // 其他类别：暂不处理（可以根据需要调整）
             });
+            
+            // 补充相近类别的气泡
+            setTimeout(() => {
+                similar.forEach(simCat => {
+                    if (emotionTree[simCat] && Math.random() > 0.5) {
+                        const subEmoitons = emotionTree[simCat];
+                        const randomSub = subEmoitons[Math.floor(Math.random() * subEmoitons.length)];
+                        createBubble(randomSub, simCat, 0);
+                    }
+                });
+            }, 1000);
         }
 
         // 显示鼓励气泡
