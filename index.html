@@ -1424,16 +1424,97 @@
             // 没有子情绪了，不做处理
             
             setTimeout(() => {
+                // 获取被戳破气泡的位置信息
+                const poppedX = parseFloat(bubble.style.left);
+                const poppedY = parseFloat(bubble.style.top);
+                const size = parseFloat(bubble.style.width) || 55;
+                
                 bubble.remove();
                 
-                // 恢复补充逻辑
+                // 立即补充新气泡（在戳破位置附近）
+                if (isPlaying) {
+                    // 随机选择情绪（优先选择相近类别）
+                    const similar = similarCategories[currentCategory] || [];
+                    const categories = [currentCategory, ...similar].filter(c => c);
+                    const randomCat = categories[Math.floor(Math.random() * categories.length)];
+                    let newEmotion;
+                    if (emotionTree[randomCat] && Math.random() > 0.3) {
+                        const subs = emotionTree[randomCat];
+                        newEmotion = subs[Math.floor(Math.random() * subs.length)];
+                    } else {
+                        newEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+                    }
+                    
+                    // 在戳破位置附近生成新气泡（带偏移避免完全重叠）
+                    createBubbleNear(newEmotion, poppedX, poppedY, size);
+                }
+                
+                // 恢复补充逻辑（保底）
                 if (wasSupplementPaused && isPlaying) {
                     bubbleTimer = setInterval(() => {
                         const count = document.querySelectorAll('.bubble:not(.popping)').length;
                         if (count < 10) createBubble();
-                    }, 1500);
+                    }, 2000);
                 }
-            }, 400);
+            }, 300);
+        }
+
+        // 在指定位置附近创建气泡
+        function createBubbleNear(emotion, nearX, nearY, nearSize) {
+            const size = Math.random() * 50 + 55;
+            const bubble = document.createElement('div');
+            bubble.className = 'Bubble';
+            bubble.style.width = bubble.style.height = size + 'px';
+            
+            // 在戳破位置附近生成（带随机偏移）
+            const offsetX = (Math.random() - 0.5) * 150;
+            const offsetY = (Math.random() - 0.5) * 100;
+            let x = nearX + offsetX;
+            let y = nearY + offsetY;
+            
+            // 边界检查
+            x = Math.max(20, Math.min(x, window.innerWidth - size - 40));
+            y = Math.max(80, Math.min(y, window.innerHeight - size - 150));
+            
+            bubble.style.left = x + 'px';
+            bubble.style.top = y + 'px';
+            
+            // 物理属性
+            bubble.dataset.vx = (Math.random() - 0.5) * 2;
+            bubble.dataset.vy = (Math.random() - 0.5) * 1.5 - 0.5;
+            bubble.dataset.radius = size / 2;
+            bubble.dataset.depth = 0;
+            bubble.dataset.parentEmotion = '';
+            
+            // 颜色
+            let color = emotionColorMap[emotion];
+            if (!color) {
+                color = defaultColors[Math.floor(Math.random() * defaultColors.length)];
+            }
+            const glowColor = color.replace('0.5', '0.35');
+            bubble.style.background = color;
+            bubble.style.boxShadow = `0 0 25px ${glowColor}, inset 0 0 18px rgba(255,255,255,0.3)`;
+            
+            // 动画
+            bubble.style.animation = 'bubbleFadeIn 0.6s ease-out forwards, floatInPlace 6s ease-in-out 0.6s infinite, bubblePulse 3s ease-in-out 0.6s infinite';
+            bubble.style.opacity = '0';
+            
+            bubble.innerHTML = `<span class="bubble-text">${emotion}</span>`;
+            
+            // 事件
+            bubble.addEventListener('click', (e) => popBubble(bubble, emotion, e));
+            bubble.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                popBubble(bubble, emotion, e.touches[0]);
+            });
+            let longPressTimer;
+            bubble.addEventListener('mousedown', () => {
+                longPressTimer = setTimeout(() => popBubble(bubble, emotion, {clientX: parseFloat(bubble.style.left), clientY: parseFloat(bubble.style.top)}), 500);
+            });
+            bubble.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+            bubble.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+            
+            bubbleContainer.appendChild(bubble);
         }
 
         // 处理情绪关系：对立面渐隐消失，相近面保留并补充
