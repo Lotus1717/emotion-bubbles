@@ -989,6 +989,8 @@
         });
 
         function startGame() {
+            if (isPlaying) return; // 防止重复启动
+            
             startPanel.style.display = 'none';
             countdownPanel.style.display = 'flex';
             let count = 3;
@@ -1014,7 +1016,7 @@
             poppedEmotions = [];
             updateTimerDisplay();
             updateProgress();
-            startAmbientSound(); // 开始背景音效
+            startAmbientSound();
             
             timer = setInterval(() => {
                 timeLeft--;
@@ -1023,28 +1025,20 @@
                 if (timeLeft <= 0) endGame();
             }, 1000);
             
-            // 初始气泡 - 每种颜色类型都出现一次（共8种颜色类型）
+            // 初始气泡 - 8 种颜色各一个
             const initialEmotions = [
-                '开心',    // 粉红
-                '幸福',    // 金黄
-                '平静',    // 青绿
-                '惊讶',    // 天蓝
-                '难过',    // 紫色
-                '愤怒',    // 橙红
-                '焦虑',    // 橙色
-                '迷茫',    // 蓝绿
+                '开心', '幸福', '平静', '惊讶',
+                '难过', '愤怒', '焦虑', '迷茫',
             ];
             
-            // 初始气泡逐个出现（每0.5秒一个）
             for (let i = 0; i < initialEmotions.length; i++) {
                 setTimeout(() => createBubble(initialEmotions[i]), i * 500);
             }
             
-            // 后续补充 - 保持10个气泡，每1秒检查补充
+            // 补充逻辑 - 保持 10 个气泡
             bubbleTimer = setInterval(() => {
-                const currentCount = document.querySelectorAll('.bubble:not(.popping):not(.fading)').length;
-                if (currentCount < 10) {
-                    createBubble(); // 补充随机情绪的气泡
+                if (document.querySelectorAll('.bubble:not(.popping)').length < 10) {
+                    createBubble();
                 }
             }, 1000);
         }
