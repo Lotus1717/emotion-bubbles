@@ -242,9 +242,9 @@
             -webkit-tap-highlight-color: transparent;
             backdrop-filter: blur(2px);
             animation: 
-                bubbleFadeIn 0.8s ease-out forwards,
-                floatInPlace 6s ease-in-out infinite,
-                bubblePulse 3s ease-in-out 0.8s infinite;
+                bubbleFadeIn 1.2s ease-out forwards,
+                floatInPlace 6s ease-in-out 1.2s infinite,
+                bubblePulse 3s ease-in-out 1.2s infinite;
             opacity: 0;
         }
 
@@ -260,32 +260,34 @@
         @keyframes bubbleFadeIn {
             0% { 
                 opacity: 0; 
-                transform: scale(0.3) translateY(20px);
-            }
-            60% {
-                opacity: 1;
-                transform: scale(1.1) translateY(-5px);
+                transform: scale(0.2);
             }
             100% { 
                 opacity: 1; 
-                transform: scale(1) translateY(0);
+                transform: scale(1);
             }
         }
 
         /* 气泡自然消失（未被戳破） */
         .bubble.fading {
-            animation: bubbleFadeOut 2s ease-out forwards !important;
+            animation: bubbleFadeOut 3s ease-out forwards !important;
+            pointer-events: none;
         }
 
         @keyframes bubbleFadeOut {
             0% { 
                 opacity: 1; 
-                transform: scale(1) translateY(0);
+                transform: scale(1);
             }
             100% { 
                 opacity: 0; 
-                transform: scale(0.8) translateY(-30px);
+                transform: scale(0.6);
             }
+        }
+
+        /* 气泡完全出现后的稳定状态 */
+        .bubble.visible {
+            opacity: 1 !important;
         }
 
         @keyframes bubblePulse {
@@ -1220,20 +1222,17 @@
             
             // 气泡生命周期 - 10-15秒后开始变透明消失
             const lifeTime = 10000 + Math.random() * 5000;
-            const fadeTime = 3000; // 3秒渐隐
             
             setTimeout(() => {
                 if (bubble.parentNode && !bubble.classList.contains('popping')) {
-                    bubble.style.transition = `opacity ${fadeTime}ms ease-out, transform ${fadeTime}ms ease-out`;
-                    bubble.style.opacity = '0';
-                    bubble.style.transform = 'scale(0.5)';
+                    bubble.classList.add('fading');
                     
-                    // 渐隐结束后移除
+                    // 渐隐动画结束后移除（3秒）
                     setTimeout(() => {
                         if (bubble.parentNode && !bubble.classList.contains('popping')) {
                             bubble.remove();
                         }
-                    }, fadeTime);
+                    }, 3000);
                 }
             }, lifeTime);
         }
