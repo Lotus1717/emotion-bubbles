@@ -242,7 +242,40 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             backdrop-filter: blur(2px);
-            animation: floatBubbleX 4s ease-in-out infinite, floatBubbleY 5s ease-in-out infinite, bubblePulse 3s ease-in-out infinite;
+            animation: bubbleFadeIn 0.8s ease-out forwards, floatBubbleX 4s ease-in-out 0.8s infinite, floatBubbleY 5s ease-in-out 0.8s infinite, bubblePulse 3s ease-in-out 0.8s infinite;
+            opacity: 0; /* 初始透明 */
+        }
+
+        /* 气泡淡入 */
+        @keyframes bubbleFadeIn {
+            0% { 
+                opacity: 0; 
+                transform: scale(0.3) translateY(20px);
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.1) translateY(-5px);
+            }
+            100% { 
+                opacity: 1; 
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* 气泡自然消失（未被戳破） */
+        .bubble.fading {
+            animation: bubbleFadeOut 2s ease-out forwards !important;
+        }
+
+        @keyframes bubbleFadeOut {
+            0% { 
+                opacity: 1; 
+                transform: scale(1) translateY(0);
+            }
+            100% { 
+                opacity: 0; 
+                transform: scale(0.8) translateY(-30px);
+            }
         }
 
         @keyframes floatBubbleX {
@@ -784,10 +817,10 @@
                 if (timeLeft <= 0) endGame();
             }, 1000);
             
-            for (let i = 0; i < 12; i++) setTimeout(() => createBubble(), i * 150);
+            for (let i = 0; i < 8; i++) setTimeout(() => createBubble(), i * 150);
             
             bubbleTimer = setInterval(() => {
-                if (document.querySelectorAll('.bubble').length < 18) createBubble();
+                if (document.querySelectorAll('.bubble:not(.popping):not(.fading)').length < 10) createBubble();
             }, 600);
         }
 
@@ -857,13 +890,20 @@
             bubble.addEventListener('mouseup', () => clearTimeout(longPressTimer));
             bubble.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
             
+            // 限制最多10个气泡
+            const existingBubbles = document.querySelectorAll('.bubble:not(.popping):not(.fading)');
+            if (existingBubbles.length >= 10) {
+                // 移除最早的气泡
+                existingBubbles[0]?.remove();
+            }
+            
             bubbleContainer.appendChild(bubble);
             
+            // 随机存活时间 10-17秒后自然消失
             const lifeTime = Math.random() * 7000 + 10000;
             setTimeout(() => {
-                if (bubble.parentNode) {
-                    bubble.style.transition = 'opacity 2s ease-out';
-                    bubble.style.opacity = '0';
+                if (bubble.parentNode && !bubble.classList.contains('popping')) {
+                    bubble.classList.add('fading');
                     setTimeout(() => bubble.remove(), 2000);
                 }
             }, lifeTime);
