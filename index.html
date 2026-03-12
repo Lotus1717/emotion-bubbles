@@ -217,6 +217,8 @@
         .theme-btn.healing { background: linear-gradient(135deg, #667eea, #764ba2); }
         .theme-btn.cyber { background: linear-gradient(135deg, #00f5ff, #ff00ff); }
         .theme-btn.minimal { background: linear-gradient(135deg, #1a237e, #283593); }
+        .theme-btn.forest { background: linear-gradient(135deg, #134E5E, #71B280); }
+        .theme-btn.sunset { background: linear-gradient(135deg, #FF5122, #DD2476); }
 
         .theme-btn.active { border-color: #fff; transform: scale(1.1); }
 
@@ -515,6 +517,8 @@
                 <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
                 <div class="theme-btn cyber" data-theme="cyber" title="赛博朋克"></div>
                 <div class="theme-btn minimal" data-theme="minimal" title="静谧蓝"></div>
+                <div class="theme-btn forest" data-theme="forest" title="森林"></div>
+                <div class="theme-btn sunset" data-theme="sunset" title="日落"></div>
             </div>
 
             <div class="time-options">
@@ -912,6 +916,12 @@
                 } else if (currentTheme === 'cyber') {
                     document.documentElement.style.setProperty('--primary', '#00f5ff');
                     document.documentElement.style.setProperty('--secondary', '#ff00ff');
+                } else if (currentTheme === 'forest') {
+                    document.documentElement.style.setProperty('--primary', '#134E5E');
+                    document.documentElement.style.setProperty('--secondary', '#71B280');
+                } else if (currentTheme === 'sunset') {
+                    document.documentElement.style.setProperty('--primary', '#FF5122');
+                    document.documentElement.style.setProperty('--secondary', '#DD2476');
                 }
             });
         });
