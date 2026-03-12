@@ -1024,12 +1024,24 @@
                 if (timeLeft <= 0) endGame();
             }, 1000);
             
-            // 初始气泡 - 一个个缓慢出现（每1.5秒一个）
-            for (let i = 0; i < 6; i++) {
-                setTimeout(() => createBubble(), i * 1500);
+            // 初始气泡 - 每种颜色类型都出现一次（共8种颜色类型）
+            const initialEmotions = [
+                '开心',    // 粉红
+                '幸福',    // 金黄
+                '平静',    // 青绿
+                '惊讶',    // 天蓝
+                '难过',    // 紫色
+                '愤怒',    // 橙红
+                '焦虑',    // 橙色
+                '迷茫',    // 蓝绿
+            ];
+            
+            // 初始气泡逐个出现
+            for (let i = 0; i < initialEmotions.length; i++) {
+                setTimeout(() => createBubble(initialEmotions[i]), i * 1500);
             }
             
-            // 后续补充 - 保持最多6个，每2秒检查是否需要补充
+            // 后续补充 - 保持最多6个，每2秒检查是否需要补充（随机情绪）
             bubbleTimer = setInterval(() => {
                 if (document.querySelectorAll('.bubble:not(.popping):not(.fading)').length < 6) createBubble();
             }, 2000);
@@ -1045,7 +1057,7 @@
             progressBar.style.width = ((duration - timeLeft) / duration * 100) + '%';
         }
 
-        function createBubble() {
+        function createBubble(specificEmotion = null) {
             if (!isPlaying) return;
             
             const bubble = document.createElement('div');
@@ -1053,13 +1065,17 @@
             const size = Math.random() * 50 + 55;
             bubble.style.width = bubble.style.height = size + 'px';
             
+            // 气泡初始化位置：中下方（屏幕下半部分）
+            const spawnZoneY = window.innerHeight * 0.4; // 从屏幕40%位置开始
+            const spawnRangeY = window.innerHeight * 0.35; // 往下35%的范围
+            
             // 防重叠：尝试多次找到不与现有气泡重叠的位置
             let x, y, attempts = 0;
             const existingBubbles = Array.from(document.querySelectorAll('.bubble:not(.popping):not(.fading)'));
             
             do {
                 x = Math.random() * (window.innerWidth - size - 80) + 40;
-                y = Math.random() * (window.innerHeight - size - 150) + 80;
+                y = spawnZoneY + Math.random() * spawnRangeY;
                 attempts++;
             } while (attempts < 20 && existingBubbles.some(b => {
                 const bx = parseFloat(b.style.left);
@@ -1105,8 +1121,13 @@
                 'rgba(100, 200, 200, 0.5)',   // 蓝绿
             ];
             
-            // 先选择情绪，再根据情绪选择对应颜色
-            const emotion = emotions[Math.floor(Math.random() * emotions.length)];
+            // 选择情绪：如果指定了特定情绪则使用，否则随机
+            let emotion;
+            if (specificEmotion) {
+                emotion = specificEmotion;
+            } else {
+                emotion = emotions[Math.floor(Math.random() * emotions.length)];
+            }
             let color = emotionColorMap[emotion];
             if (!color) {
                 // 未匹配的情绪使用随机默认颜色
