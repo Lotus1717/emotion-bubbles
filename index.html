@@ -249,22 +249,22 @@
             opacity: 0;
         }
 
-        /* 持续漂浮动画 - 向左或向右漂移 + 向上飘出视口 */
+        /* 持续漂浮动画 - 所有气泡速度一致，向上飘出视口 */
         @keyframes floatDrift {
             0% { 
                 transform: translate(0, 0) scale(1);
             }
             25% {
-                transform: translate(var(--drift-x-1, 30px), var(--drift-y-1, -80px)) scale(1.02);
+                transform: translate(20px, -100px) scale(1.02);
             }
             50% {
-                transform: translate(var(--drift-x-2, -20px), var(--drift-y-2, -180px)) scale(0.98);
+                transform: translate(-15px, -220px) scale(0.98);
             }
             75% {
-                transform: translate(var(--drift-x-3, 40px), var(--drift-y-3, -300px)) scale(1.01);
+                transform: translate(25px, -360px) scale(1.01);
             }
             100% {
-                transform: translate(var(--drift-x-4, -30px), var(--drift-y-4, -500px)) scale(0.9);
+                transform: translate(-20px, -520px) scale(0.9);
                 opacity: 0;
             }
         }
@@ -1036,15 +1036,18 @@
                 '迷茫',    // 蓝绿
             ];
             
-            // 初始气泡逐个出现
+            // 初始气泡逐个出现（每0.5秒一个）
             for (let i = 0; i < initialEmotions.length; i++) {
-                setTimeout(() => createBubble(initialEmotions[i]), i * 1500);
+                setTimeout(() => createBubble(initialEmotions[i]), i * 500);
             }
             
-            // 后续补充 - 保持最多6个，每2秒检查是否需要补充（随机情绪）
+            // 后续补充 - 保持10个气泡，每1秒检查补充
             bubbleTimer = setInterval(() => {
-                if (document.querySelectorAll('.bubble:not(.popping):not(.fading)').length < 6) createBubble();
-            }, 2000);
+                const currentCount = document.querySelectorAll('.bubble:not(.popping):not(.fading)').length;
+                if (currentCount < 10) {
+                    createBubble(); // 补充随机情绪的气泡
+                }
+            }, 1000);
         }
 
         function updateTimerDisplay() {
@@ -1087,25 +1090,6 @@
             
             bubble.style.left = x + 'px';
             bubble.style.top = y + 'px';
-            
-            // 设置随机漂浮方向和距离（让气泡飘出视口）
-            const driftX1 = (Math.random() - 0.5) * 80;
-            const driftX2 = (Math.random() - 0.5) * 80;
-            const driftX3 = (Math.random() - 0.5) * 100;
-            const driftX4 = (Math.random() - 0.5) * 120;
-            const driftY1 = -80 - Math.random() * 60;
-            const driftY2 = -180 - Math.random() * 80;
-            const driftY3 = -300 - Math.random() * 100;
-            const driftY4 = -500 - Math.random() * 150;
-            
-            bubble.style.setProperty('--drift-x-1', driftX1 + 'px');
-            bubble.style.setProperty('--drift-x-2', driftX2 + 'px');
-            bubble.style.setProperty('--drift-x-3', driftX3 + 'px');
-            bubble.style.setProperty('--drift-x-4', driftX4 + 'px');
-            bubble.style.setProperty('--drift-y-1', driftY1 + 'px');
-            bubble.style.setProperty('--drift-y-2', driftY2 + 'px');
-            bubble.style.setProperty('--drift-y-3', driftY3 + 'px');
-            bubble.style.setProperty('--drift-y-4', driftY4 + 'px');
             
             // 更多颜色选项
             const colors = [
