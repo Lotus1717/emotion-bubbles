@@ -904,15 +904,14 @@
                 btn.classList.add('active');
                 currentTheme = btn.dataset.theme;
                 document.body.classList.remove('theme-minimal');
+                document.documentElement.style.setProperty('--primary', '#667eea');
+                document.documentElement.style.setProperty('--secondary', '#764ba2');
 
                 if (currentTheme === 'minimal') {
                     document.body.classList.add('theme-minimal');
                 } else if (currentTheme === 'cyber') {
                     document.documentElement.style.setProperty('--primary', '#00f5ff');
                     document.documentElement.style.setProperty('--secondary', '#ff00ff');
-                } else {
-                    document.documentElement.style.setProperty('--primary', '#667eea');
-                    document.documentElement.style.setProperty('--secondary', '#764ba2');
                 }
             });
         });
