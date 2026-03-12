@@ -1332,10 +1332,9 @@
             bubbles.forEach(b => {
                 const depth = parseInt(b.dataset.depth || 0);
                 const text = b.textContent;
-                const category = getEmotionCategory(text);
                 
-                // 保留：同类别气泡 或 深层气泡（子情绪）
-                if (category !== keepCategory && depth <= currentDepth) {
+                // 移除：同一层级或更浅层的气泡（只保留更深层的子情绪）
+                if (depth <= currentDepth) {
                     b.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
                     b.style.opacity = '0';
                     b.style.transform = 'scale(0.5)';
