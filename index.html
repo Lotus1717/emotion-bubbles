@@ -1025,7 +1025,7 @@
                 if (timeLeft <= 0) endGame();
             }, 1000);
             
-            // 初始气泡 - 8 种颜色各一个
+            // 初始气泡 - 8 种颜色各一个（每 0.5 秒一个，共 4 秒）
             const initialEmotions = [
                 '开心', '幸福', '平静', '惊讶',
                 '难过', '愤怒', '焦虑', '迷茫',
@@ -1035,12 +1035,14 @@
                 setTimeout(() => createBubble(initialEmotions[i]), i * 500);
             }
             
-            // 补充逻辑 - 保持 10 个气泡
-            bubbleTimer = setInterval(() => {
-                if (document.querySelectorAll('.bubble:not(.popping)').length < 10) {
-                    createBubble();
-                }
-            }, 1000);
+            // 补充逻辑 - 等待初始化完成（4.5 秒后）再开始，保持 10 个气泡
+            setTimeout(() => {
+                bubbleTimer = setInterval(() => {
+                    if (document.querySelectorAll('.bubble:not(.popping)').length < 10) {
+                        createBubble();
+                    }
+                }, 1000);
+            }, 4500);
         }
 
         function updateTimerDisplay() {
