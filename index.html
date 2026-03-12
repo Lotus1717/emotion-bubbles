@@ -216,9 +216,8 @@
 
         .theme-btn.healing { background: linear-gradient(135deg, #667eea, #764ba2); }
         .theme-btn.cyber { background: linear-gradient(135deg, #00f5ff, #ff00ff); }
-        .theme-btn.minimal { background: linear-gradient(135deg, #a8e6cf, #88d8b0); }
-        .theme-btn.forest { background: linear-gradient(135deg, #56ab2f, #a8e063); }
-        
+        .theme-btn.minimal { background: linear-gradient(135deg, #1a237e, #283593); }
+
         .theme-btn.active { border-color: #fff; transform: scale(1.1); }
 
         .bubble-container {
@@ -242,7 +241,7 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             backdrop-filter: blur(2px);
-            animation: 
+            animation:
                 bubbleFadeIn 1.2s ease-out forwards,
                 floatInPlace 6s ease-in-out 1.2s infinite,
                 bubblePulse 3s ease-in-out 1.2s infinite;
@@ -259,12 +258,12 @@
 
         /* 气泡淡入 */
         @keyframes bubbleFadeIn {
-            0% { 
-                opacity: 0; 
+            0% {
+                opacity: 0;
                 transform: scale(0.2);
             }
-            100% { 
-                opacity: 1; 
+            100% {
+                opacity: 1;
                 transform: scale(1);
             }
         }
@@ -276,12 +275,12 @@
         }
 
         @keyframes bubbleFadeOut {
-            0% { 
-                opacity: 1; 
+            0% {
+                opacity: 1;
                 transform: scale(1);
             }
-            100% { 
-                opacity: 0; 
+            100% {
+                opacity: 0;
                 transform: scale(0.6);
             }
         }
@@ -292,25 +291,25 @@
         }
 
         @keyframes bubblePulse {
-            0%, 100% { 
+            0%, 100% {
                 opacity: 0.85;
-                box-shadow: 0 0 20px var(--bubble-color, rgba(102, 126, 234, 0.4)), 
+                box-shadow: 0 0 20px var(--bubble-color, rgba(102, 126, 234, 0.4)),
                             inset 0 0 15px rgba(255,255,255,0.3);
             }
-            50% { 
+            50% {
                 opacity: 1;
-                box-shadow: 0 0 35px var(--bubble-color, rgba(102, 126, 234, 0.6)), 
+                box-shadow: 0 0 35px var(--bubble-color, rgba(102, 126, 234, 0.6)),
                             inset 0 0 20px rgba(255,255,255,0.4);
             }
         }
 
-        .bubble:hover { 
+        .bubble:hover {
             transform: scale(1.12) !important;
             animation-play-state: paused;
         }
-        
-        .bubble:active { 
-            transform: scale(0.85); 
+
+        .bubble:active {
+            transform: scale(0.85);
         }
 
         .bubble-text {
@@ -348,17 +347,17 @@
         }
 
         @keyframes particleFade {
-            0% { 
-                transform: translate(0, 0) scale(1) rotate(0deg); 
-                opacity: 1; 
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
             }
             50% {
                 transform: translate(var(--tx), var(--ty)) scale(0.6) rotate(180deg);
                 opacity: 0.7;
             }
-            100% { 
-                transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg); 
-                opacity: 0; 
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg);
+                opacity: 0;
             }
         }
 
@@ -481,19 +480,19 @@
         .stats-count { background: rgba(102, 126, 234, 0.3); padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.75rem; }
 
         /* 极简主题 */
-        body.theme-minimal { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); }
-        body.theme-minimal .title, body.theme-minimal .timer-display, body.theme-minimal .result-title { color: #2e7d32; text-shadow: none; }
-        body.theme-minimal .btn-secondary, body.theme-minimal .time-btn { border-color: rgba(46, 125, 50, 0.3); color: #2e7d32; }
-        body.theme-minimal .bubble-text, body.theme-minimal .emotion-tag, body.theme-minimal .ai-suggestion-text { color: #1b5e20; text-shadow: none; }
-        body.theme-minimal .hint-top { color: #4caf50; }
+        body.theme-minimal { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%); }
+        body.theme-minimal .title, body.theme-minimal .timer-display, body.theme-minimal .result-title { color: #e0e1dd; text-shadow: none; }
+        body.theme-minimal .btn-secondary, body.theme-minimal .time-btn { border-color: rgba(224, 225, 221, 0.3); color: #e0e1dd; }
+        body.theme-minimal .bubble-text, body.theme-minimal .emotion-tag, body.theme-minimal .ai-suggestion-text { color: #e0e1dd; text-shadow: none; }
+        body.theme-minimal .hint-top { color: #778da9; }
 
         @media (max-width: 600px) {
             .title { font-size: 1.6rem; }
             .timer-display { font-size: 2rem; }
             .btn { padding: 0.7rem 1.5rem; font-size: 0.9rem; }
-            .time-btn { 
-                padding: 0.5rem 1rem; 
-                min-width: 70px; 
+            .time-btn {
+                padding: 0.5rem 1rem;
+                min-width: 70px;
                 font-size: 0.85rem;
             }
             .time-options { gap: 0.5rem; }
@@ -504,25 +503,25 @@
     <div class="stars" id="stars"></div>
     <div class="glow glow-1"></div>
     <div class="glow glow-2"></div>
-    
+
     <div class="container">
         <div class="start-panel" id="startPanel">
             <h1 class="title">情绪气泡</h1>
             <p style="color: rgba(255,255,255,0.5); margin-bottom: 1.5rem; text-align: center; max-width: 350px; font-size: 0.9rem;">
                 戳破气泡，释放情绪<br>让真实的感受浮出水面
             </p>
-            
+
             <div class="theme-options">
                 <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
                 <div class="theme-btn cyber" data-theme="cyber" title="赛博朋克"></div>
-                <div class="theme-btn minimal" data-theme="minimal" title="森林绿"></div>
+                <div class="theme-btn minimal" data-theme="minimal" title="静谧蓝"></div>
             </div>
-            
+
             <div class="time-options">
                 <button class="time-btn active" data-time="60">1分钟</button>
                 <button class="time-btn" data-time="180">3分钟</button>
             </div>
-            
+
             <button class="btn btn-primary" id="startBtn">开始</button>
             <button class="btn btn-secondary btn-small" id="statsBtn" style="margin-top: 1rem;">查看历史</button>
         </div>
@@ -539,7 +538,7 @@
         <div class="countdown-panel" id="countdownPanel" style="display: none;">
             <div class="countdown" id="countdownText">3</div>
         </div>
-        
+
         <div class="stats-panel" id="statsPanel" style="display: none;">
             <h2 class="stats-title">戳破历史</h2>
             <div class="stats-list" id="statsList"></div>
@@ -615,7 +614,7 @@
             '底气': 'rgba(255, 207, 100, 0.5)',
             '松弛感': 'rgba(255, 207, 100, 0.5)',
             '心流': 'rgba(255, 207, 100, 0.5)',
-            
+
             // 温暖/治愈类 - 金黄
             '温暖': 'rgba(255, 207, 100, 0.5)',
             '感动': 'rgba(255, 207, 100, 0.5)',
@@ -632,7 +631,7 @@
             '眼热': 'rgba(255, 207, 100, 0.5)',
             '羡慕': 'rgba(255, 207, 100, 0.5)',
             '吃醋': 'rgba(255, 207, 100, 0.5)',
-            
+
             // 平静/放松类 - 青绿
             '平静': 'rgba(78, 205, 196, 0.5)',
             'Relax': 'rgba(78, 205, 196, 0.5)',
@@ -648,14 +647,14 @@
             '想休息': 'rgba(78, 205, 196, 0.5)',
             '想要休息': 'rgba(78, 205, 196, 0.5)',
             '心软': 'rgba(120, 220, 150, 0.5)',
-            
+
             // 惊讶类 - 天蓝
             '惊讶': 'rgba(100, 220, 255, 0.5)',
             '意外': 'rgba(100, 220, 255, 0.5)',
             '震惊': 'rgba(100, 220, 255, 0.5)',
             '心跳加速': 'rgba(100, 220, 255, 0.5)',
             '加载中': 'rgba(100, 220, 255, 0.5)',
-            
+
             // 难过/悲伤类 - 紫/蓝紫
             '难过': 'rgba(150, 100, 255, 0.5)',
             '悲伤': 'rgba(150, 100, 255, 0.5)',
@@ -686,7 +685,7 @@
             '愧疚': 'rgba(180, 150, 255, 0.5)',
             '患得患失': 'rgba(180, 150, 255, 0.5)',
             '嘴硬': 'rgba(180, 150, 255, 0.5)',
-            
+
             // 愤怒/焦虑类 - 橙红
             '愤怒': 'rgba(255, 107, 107, 0.5)',
             '抓狂': 'rgba(255, 107, 107, 0.5)',
@@ -721,7 +720,7 @@
             '不甘': 'rgba(255, 180, 100, 0.5)',
             '怨恨': 'rgba(255, 180, 100, 0.5)',
             '嫉妒': 'rgba(255, 180, 100, 0.5)',
-            
+
             // 疲惫/迷茫类 - 蓝绿
             '迷茫': 'rgba(100, 200, 200, 0.5)',
             '疲惫': 'rgba(100, 200, 200, 0.5)',
@@ -748,7 +747,7 @@
             '窝心': 'rgba(100, 200, 200, 0.5)',
             '堵心': 'rgba(100, 200, 200, 0.5)',
             '憋屈': 'rgba(100, 200, 200, 0.5)',
-            
+
             // 恶心/厌恶类 - 灰紫
             '恶心': 'rgba(180, 150, 255, 0.5)',
             '厌恶': 'rgba(180, 150, 255, 0.5)',
@@ -761,14 +760,14 @@
             '想钻地缝': 'rgba(180, 150, 255, 0.5)',
             '不想回消息': 'rgba(180, 150, 255, 0.5)',
             '已读不回': 'rgba(180, 150, 255, 0.5)',
-            
+
             // 累/能量类 - 薄荷绿
             '累': 'rgba(120, 220, 150, 0.5)',
             '电量低': 'rgba(120, 220, 150, 0.5)',
             '需要充电': 'rgba(120, 220, 150, 0.5)',
             '能量耗尽': 'rgba(120, 220, 150, 0.5)',
             '卡住了': 'rgba(120, 220, 150, 0.5)',
-            
+
             // 食欲类 - 橙色
             '饿': 'rgba(255, 180, 100, 0.5)',
             '嘴馋': 'rgba(255, 180, 100, 0.5)',
@@ -905,7 +904,7 @@
                 btn.classList.add('active');
                 currentTheme = btn.dataset.theme;
                 document.body.classList.remove('theme-minimal');
-                
+
                 if (currentTheme === 'minimal') {
                     document.body.classList.add('theme-minimal');
                 } else if (currentTheme === 'cyber') {
@@ -939,19 +938,19 @@
             try {
                 stopAmbientSound();
                 const ctx = initAudio();
-                
+
                 ambientGain = ctx.createGain();
                 ambientGain.gain.setValueAtTime(0.08, ctx.currentTime);
                 ambientGain.connect(ctx.destination);
-                
+
                 // 创建柔和的 ambient 和弦 pad
                 const baseFreqs = [130.81, 164.81, 196.00, 246.94]; // C3, E3, G3, B3 和弦
-                
+
                 baseFreqs.forEach((freq, i) => {
                     // 主振荡器
                     const osc = ctx.createOscillator();
                     const oscGain = ctx.createGain();
-                    
+
                     // 添加轻微的频率调制（LFO）
                     const lfo = ctx.createOscillator();
                     const lfoGain = ctx.createGain();
@@ -959,18 +958,18 @@
                     lfoGain.connect(osc.frequency);
                     lfo.frequency.setValueAtTime(0.1 + i * 0.05, ctx.currentTime);
                     lfoGain.gain.setValueAtTime(2 + Math.random() * 2, ctx.currentTime);
-                    
+
                     osc.frequency.setValueAtTime(freq, ctx.currentTime);
                     oscGain.gain.setValueAtTime(0.15, ctx.currentTime);
-                    
+
                     osc.connect(oscGain);
                     oscGain.connect(ambientGain);
-                    
+
                     osc.type = i % 2 === 0 ? 'sine' : 'triangle';
                     lfo.type = 'sine';
                     osc.start(ctx.currentTime);
                     lfo.start(ctx.currentTime);
-                    
+
                     // 添加泛音
                     const harmonic = ctx.createOscillator();
                     const harmGain = ctx.createGain();
@@ -981,7 +980,7 @@
                     harmGain.connect(ambientGain);
                     harmonic.start(ctx.currentTime);
                 });
-                
+
                 // 添加柔和的白噪音作为背景
                 const bufferSize = 2 * ctx.sampleRate;
                 const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -989,19 +988,19 @@
                 for (let i = 0; i < bufferSize; i++) {
                     output[i] = Math.random() * 2 - 1;
                 }
-                
+
                 const whiteNoise = ctx.createBufferSource();
                 whiteNoise.buffer = noiseBuffer;
                 whiteNoise.loop = true;
-                
+
                 // 强低通滤波使噪音变得非常柔和
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'lowpass';
                 filter.frequency.value = 200;
-                
+
                 const noiseGain = ctx.createGain();
                 noiseGain.gain.setValueAtTime(0.03, ctx.currentTime);
-                
+
                 whiteNoise.connect(filter);
                 filter.connect(noiseGain);
                 noiseGain.connect(ambientGain);
@@ -1021,10 +1020,10 @@
         function playPopSound() {
             try {
                 const ctx = initAudio();
-                
+
                 // 随机选择不同的音效风格
                 const soundType = Math.floor(Math.random() * 3);
-                
+
                 if (soundType === 0) {
                     // 清脆的"啵"声
                     const osc = ctx.createOscillator();
@@ -1104,17 +1103,17 @@
 
         // 按钮事件
         document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('restartBtn').addEventListener('click', () => { 
+        document.getElementById('restartBtn').addEventListener('click', () => {
             resultPanel.style.display = 'none';
-            resultPanel.classList.remove('show'); 
-            resetGame(); 
-            startGame(); 
+            resultPanel.classList.remove('show');
+            resetGame();
+            startGame();
         });
-        document.getElementById('closeResultBtn').addEventListener('click', () => { 
+        document.getElementById('closeResultBtn').addEventListener('click', () => {
             resultPanel.style.display = 'none';
-            resultPanel.classList.remove('show'); 
+            resultPanel.classList.remove('show');
             playPanel.style.display = 'none';
-            resetGame(); 
+            resetGame();
             startPanel.style.display = 'flex';
         });
         document.getElementById('statsBtn').addEventListener('click', () => {
@@ -1122,20 +1121,20 @@
             statsPanel.style.display = 'flex';
         });
         document.getElementById('clearStatsBtn').addEventListener('click', clearStats);
-        document.getElementById('backBtn').addEventListener('click', () => { 
+        document.getElementById('backBtn').addEventListener('click', () => {
             statsPanel.style.display = 'none';
             startPanel.style.display = 'flex';
         });
 
         function startGame() {
             if (isPlaying) return; // 防止重复启动
-            
+
             startPanel.style.display = 'none';
             countdownPanel.style.display = 'flex';
             let count = 3;
             const countdownText = document.getElementById('countdownText');
             countdownText.textContent = count;
-            
+
             const countdownInterval = setInterval(() => {
                 count--;
                 playTickSound();
@@ -1156,24 +1155,24 @@
             updateTimerDisplay();
             updateProgress();
             startAmbientSound();
-            
+
             timer = setInterval(() => {
                 timeLeft--;
                 updateTimerDisplay();
                 updateProgress();
                 if (timeLeft <= 0) endGame();
             }, 1000);
-            
+
             // 初始气泡 - 8 种颜色各一个（每 0.5 秒一个，共 4 秒）
             const initialEmotions = [
                 '开心', '幸福', '平静', '惊讶',
                 '难过', '愤怒', '焦虑', '迷茫',
             ];
-            
+
             for (let i = 0; i < initialEmotions.length; i++) {
                 setTimeout(() => createBubble(initialEmotions[i], null, 0), i * 500);
             }
-            
+
             // 补充逻辑 - 等待初始化完成（4.5 秒后）再开始，保持 10 个气泡
             setTimeout(() => {
                 bubbleTimer = setInterval(() => {
@@ -1182,7 +1181,7 @@
                     if (count < 10) createBubble();
                 }, 1500);
             }, 4500);
-            
+
             // 启动物理引擎循环
             physicsTimer = setInterval(updatePhysics, 50);
         }
@@ -1194,18 +1193,18 @@
                 width: window.innerWidth,
                 height: window.innerHeight - 120
             };
-            
+
             bubbles.forEach(bubble => {
                 let x = parseFloat(bubble.style.left);
                 let y = parseFloat(bubble.style.top);
                 let vx = parseFloat(bubble.dataset.vx) || 0;
                 let vy = parseFloat(bubble.dataset.vy) || 0;
                 const radius = parseFloat(bubble.dataset.radius) || 40;
-                
+
                 // 更新位置
                 x += vx;
                 y += vy;
-                
+
                 // 边界反弹
                 if (x <= 20 || x >= bounds.width - radius * 2 - 20) {
                     vx *= -0.8;
@@ -1215,30 +1214,30 @@
                     vy *= -0.8;
                     y = Math.max(60, Math.min(y, bounds.height - radius * 2 - 60));
                 }
-                
+
                 // 气泡之间碰撞检测和弹开
                 bubbles.forEach(other => {
                     if (other === bubble) return;
-                    
+
                     let ox = parseFloat(other.style.left);
                     let oy = parseFloat(other.style.top);
                     const or = parseFloat(other.dataset.radius) || 40;
-                    
+
                     const dx = x - ox;
                     const dy = y - oy;
                     const dist = Math.hypot(dx, dy);
                     const minDist = radius + or;
-                    
+
                     if (dist < minDist && dist > 0) {
                         // 碰撞 - 弹开
                         const overlap = minDist - dist;
                         const nx = dx / dist;
                         const ny = dy / dist;
-                        
+
                         // 分离气泡
                         x += nx * overlap * 0.5;
                         y += ny * overlap * 0.5;
-                        
+
                         // 交换速度（弹性碰撞）
                         const ovx = parseFloat(other.dataset.vx) || 0;
                         const ovy = parseFloat(other.dataset.vy) || 0;
@@ -1248,7 +1247,7 @@
                         other.dataset.vy = vy * 0.8 + (Math.random() - 0.5) * 0.3;
                     }
                 });
-                
+
                 // 更新位置
                 bubble.style.left = x + 'px';
                 bubble.style.top = y + 'px';
@@ -1269,23 +1268,23 @@
 
         function createBubble(specificEmotion = null, parentEmotion = null, depth = 0) {
             if (!isPlaying) return;
-            
+
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
             bubble.dataset.depth = depth;
             bubble.dataset.parentEmotion = parentEmotion || '';
-            
+
             const size = Math.random() * 50 + 55;
             bubble.style.width = bubble.style.height = size + 'px';
-            
+
             // 气泡初始化位置：全屏随机分布
             const minY = 80; // 顶部安全边距（避开标题栏）
             const maxY = window.innerHeight - size - 100; // 底部安全边距
-            
+
             // 防重叠：尝试多次找到不与现有气泡重叠的位置
             let x, y, attempts = 0;
             const existingBubbles = Array.from(document.querySelectorAll('.bubble:not(.popping):not(.fading)'));
-            
+
             do {
                 x = Math.random() * (window.innerWidth - size - 80) + 40;
                 y = minY + Math.random() * (maxY - minY);
@@ -1297,15 +1296,15 @@
                 const dist = Math.hypot(x - bx, y - by);
                 return dist < (size + bsize) * 0.6; // 保持60%间距
             }));
-            
+
             bubble.style.left = x + 'px';
             bubble.style.top = y + 'px';
-            
+
             // 物理属性 - 随机初始速度
             bubble.dataset.vx = (Math.random() - 0.5) * 2;
             bubble.dataset.vy = (Math.random() - 0.5) * 1.5 - 0.5;
             bubble.dataset.radius = size / 2;
-            
+
             // 更多颜色选项
             const colors = [
                 'rgba(255, 107, 107, 0.5)',   // 珊瑚红
@@ -1319,7 +1318,7 @@
                 'rgba(180, 150, 255, 0.5)',   // 淡紫
                 'rgba(100, 200, 200, 0.5)',   // 蓝绿
             ];
-            
+
             // 选择情绪：如果指定了特定情绪则使用，否则随机
             let emotion;
             if (specificEmotion) {
@@ -1336,20 +1335,20 @@
             bubble.style.background = color;
             bubble.style.setProperty('--bubble-color', glowColor);
             bubble.style.boxShadow = `0 0 25px ${glowColor}, inset 0 0 18px rgba(255,255,255,0.3), inset 0 0 8px rgba(255,255,255,0.15)`;
-            
+
             // 随机动画延迟，让气泡运动不同步
             const animDelayX = (Math.random() * -4) + 's';
             const animDelayY = (Math.random() * -5) + 's';
             const animDelayPulse = (Math.random() * -3) + 's';
             bubble.style.animationDelay = `${animDelayX}, ${animDelayY}, ${animDelayPulse}`;
-            
+
             // 随机动画持续时间
             const durationX = 3 + Math.random() * 3;
             const durationY = 4 + Math.random() * 3;
             bubble.style.animationDuration = `${durationX}s, ${durationY}s, 3s`;
-            
+
             bubble.innerHTML = `<span class="bubble-text">${emotion}</span>`;
-            
+
             // 点击和长按
             bubble.addEventListener('click', (e) => popBubble(bubble, emotion, e));
             bubble.addEventListener('touchstart', (e) => {
@@ -1362,22 +1361,22 @@
             });
             bubble.addEventListener('mouseup', () => clearTimeout(longPressTimer));
             bubble.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
-            
+
             // 限制最多10个气泡（已在前面声明）
             if (existingBubbles.length >= 10) {
                 // 移除最早的气泡
                 existingBubbles[0]?.remove();
             }
-            
+
             bubbleContainer.appendChild(bubble);
-            
+
             // 气泡生命周期 - 10-15秒后开始变透明消失
             const lifeTime = 10000 + Math.random() * 5000;
-            
+
             setTimeout(() => {
                 if (bubble.parentNode && !bubble.classList.contains('popping')) {
                     bubble.classList.add('fading');
-                    
+
                     // 渐隐动画结束后移除（3秒）
                     setTimeout(() => {
                         if (bubble.parentNode && !bubble.classList.contains('popping')) {
@@ -1390,21 +1389,21 @@
 
         function popBubble(bubble, emotion, event) {
             if (bubble.classList.contains('popping')) return;
-            
+
             const depth = parseInt(bubble.dataset.depth || 0);
             const parentEmotion = bubble.dataset.parentEmotion || '';
-            
+
             // 获取当前情绪所属类别
             const currentCategory = getEmotionCategory(emotion);
-            
+
             poppedEmotions.push(emotion);
             bubble.classList.add('popping');
             playPopSound();
-            
+
             const x = event.clientX || parseFloat(bubble.style.left) + parseFloat(bubble.style.width) / 2;
             const y = event.clientY || parseFloat(bubble.style.top) + parseFloat(bubble.style.height) / 2;
             createParticles(x, y, bubble.style.background);
-            
+
             // 暂停补充逻辑，避免时序冲突
             let wasSupplementPaused = false;
             if (bubbleTimer) {
@@ -1412,19 +1411,19 @@
                 bubbleTimer = null;
                 wasSupplementPaused = true;
             }
-            
+
             // 根据情绪关系处理其他气泡：对立面消失，相近面保留
             handleEmotionRelations(currentCategory, depth);
-            
+
             // 检查是否可以挖掘更深层的情绪（最多2层）
             const maxDepth = 2;
             const canDigDeeper = depth < maxDepth && emotionTree[emotion];
-            
+
             if (canDigDeeper) {
                 // 有子情绪，生成细分气泡
                 const subEmotions = emotionTree[emotion];
                 const count = Math.min(3, subEmotions.length); // 每次生成3个细分情绪
-                
+
                 // 延迟一点生成，让戳破效果先出来
                 setTimeout(() => {
                     for (let i = 0; i < count; i++) {
@@ -1433,15 +1432,15 @@
                 }, 300);
             }
             // 没有子情绪了，不做处理
-            
+
             setTimeout(() => {
                 // 获取被戳破气泡的位置信息
                 const poppedX = parseFloat(bubble.style.left);
                 const poppedY = parseFloat(bubble.style.top);
                 const size = parseFloat(bubble.style.width) || 55;
-                
+
                 bubble.remove();
-                
+
                 // 立即补充新气泡（在戳破位置附近）
                 if (isPlaying) {
                     // 随机选择情绪（优先选择相近类别）
@@ -1455,11 +1454,11 @@
                     } else {
                         newEmotion = emotions[Math.floor(Math.random() * emotions.length)];
                     }
-                    
+
                     // 在戳破位置附近生成新气泡（带偏移避免完全重叠）
                     createBubbleNear(newEmotion, poppedX, poppedY, size);
                 }
-                
+
                 // 恢复补充逻辑（保底）
                 if (wasSupplementPaused && isPlaying) {
                     bubbleTimer = setInterval(() => {
@@ -1476,27 +1475,27 @@
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
             bubble.style.width = bubble.style.height = size + 'px';
-            
+
             // 在戳破位置附近生成（带随机偏移）
             const offsetX = (Math.random() - 0.5) * 150;
             const offsetY = (Math.random() - 0.5) * 100;
             let x = nearX + offsetX;
             let y = nearY + offsetY;
-            
+
             // 边界检查
             x = Math.max(20, Math.min(x, window.innerWidth - size - 40));
             y = Math.max(80, Math.min(y, window.innerHeight - size - 150));
-            
+
             bubble.style.left = x + 'px';
             bubble.style.top = y + 'px';
-            
+
             // 物理属性
             bubble.dataset.vx = (Math.random() - 0.5) * 2;
             bubble.dataset.vy = (Math.random() - 0.5) * 1.5 - 0.5;
             bubble.dataset.radius = size / 2;
             bubble.dataset.depth = 0;
             bubble.dataset.parentEmotion = '';
-            
+
             // 颜色
             let color = emotionColorMap[emotion];
             if (!color) {
@@ -1505,13 +1504,13 @@
             const glowColor = color.replace('0.5', '0.35');
             bubble.style.background = color;
             bubble.style.boxShadow = `0 0 25px ${glowColor}, inset 0 0 18px rgba(255,255,255,0.3)`;
-            
+
             // 动画
             bubble.style.animation = 'bubbleFadeIn 0.6s ease-out forwards, floatInPlace 6s ease-in-out 0.6s infinite, bubblePulse 3s ease-in-out 0.6s infinite';
             bubble.style.opacity = '0';
-            
+
             bubble.innerHTML = `<span class="bubble-text">${emotion}</span>`;
-            
+
             // 事件
             bubble.addEventListener('click', (e) => popBubble(bubble, emotion, e));
             bubble.addEventListener('touchstart', (e) => {
@@ -1524,7 +1523,7 @@
             });
             bubble.addEventListener('mouseup', () => clearTimeout(longPressTimer));
             bubble.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
-            
+
             bubbleContainer.appendChild(bubble);
         }
 
@@ -1532,13 +1531,13 @@
         function handleEmotionRelations(category, currentDepth) {
             const opposite = oppositeCategories[category] || [];
             const similar = similarCategories[category] || [];
-            
+
             const bubbles = document.querySelectorAll('.bubble:not(.popping)');
             bubbles.forEach(b => {
                 const depth = parseInt(b.dataset.depth || 0);
                 const text = b.textContent;
                 const cat = getEmotionCategory(text);
-                
+
                 // 对立面：渐隐消失
                 if (opposite.includes(cat)) {
                     b.style.transition = 'opacity 1.5s ease-out, transform 1.5s ease-out';
@@ -1548,7 +1547,7 @@
                 }
                 // 其他类别（没有在对立列表）：保留
             });
-            
+
             // 补充相近类别的气泡（只在同类和相近类别中补充）
             if (similar.length > 0) {
                 setTimeout(() => {
@@ -1590,15 +1589,15 @@
                 particle.style.color = particleColor; // 用于 box-shadow
                 particle.style.setProperty('--tx', (Math.cos(angle) * distance) + 'px');
                 particle.style.setProperty('--ty', (Math.sin(angle) * distance) + 'px');
-                
+
                 // 随机动画持续时间
                 const duration = 0.5 + Math.random() * 0.5;
                 particle.style.animationDuration = duration + 's';
-                
+
                 document.body.appendChild(particle);
                 setTimeout(() => particle.remove(), duration * 1000);
             }
-            
+
             // 添加一些小的扩散圈效果
             for (let i = 0; i < 3; i++) {
                 const ring = document.createElement('div');
@@ -1634,7 +1633,7 @@
             const counts = {};
             poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
             const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([e]) => e);
-            
+
             emotionTags.innerHTML = sorted.map(e => `<span class="emotion-tag">${e}</span>`).join('');
             generateAISuggestion(sorted);
             resultPanel.classList.add('show');
@@ -1737,7 +1736,7 @@
             twisted: [
                 '纠结的时候，做任何一个选择都比不做好。',
                 '有些事情没有完美答案，接受不确定性也是一种成长。',
-                '如果实在不知道选哪个，就抛硬币吧——不是因为它会给你答案，而是让你看清自己的心意。',
+                '如果实在不知道选哪个，就抛硬币吧--不是因为它会给你答案，而是让你看清自己的心意。',
                 'Life is short. 跟着直觉走，哪怕错了也是经验。'
             ],
             // 负面情绪 - 无力感类
@@ -1981,7 +1980,7 @@
 
             // 限制建议数量，最多4条
             const finalSuggestions = suggestions.slice(0, 4);
-            
+
             // 如果只有一条，加上通用的鼓励
             if (finalSuggestions.length === 1) {
                 finalSuggestions.push(getRandomSuggestion('default'));
@@ -1994,7 +1993,7 @@
             const today = new Date().toLocaleDateString();
             const counts = {};
             poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
-            
+
             const existing = history.findIndex(h => h.date === today);
             if (existing >= 0) {
                 Object.entries(counts).forEach(([e, c]) => {
@@ -2009,21 +2008,21 @@
 
         function showStats() {
             const statsList = document.getElementById('statsList');
-            
+
             if (history.length === 0) {
                 statsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">暂无历史记录</p>';
                 return;
             }
-            
+
             const allEmotions = {};
             history.forEach(h => {
                 Object.entries(h.emotions).forEach(([e, c]) => {
                     allEmotions[e] = (allEmotions[e] || 0) + c;
                 });
             });
-            
+
             const sorted = Object.entries(allEmotions).sort((a, b) => b[1] - a[1]).slice(0, 20);
-            statsList.innerHTML = sorted.map(([e, c]) => 
+            statsList.innerHTML = sorted.map(([e, c]) =>
                 `<div class="stats-item"><span>${e}</span><span class="stats-count">${c}</span></div>`
             ).join('');
         }
