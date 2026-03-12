@@ -1217,6 +1217,25 @@
             }
             
             bubbleContainer.appendChild(bubble);
+            
+            // 气泡生命周期 - 10-15秒后开始变透明消失
+            const lifeTime = 10000 + Math.random() * 5000;
+            const fadeTime = 3000; // 3秒渐隐
+            
+            setTimeout(() => {
+                if (bubble.parentNode && !bubble.classList.contains('popping')) {
+                    bubble.style.transition = `opacity ${fadeTime}ms ease-out, transform ${fadeTime}ms ease-out`;
+                    bubble.style.opacity = '0';
+                    bubble.style.transform = 'scale(0.5)';
+                    
+                    // 渐隐结束后移除
+                    setTimeout(() => {
+                        if (bubble.parentNode && !bubble.classList.contains('popping')) {
+                            bubble.remove();
+                        }
+                    }, fadeTime);
+                }
+            }, lifeTime);
         }
 
         function popBubble(bubble, emotion, event) {
