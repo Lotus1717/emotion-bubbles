@@ -1004,6 +1004,7 @@
         document.getElementById('closeResultBtn').addEventListener('click', () => { 
             resultPanel.style.display = 'none';
             resultPanel.classList.remove('show'); 
+            playPanel.style.display = 'none';
             resetGame(); 
             startPanel.style.display = 'flex';
         });
@@ -1402,6 +1403,7 @@
 
         function endGame() {
             isPlaying = false;
+            playPanel.style.display = 'none';
             clearInterval(timer);
             clearInterval(bubbleTimer);
             clearInterval(physicsTimer);
