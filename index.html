@@ -244,26 +244,29 @@
             backdrop-filter: blur(2px);
             animation: 
                 bubbleFadeIn 0.8s ease-out forwards,
-                floatX var(--float-duration-x, 4s) ease-in-out var(--float-delay-x, 0s) infinite,
-                floatY var(--float-duration-y, 5s) ease-in-out var(--float-delay-y, 0s) infinite,
+                floatDrift 8s linear forwards,
                 bubblePulse 3s ease-in-out 0.8s infinite;
             opacity: 0;
         }
 
-        /* 水平漂浮 - 使用变量 */
-        @keyframes floatX {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(calc(var(--float-amplitude-x, 15px) * 0.8)); }
-            50% { transform: translateX(calc(var(--float-amplitude-x, 15px) * -0.5)); }
-            75% { transform: translateX(calc(var(--float-amplitude-x, 15px) * 0.6)); }
-        }
-
-        /* 垂直漂浮 - 持续向上飘 */
-        @keyframes floatY {
-            0%, 100% { transform: translateY(0); }
-            25% { transform: translateY(calc(var(--float-amplitude-y, 10px) * -1.2)); }
-            50% { transform: translateY(calc(var(--float-amplitude-y, 10px) * -0.8)); }
-            75% { transform: translateY(calc(var(--float-amplitude-y, 10px) * -1.5)); }
+        /* 持续漂浮动画 - 向左或向右漂移 + 向上飘出视口 */
+        @keyframes floatDrift {
+            0% { 
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(var(--drift-x-1, 30px), var(--drift-y-1, -80px)) scale(1.02);
+            }
+            50% {
+                transform: translate(var(--drift-x-2, -20px), var(--drift-y-2, -180px)) scale(0.98);
+            }
+            75% {
+                transform: translate(var(--drift-x-3, 40px), var(--drift-y-3, -300px)) scale(1.01);
+            }
+            100% {
+                transform: translate(var(--drift-x-4, -30px), var(--drift-y-4, -500px)) scale(0.9);
+                opacity: 0;
+            }
         }
 
         /* 气泡淡入 */
@@ -1021,11 +1024,15 @@
                 if (timeLeft <= 0) endGame();
             }, 1000);
             
-            for (let i = 0; i < 8; i++) setTimeout(() => createBubble(), i * 150);
+            // 初始气泡 - 一个个缓慢出现（每1.5秒一个）
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => createBubble(), i * 1500);
+            }
             
+            // 后续补充 - 保持最多6个，每2秒检查是否需要补充
             bubbleTimer = setInterval(() => {
-                if (document.querySelectorAll('.bubble:not(.popping):not(.fading)').length < 10) createBubble();
-            }, 600);
+                if (document.querySelectorAll('.bubble:not(.popping):not(.fading)').length < 6) createBubble();
+            }, 2000);
         }
 
         function updateTimerDisplay() {
@@ -1065,21 +1072,24 @@
             bubble.style.left = x + 'px';
             bubble.style.top = y + 'px';
             
-            // 为每个气泡设置独立的运动速度和方向
-            const speedX = (Math.random() - 0.5) * 30; // 随机X速度
-            const speedY = -Math.random() * 15 - 5;    // 向上漂浮
-            bubble.dataset.speedX = speedX;
-            bubble.dataset.speedY = speedY;
-            bubble.dataset.baseX = x;
-            bubble.dataset.baseY = y;
+            // 设置随机漂浮方向和距离（让气泡飘出视口）
+            const driftX1 = (Math.random() - 0.5) * 80;
+            const driftX2 = (Math.random() - 0.5) * 80;
+            const driftX3 = (Math.random() - 0.5) * 100;
+            const driftX4 = (Math.random() - 0.5) * 120;
+            const driftY1 = -80 - Math.random() * 60;
+            const driftY2 = -180 - Math.random() * 80;
+            const driftY3 = -300 - Math.random() * 100;
+            const driftY4 = -500 - Math.random() * 150;
             
-            // 使用CSS变量实现独立运动轨迹
-            bubble.style.setProperty('--float-amplitude-x', (15 + Math.random() * 20) + 'px');
-            bubble.style.setProperty('--float-amplitude-y', (10 + Math.random() * 15) + 'px');
-            bubble.style.setProperty('--float-duration-x', (4 + Math.random() * 3) + 's');
-            bubble.style.setProperty('--float-duration-y', (5 + Math.random() * 4) + 's');
-            bubble.style.setProperty('--float-delay-x', (Math.random() * -4) + 's');
-            bubble.style.setProperty('--float-delay-y', (Math.random() * -5) + 's');
+            bubble.style.setProperty('--drift-x-1', driftX1 + 'px');
+            bubble.style.setProperty('--drift-x-2', driftX2 + 'px');
+            bubble.style.setProperty('--drift-x-3', driftX3 + 'px');
+            bubble.style.setProperty('--drift-x-4', driftX4 + 'px');
+            bubble.style.setProperty('--drift-y-1', driftY1 + 'px');
+            bubble.style.setProperty('--drift-y-2', driftY2 + 'px');
+            bubble.style.setProperty('--drift-y-3', driftY3 + 'px');
+            bubble.style.setProperty('--drift-y-4', driftY4 + 'px');
             
             // 更多颜色选项
             const colors = [
@@ -1141,14 +1151,12 @@
             
             bubbleContainer.appendChild(bubble);
             
-            // 随机存活时间 10-17秒后自然消失
-            const lifeTime = Math.random() * 7000 + 10000;
+            // 安全移除 - 动画结束后（8秒）确保气泡被移除
             setTimeout(() => {
                 if (bubble.parentNode && !bubble.classList.contains('popping')) {
-                    bubble.classList.add('fading');
-                    setTimeout(() => bubble.remove(), 2000);
+                    bubble.remove();
                 }
-            }, lifeTime);
+            }, 8000);
         }
 
         function popBubble(bubble, emotion, event) {
