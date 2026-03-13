@@ -1,0 +1,412 @@
+/**
+ * 游戏逻辑模块
+ * 管理游戏状态、计时、历史记录等核心逻辑
+ */
+
+import { CONFIG, THEMES, STORAGE_KEYS } from './constants.js';
+import { INITIAL_EMOTIONS, OPPOSITE_EMOTIONS, SIMILAR_EMOTIONS, EMOTION_TREE, getRandomEmotion, getEmotionCategory } from './emotions.js';
+import { audioManager } from './audio.js';
+import { physicsEngine } from './physics.js';
+import { bubbleManager } from './bubble.js';
+import { generateSuggestion } from './suggestions.js';
+
+/**
+ * 游戏状态枚举
+ */
+export const GameState = {
+    IDLE: 'idle',
+    COUNTDOWN: 'countdown',
+    PLAYING: 'playing',
+    RESULT: 'result',
+    STATS: 'stats',
+};
+
+/**
+ * 游戏控制器
+ */
+class GameController {
+    constructor() {
+        // 游戏状态
+        this.state = GameState.IDLE;
+        this.duration = CONFIG.DEFAULT_DURATION;
+        this.timeLeft = CONFIG.DEFAULT_DURATION;
+        this.currentTheme = 'healing';
+        
+        // 计时器
+        this.gameTimer = null;
+        this.countdownTimer = null;
+        
+        // 数据
+        this.poppedEmotions = [];
+        this.history = [];
+        
+        // DOM 引用
+        this.elements = {};
+        
+        // 回调
+        this.onStateChange = null;
+        this.onTimeUpdate = null;
+    }
+
+    /**
+     * 初始化游戏
+     * @param {Object} elements - DOM 元素引用
+     */
+    init(elements) {
+        this.elements = elements;
+        this._loadHistory();
+        this._initBubbleManager();
+    }
+
+    /**
+     * 初始化气泡管理器
+     * @private
+     */
+    _initBubbleManager() {
+        bubbleManager.init(
+            this.elements.bubbleContainer,
+            (emotion) => this._onBubblePop(emotion),
+            (category, depth) => this._handleEmotionRelations(category, depth)
+        );
+    }
+
+    /**
+     * 设置游戏时长
+     * @param {number} seconds - 时长（秒）
+     */
+    setDuration(seconds) {
+        this.duration = seconds;
+        this.timeLeft = seconds;
+    }
+
+    /**
+     * 设置主题
+     * @param {string} theme - 主题名称
+     */
+    setTheme(theme) {
+        if (!THEMES[theme]) return;
+        
+        this.currentTheme = theme;
+        const colors = THEMES[theme];
+        
+        document.documentElement.style.setProperty('--primary', colors.primary);
+        document.documentElement.style.setProperty('--secondary', colors.secondary);
+    }
+
+    /**
+     * 开始游戏（先倒计时）
+     */
+    start() {
+        if (this.state !== GameState.IDLE) return;
+        
+        this._setState(GameState.COUNTDOWN);
+        this._startCountdown();
+    }
+
+    /**
+     * 开始倒计时
+     * @private
+     */
+    _startCountdown() {
+        let count = CONFIG.COUNTDOWN_SECONDS;
+        
+        if (this.elements.countdownText) {
+            this.elements.countdownText.textContent = count;
+        }
+
+        this.countdownTimer = setInterval(() => {
+            count--;
+            audioManager.playTick();
+            
+            if (count > 0) {
+                if (this.elements.countdownText) {
+                    this.elements.countdownText.textContent = count;
+                }
+            } else {
+                clearInterval(this.countdownTimer);
+                this._startPlay();
+            }
+        }, 1000);
+    }
+
+    /**
+     * 开始游戏
+     * @private
+     */
+    _startPlay() {
+        this._setState(GameState.PLAYING);
+        
+        this.timeLeft = this.duration;
+        this.poppedEmotions = [];
+        
+        this._updateTimerDisplay();
+        this._updateProgress();
+        
+        // 启动音频
+        audioManager.resume();
+        audioManager.startAmbient();
+        
+        // 启动物理引擎
+        physicsEngine.start(() => bubbleManager.getAllBubbles());
+        
+        // 启动气泡生成
+        bubbleManager.start(INITIAL_EMOTIONS);
+        
+        // 启动游戏计时
+        this.gameTimer = setInterval(() => {
+            this.timeLeft--;
+            this._updateTimerDisplay();
+            this._updateProgress();
+            
+            if (this.timeLeft <= 0) {
+                this._endGame();
+            }
+        }, 1000);
+    }
+
+    /**
+     * 结束游戏
+     * @private
+     */
+    _endGame() {
+        clearInterval(this.gameTimer);
+        this.gameTimer = null;
+        
+        bubbleManager.stop();
+        physicsEngine.stop();
+        audioManager.stopAmbient();
+        audioManager.playEnd();
+        
+        this._saveHistory();
+        this._showResult();
+        
+        this._setState(GameState.RESULT);
+    }
+
+    /**
+     * 重新开始
+     */
+    restart() {
+        this._reset();
+        this.start();
+    }
+
+    /**
+     * 关闭结果面板，返回首页
+     */
+    closeResult() {
+        this._reset();
+        this._setState(GameState.IDLE);
+    }
+
+    /**
+     * 显示统计面板
+     */
+    showStats() {
+        this._updateStatsDisplay();
+        this._setState(GameState.STATS);
+    }
+
+    /**
+     * 关闭统计面板
+     */
+    closeStats() {
+        this._setState(GameState.IDLE);
+    }
+
+    /**
+     * 清空历史记录
+     */
+    clearHistory() {
+        this.history = [];
+        localStorage.setItem(STORAGE_KEYS.HISTORY, '[]');
+        this._updateStatsDisplay();
+    }
+
+    /**
+     * 重置游戏状态
+     * @private
+     */
+    _reset() {
+        clearInterval(this.gameTimer);
+        clearInterval(this.countdownTimer);
+        this.gameTimer = null;
+        this.countdownTimer = null;
+        
+        bubbleManager.stop();
+        bubbleManager.clear();
+        physicsEngine.stop();
+        audioManager.stopAmbient();
+        
+        this.poppedEmotions = [];
+        this.timeLeft = this.duration;
+    }
+
+    /**
+     * 设置游戏状态
+     * @private
+     */
+    _setState(newState) {
+        this.state = newState;
+        if (this.onStateChange) {
+            this.onStateChange(newState);
+        }
+    }
+
+    /**
+     * 气泡戳破回调
+     * @private
+     */
+    _onBubblePop(emotion) {
+        this.poppedEmotions.push(emotion);
+    }
+
+    /**
+     * 处理情绪关系（对立/相近）
+     * @private
+     */
+    _handleEmotionRelations(category, depth) {
+        const opposite = OPPOSITE_EMOTIONS[category] || [];
+        const similar = SIMILAR_EMOTIONS[category] || [];
+
+        // 让对立情绪消失
+        if (opposite.length > 0) {
+            bubbleManager.fadeOppositeEmotions(opposite);
+        }
+
+        // 补充相近类别的气泡
+        if (similar.length > 0) {
+            setTimeout(() => {
+                const targetCategories = [category, ...similar].slice(0, 3);
+                targetCategories.forEach(cat => {
+                    if (EMOTION_TREE[cat] && Math.random() > 0.4) {
+                        const subEmotions = EMOTION_TREE[cat];
+                        const randomSub = subEmotions[Math.floor(Math.random() * subEmotions.length)];
+                        bubbleManager.create(randomSub, cat, 0);
+                    }
+                });
+            }, 1000);
+        }
+    }
+
+    /**
+     * 更新计时器显示
+     * @private
+     */
+    _updateTimerDisplay() {
+        if (!this.elements.timerDisplay) return;
+        
+        const m = Math.floor(this.timeLeft / 60);
+        const s = this.timeLeft % 60;
+        this.elements.timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    /**
+     * 更新进度条
+     * @private
+     */
+    _updateProgress() {
+        if (!this.elements.progressBar) return;
+        
+        const progress = ((this.duration - this.timeLeft) / this.duration) * 100;
+        this.elements.progressBar.style.width = progress + '%';
+    }
+
+    /**
+     * 显示结果
+     * @private
+     */
+    _showResult() {
+        // 统计情绪出现次数
+        const counts = {};
+        this.poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+        
+        // 排序取前 N 个
+        const sorted = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, CONFIG.HISTORY.RESULT_TOP)
+            .map(([e]) => e);
+
+        // 更新情绪标签
+        if (this.elements.emotionTags) {
+            this.elements.emotionTags.innerHTML = sorted
+                .map(e => `<span class="emotion-tag">${e}</span>`)
+                .join('');
+        }
+
+        // 生成 AI 建议
+        if (this.elements.aiSuggestion) {
+            this.elements.aiSuggestion.textContent = generateSuggestion(sorted);
+        }
+    }
+
+    /**
+     * 保存历史记录
+     * @private
+     */
+    _saveHistory() {
+        const today = new Date().toLocaleDateString();
+        const counts = {};
+        this.poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+
+        const existing = this.history.findIndex(h => h.date === today);
+        if (existing >= 0) {
+            // 合并今天的记录
+            Object.entries(counts).forEach(([e, c]) => {
+                this.history[existing].emotions[e] = (this.history[existing].emotions[e] || 0) + c;
+            });
+        } else {
+            this.history.push({ date: today, emotions: counts });
+        }
+
+        // 只保留最近 N 天
+        this.history = this.history.slice(-CONFIG.HISTORY.MAX_DAYS);
+        localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(this.history));
+    }
+
+    /**
+     * 加载历史记录
+     * @private
+     */
+    _loadHistory() {
+        try {
+            this.history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+        } catch (e) {
+            console.warn('Failed to load history:', e);
+            this.history = [];
+        }
+    }
+
+    /**
+     * 更新统计显示
+     * @private
+     */
+    _updateStatsDisplay() {
+        if (!this.elements.statsList) return;
+
+        if (this.history.length === 0) {
+            this.elements.statsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">暂无历史记录</p>';
+            return;
+        }
+
+        // 汇总所有情绪
+        const allEmotions = {};
+        this.history.forEach(h => {
+            Object.entries(h.emotions).forEach(([e, c]) => {
+                allEmotions[e] = (allEmotions[e] || 0) + c;
+            });
+        });
+
+        // 排序取前 N 个
+        const sorted = Object.entries(allEmotions)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, CONFIG.HISTORY.DISPLAY_TOP);
+
+        this.elements.statsList.innerHTML = sorted
+            .map(([e, c]) => `<div class="stats-item"><span>${e}</span><span class="stats-count">${c}</span></div>`)
+            .join('');
+    }
+}
+
+// 导出单例
+export const gameController = new GameController();

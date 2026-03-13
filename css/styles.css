@@ -1,0 +1,759 @@
+/**
+ * 情绪气泡 - 样式表
+ * 
+ * 文件结构:
+ * 1. CSS 变量定义
+ * 2. 基础重置
+ * 3. 背景效果 (星空/光晕)
+ * 4. 布局容器
+ * 5. 标题与文字
+ * 6. 按钮组件
+ * 7. 时间/主题选择器
+ * 8. 气泡样式与动画
+ * 9. 粒子效果
+ * 10. 面板 (结果/统计)
+ * 11. 响应式适配
+ */
+
+/* ===========================================
+   1. CSS 变量定义
+   =========================================== */
+:root {
+    /* 主题色 */
+    --primary: #667eea;
+    --secondary: #764ba2;
+    
+    /* 背景色 */
+    --bg-dark: #0a0a1a;
+    --bg-mid: #1a1a3a;
+    --bg-light: #0d1b2a;
+    
+    /* 文字色 */
+    --text-primary: #fff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.5);
+    --text-hint: rgba(255, 255, 255, 0.35);
+    
+    /* 边框/分隔 */
+    --border-light: rgba(255, 255, 255, 0.2);
+    --border-lighter: rgba(255, 255, 255, 0.1);
+    
+    /* 尺寸 */
+    --bubble-min-size: 55px;
+    --bubble-size-range: 50px;
+    --header-safe-zone: 80px;
+    --footer-height: 120px;
+    
+    /* 动画时长 */
+    --transition-fast: 0.15s;
+    --transition-normal: 0.3s;
+    --transition-slow: 0.5s;
+    
+    /* 圆角 */
+    --radius-sm: 2px;
+    --radius-md: 15px;
+    --radius-lg: 25px;
+    --radius-xl: 50px;
+    --radius-full: 50%;
+}
+
+/* ===========================================
+   2. 基础重置
+   =========================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-light) 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ===========================================
+   3. 背景效果 (星空/光晕)
+   =========================================== */
+.stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.star {
+    position: absolute;
+    background: white;
+    border-radius: var(--radius-full);
+    animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { 
+        opacity: 0.3; 
+        transform: scale(1); 
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.2); 
+    }
+}
+
+.glow {
+    position: fixed;
+    border-radius: var(--radius-full);
+    filter: blur(80px);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.glow-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--primary);
+    top: -100px;
+    right: -100px;
+    animation: float 15s ease-in-out infinite;
+}
+
+.glow-2 {
+    width: 300px;
+    height: 300px;
+    background: var(--secondary);
+    bottom: -50px;
+    left: -50px;
+    animation: float 20s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(30px, 30px); }
+}
+
+/* ===========================================
+   4. 布局容器
+   =========================================== */
+.container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===========================================
+   5. 标题与文字
+   =========================================== */
+.title {
+    font-size: 2.2rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+    font-weight: 300;
+    letter-spacing: 0.3em;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    text-align: center;
+    max-width: 350px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* ===========================================
+   6. 按钮组件
+   =========================================== */
+.btn {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: var(--radius-xl);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-normal) ease;
+    outline: none;
+    font-family: inherit;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--text-primary);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* ===========================================
+   7. 时间/主题选择器
+   =========================================== */
+.time-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90%;
+}
+
+.time-btn {
+    padding: 0.6rem 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-lg);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 80px;
+    font-family: inherit;
+}
+
+.time-btn.active {
+    background: rgba(102, 126, 234, 0.5);
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.theme-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.theme-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.theme-btn.healing { 
+    background: linear-gradient(135deg, #667eea, #764ba2); 
+}
+
+.theme-btn.forest { 
+    background: linear-gradient(135deg, #134E5E, #71B280); 
+}
+
+.theme-btn.sunset { 
+    background: linear-gradient(135deg, #FF5122, #DD2476); 
+}
+
+.theme-btn.active { 
+    border-color: var(--text-primary); 
+    transform: scale(1.1); 
+}
+
+/* ===========================================
+   8. 进度条与计时器
+   =========================================== */
+.progress-container {
+    width: 200px;
+    height: 4px;
+    background: var(--border-lighter);
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: var(--radius-sm);
+    transition: width 1s linear;
+    box-shadow: 0 0 10px var(--primary);
+    width: 0;
+}
+
+.timer-display {
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1rem;
+    font-weight: 200;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+/* ===========================================
+   9. 气泡样式与动画
+   =========================================== */
+.bubble-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - var(--footer-height));
+    z-index: 10;
+}
+
+.bubble {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform var(--transition-fast) cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    backdrop-filter: blur(2px);
+    animation:
+        bubbleFadeIn 1.2s ease-out forwards,
+        floatInPlace 6s ease-in-out 1.2s infinite,
+        bubblePulse 3s ease-in-out 1.2s infinite;
+    opacity: 0;
+}
+
+/* 气泡原地漂浮动画 */
+@keyframes floatInPlace {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(15px, -10px) scale(1.03); }
+    50% { transform: translate(-10px, -20px) scale(0.98); }
+    75% { transform: translate(20px, -5px) scale(1.02); }
+}
+
+/* 气泡淡入 */
+@keyframes bubbleFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.2);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 气泡脉冲 */
+@keyframes bubblePulse {
+    0%, 100% {
+        opacity: 0.85;
+        box-shadow: 0 0 20px var(--bubble-color, rgba(102, 126, 234, 0.4)),
+                    inset 0 0 15px rgba(255, 255, 255, 0.3);
+    }
+    50% {
+        opacity: 1;
+        box-shadow: 0 0 35px var(--bubble-color, rgba(102, 126, 234, 0.6)),
+                    inset 0 0 20px rgba(255, 255, 255, 0.4);
+    }
+}
+
+/* 气泡自然消失 */
+.bubble.fading {
+    animation: bubbleFadeOut 3s ease-out forwards !important;
+    pointer-events: none;
+}
+
+@keyframes bubbleFadeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+}
+
+/* 气泡可见状态 */
+.bubble.visible {
+    opacity: 1 !important;
+}
+
+/* 气泡悬停 */
+.bubble:hover {
+    transform: scale(1.12) !important;
+    animation-play-state: paused;
+}
+
+/* 气泡按压 */
+.bubble:active {
+    transform: scale(0.85);
+}
+
+/* 气泡戳破动画 */
+.bubble.popping {
+    animation: pop 0.4s ease-out forwards !important;
+}
+
+@keyframes pop {
+    0% { transform: scale(1); opacity: 1; }
+    30% { transform: scale(1.35); opacity: 0.8; }
+    60% { transform: scale(1.1); opacity: 0.5; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+/* 气泡文字 */
+.bubble-text {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 0.5rem;
+    max-width: 80%;
+    word-wrap: break-word;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    font-weight: 500;
+    animation: textFloat 2s ease-in-out infinite;
+}
+
+@keyframes textFloat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* ===========================================
+   10. 粒子效果
+   =========================================== */
+.particle {
+    position: absolute;
+    border-radius: var(--radius-full);
+    pointer-events: none;
+    animation: particleFade 0.8s ease-out forwards;
+    box-shadow: 0 0 6px currentColor;
+}
+
+@keyframes particleFade {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(var(--tx), var(--ty)) scale(0.6) rotate(180deg);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* ===========================================
+   11. 面板样式
+   =========================================== */
+.panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+.panel.hidden {
+    display: none;
+}
+
+/* 开始面板 */
+.start-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 游戏面板 */
+.play-panel {
+    display: none;
+}
+
+/* 底部控制区 */
+.play-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 10;
+    background: linear-gradient(to top, rgba(10, 10, 26, 0.8), transparent);
+}
+
+/* 提示文字 */
+.hint-top {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-hint);
+    font-size: 0.8rem;
+    z-index: 10;
+}
+
+/* 倒计时面板 */
+.countdown-panel {
+    display: none;
+}
+
+.countdown {
+    font-size: 5rem;
+    color: var(--text-primary);
+    animation: pulse 1s ease-in-out infinite;
+    text-shadow: 0 0 40px var(--primary);
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* 结果面板 */
+.result-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 26, 0.95);
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.result-panel.show {
+    display: flex;
+    animation: fadeIn var(--transition-slow) ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.result-title {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.result-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.emotion-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: center;
+    max-width: 500px;
+    margin-bottom: 1.5rem;
+}
+
+.emotion-tag {
+    padding: 0.4rem 0.8rem;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(236, 72, 153, 0.3));
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.ai-suggestion {
+    max-width: 450px;
+    padding: 1.2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-lighter);
+}
+
+.ai-suggestion-title {
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.ai-suggestion-text {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.8;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+}
+
+.result-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* 统计面板 */
+.stats-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 26, 0.95);
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.stats-panel.show {
+    display: flex;
+}
+
+.stats-title {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.stats-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    width: 100%;
+    max-width: 300px;
+}
+
+.stats-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    padding: 0.3rem 0;
+}
+
+.stats-count {
+    background: rgba(102, 126, 234, 0.3);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    min-width: 30px;
+    text-align: center;
+}
+
+/* ===========================================
+   12. 主题变体
+   =========================================== */
+body.theme-minimal {
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+}
+
+body.theme-minimal .title,
+body.theme-minimal .timer-display,
+body.theme-minimal .result-title {
+    color: #e0e1dd;
+    text-shadow: none;
+}
+
+body.theme-minimal .btn-secondary,
+body.theme-minimal .time-btn {
+    border-color: rgba(224, 225, 221, 0.3);
+    color: #e0e1dd;
+}
+
+body.theme-minimal .bubble-text,
+body.theme-minimal .emotion-tag,
+body.theme-minimal .ai-suggestion-text {
+    color: #e0e1dd;
+    text-shadow: none;
+}
+
+body.theme-minimal .hint-top {
+    color: #778da9;
+}
+
+/* ===========================================
+   13. 响应式适配
+   =========================================== */
+@media (max-width: 600px) {
+    .title {
+        font-size: 1.6rem;
+    }
+    
+    .timer-display {
+        font-size: 2rem;
+    }
+    
+    .btn {
+        padding: 0.7rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .time-btn {
+        padding: 0.5rem 1rem;
+        min-width: 70px;
+        font-size: 0.85rem;
+    }
+    
+    .time-options {
+        gap: 0.5rem;
+    }
+    
+    .bubble-text {
+        font-size: 0.75rem;
+    }
+    
+    .result-panel,
+    .stats-panel {
+        padding: 1rem;
+    }
+    
+    .ai-suggestion {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .title {
+        font-size: 1.4rem;
+        letter-spacing: 0.2em;
+    }
+    
+    .subtitle {
+        font-size: 0.8rem;
+    }
+}
