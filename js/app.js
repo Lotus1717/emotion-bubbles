@@ -1,5 +1,5 @@
 /**
- * 情绪气泡 - 入口文件
+ * 念起 - 入口文件
  * 
  * 负责 DOM 初始化、事件绑定和状态管理
  */
@@ -24,7 +24,7 @@ class App {
         this._bindEvents();
         this._initGameController();
         
-        console.log('🫧 情绪气泡已加载');
+        console.log('🫧 念起已加载');
     }
 
     /**
