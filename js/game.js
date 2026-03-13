@@ -4,7 +4,7 @@
  */
 
 import { CONFIG, THEMES, STORAGE_KEYS } from './constants.js';
-import { INITIAL_EMOTIONS, OPPOSITE_EMOTIONS, SIMILAR_EMOTIONS, EMOTION_TREE, getRandomEmotion, getEmotionCategory } from './emotions.js';
+import { OPPOSITE_EMOTIONS, SIMILAR_EMOTIONS, EMOTION_TREE, getRandomEmotion, getEmotionCategory, getRandomInitialEmotions, getRandomFromCategory } from './emotions.js';
 import { audioManager } from './audio.js';
 import { physicsEngine } from './physics.js';
 import { bubbleManager } from './bubble.js';
@@ -149,8 +149,9 @@ class GameController {
         // 启动物理引擎
         physicsEngine.start(() => bubbleManager.getAllBubbles());
         
-        // 启动气泡生成
-        bubbleManager.start(INITIAL_EMOTIONS);
+        // 启动气泡生成（使用随机初始情绪）
+        const initialEmotions = getRandomInitialEmotions();
+        bubbleManager.start(initialEmotions);
         
         // 启动游戏计时
         this.gameTimer = setInterval(() => {
@@ -200,6 +201,14 @@ class GameController {
     }
 
     /**
+     * 提前结束游戏
+     */
+    endEarly() {
+        if (this.state !== GameState.PLAYING) return;
+        this._endGame();
+    }
+
+    /**
      * 显示统计面板
      */
     showStats() {
@@ -240,6 +249,10 @@ class GameController {
         
         this.poppedEmotions = [];
         this.timeLeft = this.duration;
+        this.emotionBalanceTracker = [];
+        
+        // 重置状态为 IDLE，以便可以重新开始
+        this.state = GameState.IDLE;
     }
 
     /**
@@ -263,29 +276,85 @@ class GameController {
 
     /**
      * 处理情绪关系（对立/相近）
+     * 实现"情绪流动"的核心逻辑
      * @private
      */
     _handleEmotionRelations(category, depth) {
         const opposite = OPPOSITE_EMOTIONS[category] || [];
         const similar = SIMILAR_EMOTIONS[category] || [];
 
-        // 让对立情绪消失
-        if (opposite.length > 0) {
-            bubbleManager.fadeOppositeEmotions(opposite);
+        // 1. 相似情绪"共振"（立即发光）
+        if (similar.length > 0) {
+            bubbleManager.resonateSimilarEmotions([category, ...similar]);
         }
 
-        // 补充相近类别的气泡
-        if (similar.length > 0) {
+        // 2. 对立情绪消散（延迟一点，让用户看到共振效果后再消散）
+        if (opposite.length > 0) {
             setTimeout(() => {
-                const targetCategories = [category, ...similar].slice(0, 3);
-                targetCategories.forEach(cat => {
-                    if (EMOTION_TREE[cat] && Math.random() > 0.4) {
-                        const subEmotions = EMOTION_TREE[cat];
-                        const randomSub = subEmotions[Math.floor(Math.random() * subEmotions.length)];
-                        bubbleManager.create(randomSub, cat, 0);
-                    }
-                });
-            }, 1000);
+                bubbleManager.fadeOppositeEmotions(opposite);
+            }, 300);
+        }
+
+        // 3. 情绪平衡机制：如果持续戳同类情绪，会补充对立情绪
+        this._updateEmotionBalance(category);
+
+        // 4. 有概率补充相近类别（模拟情绪自然涌现）
+        if (similar.length > 0 && Math.random() > 0.7) {
+            setTimeout(() => {
+                const shuffled = [...similar].sort(() => Math.random() - 0.5);
+                const cat = shuffled[0];
+                if (EMOTION_TREE[cat]) {
+                    const randomSub = getRandomFromCategory(cat);
+                    bubbleManager.create(randomSub, cat, 0);
+                }
+            }, 1500);
+        }
+    }
+
+    /**
+     * 情绪平衡机制
+     * 追踪用户戳破的情绪类别，如果过于单一，补充对立/其他类别
+     * @private
+     */
+    _updateEmotionBalance(category) {
+        // 初始化平衡追踪器
+        if (!this.emotionBalanceTracker) {
+            this.emotionBalanceTracker = [];
+        }
+
+        this.emotionBalanceTracker.push(category);
+        
+        // 只保留最近 10 次
+        if (this.emotionBalanceTracker.length > 10) {
+            this.emotionBalanceTracker.shift();
+        }
+
+        // 检查是否过于单一（最近 6 次中有 4 次以上是同类或相似类）
+        if (this.emotionBalanceTracker.length >= 6) {
+            const recent = this.emotionBalanceTracker.slice(-6);
+            const categoryCount = {};
+            
+            recent.forEach(cat => {
+                categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+            });
+
+            const maxCount = Math.max(...Object.values(categoryCount));
+            
+            // 如果某类占比过高，补充对立情绪
+            if (maxCount >= 4) {
+                const dominantCategory = Object.keys(categoryCount).find(k => categoryCount[k] === maxCount);
+                const opposite = OPPOSITE_EMOTIONS[dominantCategory] || [];
+                
+                if (opposite.length > 0) {
+                    setTimeout(() => {
+                        const oppositeCategory = opposite[Math.floor(Math.random() * opposite.length)];
+                        if (EMOTION_TREE[oppositeCategory]) {
+                            const randomSub = getRandomFromCategory(oppositeCategory);
+                            bubbleManager.create(randomSub, oppositeCategory, 0);
+                        }
+                    }, 2000);
+                }
+            }
         }
     }
 

@@ -62,6 +62,7 @@ class App {
             statsBtn: document.getElementById('statsBtn'),
             clearStatsBtn: document.getElementById('clearStatsBtn'),
             backBtn: document.getElementById('backBtn'),
+            endEarlyBtn: document.getElementById('endEarlyBtn'),
             
             // 星空
             stars: document.getElementById('stars'),
@@ -125,6 +126,11 @@ class App {
         // 返回按钮
         elements.backBtn?.addEventListener('click', () => {
             gameController.closeStats();
+        });
+
+        // 提前结束按钮
+        elements.endEarlyBtn?.addEventListener('click', () => {
+            gameController.endEarly();
         });
 
         // 主题选择

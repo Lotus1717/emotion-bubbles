@@ -20,9 +20,9 @@ export const CONFIG = {
         SPAWN_INTERVAL: 1500,      // 补充气泡间隔 (ms)
         INITIAL_SPAWN_DELAY: 500,  // 初始气泡生成间隔 (ms)
         INITIAL_WAIT: 4500,        // 等待初始化完成后再补充 (ms)
-        LIFE_MIN: 10000,           // 最短生命周期 (ms)
-        LIFE_RANGE: 5000,          // 生命周期随机范围 (ms)
-        FADE_DURATION: 3000,       // 渐隐时长 (ms)
+        LIFE_MIN: 6000,            // 最短生命周期 (ms) - 6秒
+        LIFE_RANGE: 4000,          // 生命周期随机范围 (ms) - 0~4秒
+        FADE_DURATION: 2000,       // 渐隐时长 (ms) - 2秒
         POP_DURATION: 300,         // 戳破动画时长 (ms)
     },
     
@@ -87,8 +87,10 @@ export const CONFIG = {
     },
     
     // 情绪挖掘深度
-    EMOTION_MAX_DEPTH: 2,
-    EMOTION_BRANCH_COUNT: 3,
+    EMOTION_MAX_DEPTH: 3,           // 允许更深的探索
+    EMOTION_BRANCH_COUNT: 4,        // 每次生成更多子情绪
+    EMOTION_SPAWN_DELAY: 150,       // 子情绪生成间隔 (ms)
+    EMOTION_SPAWN_START_DELAY: 200, // 开始生成的延迟 (ms)
 };
 
 // 主题配置

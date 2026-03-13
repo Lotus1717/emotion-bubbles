@@ -35,7 +35,7 @@ class AudioManager {
 
     /**
      * 播放背景 Ambient 音乐
-     * 使用和弦 pad + 柔和白噪音营造氛围
+     * 自然风格：溪流声 + 轻风 + 偶尔的鸟鸣 + 柔和和弦
      */
     startAmbient() {
         if (this.isAmbientPlaying) return;
@@ -49,48 +49,17 @@ class AudioManager {
             this.ambientGain.gain.setValueAtTime(CONFIG.AUDIO.AMBIENT_VOLUME, ctx.currentTime);
             this.ambientGain.connect(ctx.destination);
 
-            // 创建柔和的 ambient 和弦 pad (C3, E3, G3, B3)
-            CONFIG.AUDIO.AMBIENT_FREQUENCIES.forEach((freq, i) => {
-                // 主振荡器
-                const osc = ctx.createOscillator();
-                const oscGain = ctx.createGain();
-
-                // 添加轻微的频率调制（LFO）增加空灵感
-                const lfo = ctx.createOscillator();
-                const lfoGain = ctx.createGain();
-                lfo.connect(lfoGain);
-                lfoGain.connect(osc.frequency);
-                lfo.frequency.setValueAtTime(0.1 + i * 0.05, ctx.currentTime);
-                lfoGain.gain.setValueAtTime(2 + Math.random() * 2, ctx.currentTime);
-
-                osc.frequency.setValueAtTime(freq, ctx.currentTime);
-                oscGain.gain.setValueAtTime(0.15, ctx.currentTime);
-
-                osc.connect(oscGain);
-                oscGain.connect(this.ambientGain);
-
-                osc.type = i % 2 === 0 ? 'sine' : 'triangle';
-                lfo.type = 'sine';
-                osc.start(ctx.currentTime);
-                lfo.start(ctx.currentTime);
-
-                this.ambientOscillators.push(osc, lfo);
-
-                // 添加泛音
-                const harmonic = ctx.createOscillator();
-                const harmGain = ctx.createGain();
-                harmonic.frequency.setValueAtTime(freq * 2, ctx.currentTime);
-                harmonic.type = 'sine';
-                harmGain.gain.setValueAtTime(0.05, ctx.currentTime);
-                harmonic.connect(harmGain);
-                harmGain.connect(this.ambientGain);
-                harmonic.start(ctx.currentTime);
-
-                this.ambientOscillators.push(harmonic);
-            });
-
-            // 添加柔和的粉红噪音作为背景
-            this._createPinkNoise();
+            // 1. 溪流声（过滤噪音 + 轻微调制）
+            this._createStreamSound();
+            
+            // 2. 轻风声（极低频噪音）
+            this._createWindSound();
+            
+            // 3. 深沉的环境和弦（非常轻柔）
+            this._createDeepPad();
+            
+            // 4. 偶尔的鸟鸣点缀
+            this._startBirdChirps();
             
             this.isAmbientPlaying = true;
         } catch (e) {
@@ -99,50 +68,238 @@ class AudioManager {
     }
 
     /**
-     * 创建粉红噪音（比白噪音更柔和）
+     * 创建溪流声效果
      * @private
      */
-    _createPinkNoise() {
+    _createStreamSound() {
         const ctx = this.context;
         const bufferSize = 2 * ctx.sampleRate;
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
         
-        // 生成白噪音
+        // 生成带有自然起伏的噪音（模拟水流）
+        let lastOut = 0;
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            // 布朗噪音算法，更自然
+            output[i] = (lastOut + (0.02 * white)) / 1.02;
+            lastOut = output[i];
+            output[i] *= 3.5; // 增益补偿
+        }
+
+        const streamNoise = ctx.createBufferSource();
+        streamNoise.buffer = noiseBuffer;
+        streamNoise.loop = true;
+
+        // 带通滤波 - 模拟水流的频率特征
+        const bandpass = ctx.createBiquadFilter();
+        bandpass.type = 'bandpass';
+        bandpass.frequency.value = 800;
+        bandpass.Q.value = 0.5;
+
+        // LFO 调制滤波频率，产生水流起伏感
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 0.3; // 很慢的调制
+        lfoGain.gain.value = 200;
+        lfo.connect(lfoGain);
+        lfoGain.connect(bandpass.frequency);
+        lfo.start();
+
+        const streamGain = ctx.createGain();
+        streamGain.gain.setValueAtTime(0.15, ctx.currentTime);
+
+        streamNoise.connect(bandpass);
+        bandpass.connect(streamGain);
+        streamGain.connect(this.ambientGain);
+        streamNoise.start();
+
+        this.ambientOscillators.push(streamNoise, lfo);
+    }
+
+    /**
+     * 创建轻风声效果
+     * @private
+     */
+    _createWindSound() {
+        const ctx = this.context;
+        const bufferSize = 2 * ctx.sampleRate;
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        
         for (let i = 0; i < bufferSize; i++) {
             output[i] = Math.random() * 2 - 1;
         }
 
-        const whiteNoise = ctx.createBufferSource();
-        whiteNoise.buffer = noiseBuffer;
-        whiteNoise.loop = true;
+        const windNoise = ctx.createBufferSource();
+        windNoise.buffer = noiseBuffer;
+        windNoise.loop = true;
 
-        // 强低通滤波使噪音变得非常柔和
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 200;
+        // 极低通滤波 - 模拟远处的风声
+        const lowpass = ctx.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 150;
 
-        const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.03, ctx.currentTime);
+        // 缓慢的音量起伏
+        const windGain = ctx.createGain();
+        windGain.gain.setValueAtTime(0.04, ctx.currentTime);
 
-        whiteNoise.connect(filter);
-        filter.connect(noiseGain);
-        noiseGain.connect(this.ambientGain);
-        whiteNoise.start();
+        // LFO 调制音量，产生风的起伏
+        const volumeLfo = ctx.createOscillator();
+        const volumeLfoGain = ctx.createGain();
+        volumeLfo.frequency.value = 0.08; // 非常慢
+        volumeLfoGain.gain.value = 0.02;
+        volumeLfo.connect(volumeLfoGain);
+        volumeLfoGain.connect(windGain.gain);
+        volumeLfo.start();
 
-        this.ambientOscillators.push(whiteNoise);
+        windNoise.connect(lowpass);
+        lowpass.connect(windGain);
+        windGain.connect(this.ambientGain);
+        windNoise.start();
+
+        this.ambientOscillators.push(windNoise, volumeLfo);
+    }
+
+    /**
+     * 创建深沉的环境和弦垫
+     * @private
+     */
+    _createDeepPad() {
+        const ctx = this.context;
+        // 使用很低的频率，营造深沉感 (A2, C3, E3)
+        const frequencies = [110, 130.81, 164.81];
+        
+        frequencies.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const oscGain = ctx.createGain();
+            
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            oscGain.gain.setValueAtTime(0.03, ctx.currentTime); // 非常轻
+            
+            // 轻微的颤音效果
+            const vibrato = ctx.createOscillator();
+            const vibratoGain = ctx.createGain();
+            vibrato.frequency.value = 0.2 + i * 0.1;
+            vibratoGain.gain.value = 1;
+            vibrato.connect(vibratoGain);
+            vibratoGain.connect(osc.frequency);
+            vibrato.start();
+            
+            osc.connect(oscGain);
+            oscGain.connect(this.ambientGain);
+            osc.start();
+            
+            this.ambientOscillators.push(osc, vibrato);
+        });
+    }
+
+    /**
+     * 启动偶尔的鸟鸣声
+     * @private
+     */
+    _startBirdChirps() {
+        // 随机间隔播放鸟鸣
+        const scheduleChirp = () => {
+            if (!this.isAmbientPlaying) return;
+            
+            // 随机延迟 3-8 秒
+            const delay = 3000 + Math.random() * 5000;
+            
+            this.birdTimer = setTimeout(() => {
+                if (this.isAmbientPlaying) {
+                    this._playBirdChirp();
+                    scheduleChirp();
+                }
+            }, delay);
+        };
+        
+        // 首次延迟 2-4 秒后开始
+        setTimeout(() => scheduleChirp(), 2000 + Math.random() * 2000);
+    }
+
+    /**
+     * 播放一次鸟鸣声
+     * @private
+     */
+    _playBirdChirp() {
+        if (!this.context || !this.ambientGain) return;
+        
+        const ctx = this.context;
+        const now = ctx.currentTime;
+        
+        // 随机选择鸟鸣类型
+        const chirpType = Math.floor(Math.random() * 3);
+        
+        if (chirpType === 0) {
+            // 短促的啾啾声
+            this._createChirpNote(1800 + Math.random() * 400, 0.08, now);
+            this._createChirpNote(2000 + Math.random() * 400, 0.06, now + 0.1);
+        } else if (chirpType === 1) {
+            // 下滑的叫声
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ambientGain);
+            
+            osc.frequency.setValueAtTime(2200, now);
+            osc.frequency.exponentialRampToValueAtTime(1600, now + 0.15);
+            gain.gain.setValueAtTime(0.015, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            
+            osc.type = 'sine';
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else {
+            // 三连音
+            this._createChirpNote(1600, 0.05, now);
+            this._createChirpNote(1900, 0.05, now + 0.08);
+            this._createChirpNote(1700, 0.07, now + 0.16);
+        }
+    }
+
+    /**
+     * 创建单个鸟鸣音符
+     * @private
+     */
+    _createChirpNote(freq, duration, startTime) {
+        const ctx = this.context;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.ambientGain);
+        
+        osc.frequency.setValueAtTime(freq, startTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.1, startTime + duration * 0.3);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.95, startTime + duration);
+        
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.02, startTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        
+        osc.type = 'sine';
+        osc.start(startTime);
+        osc.stop(startTime + duration);
     }
 
     /**
      * 停止背景音乐
      */
     stopAmbient() {
+        // 停止鸟鸣定时器
+        if (this.birdTimer) {
+            clearTimeout(this.birdTimer);
+            this.birdTimer = null;
+        }
+        
         if (this.ambientGain && this.context) {
             try {
                 // 渐出效果
                 this.ambientGain.gain.exponentialRampToValueAtTime(
                     0.001, 
-                    this.context.currentTime + 0.5
+                    this.context.currentTime + 0.8
                 );
                 
                 // 停止所有振荡器
@@ -151,7 +308,7 @@ class AudioManager {
                         try { osc.stop(); } catch (e) {}
                     });
                     this.ambientOscillators = [];
-                }, 500);
+                }, 800);
             } catch (e) {
                 console.warn('Failed to stop ambient sound:', e);
             }
