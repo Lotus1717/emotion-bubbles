@@ -6,6 +6,7 @@
 
 import { CONFIG } from './constants.js';
 import { gameController, GameState } from './game.js';
+import { shareManager } from './share.js';
 
 /**
  * 应用初始化
@@ -23,6 +24,9 @@ class App {
         this._initStars();
         this._bindEvents();
         this._initGameController();
+        
+        // 初始化分享管理器
+        shareManager.init();
         
         console.log('🫧 念起已加载');
     }
@@ -59,6 +63,7 @@ class App {
             startBtn: document.getElementById('startBtn'),
             restartBtn: document.getElementById('restartBtn'),
             closeResultBtn: document.getElementById('closeResultBtn'),
+            shareBtn: document.getElementById('shareBtn'),
             statsBtn: document.getElementById('statsBtn'),
             clearStatsBtn: document.getElementById('clearStatsBtn'),
             backBtn: document.getElementById('backBtn'),
@@ -106,9 +111,48 @@ class App {
             gameController.restart();
         });
 
-        // 关闭结果按钮
+            // 关闭结果按钮
         elements.closeResultBtn?.addEventListener('click', () => {
             gameController.closeResult();
+        });
+
+        // 分享按钮
+        elements.shareBtn?.addEventListener('click', async () => {
+            // 获取当前游戏结果数据
+            const emotions = gameController.poppedEmotions || [];
+            const duration = gameController.duration || 60;
+            const suggestion = elements.aiSuggestion?.textContent || '';
+            
+            if (emotions.length === 0) {
+                alert('还没有戳破任何情绪气泡哦～');
+                return;
+            }
+            
+            // 统计情绪出现次数
+            const counts = {};
+            emotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+            const sortedEmotions = Object.entries(counts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6)
+                .map(([e]) => e);
+            
+            // 生成分享卡片
+            const cardData = {
+                emotions: sortedEmotions,
+                duration: duration,
+                suggestion: suggestion
+            };
+            
+            const dataURL = shareManager.generateCard(cardData);
+            
+            // 尝试复制到剪贴板
+            const copied = await shareManager.copyToClipboard(dataURL);
+            if (copied) {
+                alert('✅ 图片已复制到剪贴板！\n可以直接粘贴到微信/微博分享～');
+            } else {
+                // 降级为下载
+                shareManager.saveImage(dataURL, '念起分享.png');
+            }
         });
 
         // 统计按钮
