@@ -128,30 +128,49 @@ class App {
                 return;
             }
             
-            // 统计情绪出现次数
-            const counts = {};
-            emotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
-            const sortedEmotions = Object.entries(counts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 6)
-                .map(([e]) => e);
+            // 显示 loading 状态
+            const originalText = elements.shareBtn.textContent;
+            elements.shareBtn.disabled = true;
+            elements.shareBtn.textContent = '生成中...';
             
-            // 生成分享卡片
-            const cardData = {
-                emotions: sortedEmotions,
-                duration: duration,
-                suggestion: suggestion
-            };
-            
-            const dataURL = shareManager.generateCard(cardData);
-            
-            // 尝试复制到剪贴板
-            const copied = await shareManager.copyToClipboard(dataURL);
-            if (copied) {
-                alert('✅ 图片已复制到剪贴板！\n可以直接粘贴到微信/微博分享～');
-            } else {
-                // 降级为下载
-                shareManager.saveImage(dataURL, '念起分享.png');
+            try {
+                // 统计情绪出现次数
+                const counts = {};
+                emotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+                const sortedEmotions = Object.entries(counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 6)
+                    .map(([e]) => e);
+                
+                // 生成分享卡片
+                const cardData = {
+                    emotions: sortedEmotions,
+                    duration: duration,
+                    suggestion: suggestion
+                };
+                
+                const dataURL = shareManager.generateCard(cardData);
+                
+                // 尝试复制到剪贴板
+                const copied = await shareManager.copyToClipboard(dataURL);
+                if (copied) {
+                    alert('✅ 图片已复制到剪贴板！\n可以直接粘贴到微信/微博分享～');
+                } else {
+                    // 降级为下载
+                    const saved = await shareManager.saveImage(dataURL, '念起分享.png');
+                    if (saved) {
+                        alert('✅ 图片已保存！\n请在相册中找到「念起分享.png」分享～');
+                    } else {
+                        alert('抱歉，当前浏览器不支持分享功能。\n请尝试使用最新版 Chrome 或 Safari。');
+                    }
+                }
+            } catch (error) {
+                console.error('分享失败:', error);
+                alert('生成分享图片时出错，请重试～');
+            } finally {
+                // 恢复按钮状态
+                elements.shareBtn.disabled = false;
+                elements.shareBtn.textContent = originalText;
             }
         });
 
