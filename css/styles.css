@@ -859,6 +859,204 @@ body {
     text-align: center;
 }
 
+/* 时间筛选器 */
+.stats-filter {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn.active {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: rgba(255, 215, 0, 0.5);
+    color: #ffd700;
+}
+
+.filter-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* 概览统计卡片 */
+.stats-overview {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    text-align: center;
+    min-width: 80px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 0.3rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* 统计区块标题 */
+.stats-section-title {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 1rem 0 0.5rem;
+    text-align: left;
+    width: 100%;
+}
+
+/* 分类统计 */
+.stats-category {
+    width: 100%;
+    max-width: 350px;
+    margin-bottom: 1rem;
+}
+
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.category-name {
+    width: 70px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    flex-shrink: 0;
+}
+
+.category-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.category-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.category-count {
+    width: 70px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Top 情绪 */
+.stats-top {
+    width: 100%;
+    max-width: 350px;
+    margin-bottom: 1rem;
+}
+
+.top-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.top-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+}
+
+.top-emotion {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+}
+
+.top-count {
+    color: rgba(255, 215, 0, 0.8);
+    font-size: 0.8rem;
+}
+
+.top-percent {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+}
+
+/* 趋势图表 */
+.stats-trend {
+    width: 100%;
+    max-width: 350px;
+    margin-bottom: 1.5rem;
+}
+
+.trend-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 100px;
+    gap: 4px;
+    padding-top: 10px;
+}
+
+.trend-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.trend-bar-fill {
+    width: 100%;
+    background: linear-gradient(180deg, #667eea, #764ba2);
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: height 0.5s ease;
+}
+
+.trend-label {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 4px;
+}
+
+/* 统计按钮组 */
+.stats-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
 /* ===========================================
    12. 主题变体
    =========================================== */

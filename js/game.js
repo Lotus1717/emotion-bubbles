@@ -224,6 +224,14 @@ class GameController {
     }
 
     /**
+     * 更新统计时间范围
+     * @param {string} range - 时间范围
+     */
+    updateStatsRange(range) {
+        this._updateStatsDisplay(range);
+    }
+
+    /**
      * 清空历史记录
      */
     clearHistory() {
@@ -450,30 +458,94 @@ class GameController {
      * 更新统计显示
      * @private
      */
-    _updateStatsDisplay() {
+    _updateStatsDisplay(range = 'week') {
         if (!this.elements.statsList) return;
-
-        if (this.history.length === 0) {
-            this.elements.statsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">暂无历史记录</p>';
-            return;
+        
+        // 初始化统计模块
+        emotionStats.init(this.history);
+        
+        // 获取统计数据
+        const stats = emotionStats.getStats(range);
+        const { overview, change } = stats;
+        
+        // 更新概览数字
+        if (this.elements.statTotalPopped) {
+            this.elements.statTotalPopped.textContent = overview.totalPopped;
         }
-
-        // 汇总所有情绪
-        const allEmotions = {};
-        this.history.forEach(h => {
-            Object.entries(h.emotions).forEach(([e, c]) => {
-                allEmotions[e] = (allEmotions[e] || 0) + c;
-            });
-        });
-
-        // 排序取前 N 个
-        const sorted = Object.entries(allEmotions)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, CONFIG.HISTORY.DISPLAY_TOP);
-
-        this.elements.statsList.innerHTML = sorted
-            .map(([e, c]) => `<div class="stats-item"><span>${e}</span><span class="stats-count">${c}</span></div>`)
-            .join('');
+        if (this.elements.statTotalDays) {
+            this.elements.statTotalDays.textContent = overview.totalDays;
+        }
+        if (this.elements.statAvgPerDay) {
+            this.elements.statAvgPerDay.textContent = overview.avgPerDay;
+        }
+        
+        // 更新分类统计
+        if (this.elements.categoryList) {
+            this.elements.categoryList.innerHTML = Object.entries(overview.categoryBreakdown)
+                .filter(([_, data]) => data.count > 0)
+                .map(([category, data]) => `
+                    <div class="category-item">
+                        <div class="category-name">${this._getCategoryName(category)}</div>
+                        <div class="category-bar">
+                            <div class="category-bar-fill" style="width: ${data.percentage}%"></div>
+                        </div>
+                        <div class="category-count">${data.count} (${data.percentage}%)</div>
+                    </div>
+                `).join('');
+        }
+        
+        // 更新 Top 情绪
+        if (this.elements.topList) {
+            this.elements.topList.innerHTML = overview.topEmotions
+                .map(item => `
+                    <div class="top-item">
+                        <span class="top-emotion">${item.emotion}</span>
+                        <span class="top-count">${item.count}次</span>
+                        <span class="top-percent">${item.percentage}%</span>
+                    </div>
+                `).join('');
+        }
+        
+        // 更新趋势图
+        if (this.elements.trendChart) {
+            const trend = stats.trend;
+            const maxTotal = Math.max(...trend.map(d => d.total), 1);
+            
+            this.elements.trendChart.innerHTML = trend.map(d => `
+                <div class="trend-bar">
+                    <div class="trend-bar-fill" style="height: ${(d.total / maxTotal) * 100}%"></div>
+                    <div class="trend-label">${d.shortDate}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 兼容旧版列表（如果 statsList 还在）
+        if (this.elements.statsList) {
+            if (this.history.length === 0) {
+                this.elements.statsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">暂无历史记录</p>';
+            } else {
+                // 兼容旧代码，但使用新数据
+                const topEmotions = overview.topEmotions.slice(0, 5);
+                this.elements.statsList.innerHTML = topEmotions
+                    .map(item => `<div class="stats-item"><span>${item.emotion}</span><span class="stats-count">${item.count}</span></div>`)
+                    .join('');
+            }
+        }
+    }
+    
+    /**
+     * 获取分类中文名
+     * @private
+     */
+    _getCategoryName(category) {
+        const names = {
+            'base': '基础情绪',
+            'complex': '复杂情绪',
+            'healing': '治愈情绪',
+            'social': '社恐情绪',
+            'work': '职场情绪'
+        };
+        return names[category] || category;
     }
 }
 

@@ -7,6 +7,7 @@
 import { CONFIG } from './constants.js';
 import { gameController, GameState } from './game.js';
 import { shareManager } from './share.js';
+import { emotionStats } from './stats.js';
 
 /**
  * 应用初始化
@@ -177,6 +178,16 @@ class App {
         // 统计按钮
         elements.statsBtn?.addEventListener('click', () => {
             gameController.showStats();
+        });
+
+        // 时间筛选按钮
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const range = btn.dataset.range;
+                gameController.updateStatsRange(range);
+            });
         });
 
         // 清空历史按钮
