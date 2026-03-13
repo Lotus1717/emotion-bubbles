@@ -22,33 +22,33 @@
     /* 主题色 */
     --primary: #667eea;
     --secondary: #764ba2;
-    
+
     /* 背景色 */
     --bg-dark: #0a0a1a;
     --bg-mid: #1a1a3a;
     --bg-light: #0d1b2a;
-    
+
     /* 文字色 */
     --text-primary: #fff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-muted: rgba(255, 255, 255, 0.5);
     --text-hint: rgba(255, 255, 255, 0.35);
-    
+
     /* 边框/分隔 */
     --border-light: rgba(255, 255, 255, 0.2);
     --border-lighter: rgba(255, 255, 255, 0.1);
-    
+
     /* 尺寸 */
     --bubble-min-size: 55px;
     --bubble-size-range: 50px;
     --header-safe-zone: 80px;
     --footer-height: 120px;
-    
+
     /* 动画时长 */
     --transition-fast: 0.15s;
     --transition-normal: 0.3s;
     --transition-slow: 0.5s;
-    
+
     /* 圆角 */
     --radius-sm: 2px;
     --radius-md: 15px;
@@ -97,13 +97,16 @@ body {
 }
 
 @keyframes twinkle {
-    0%, 100% { 
-        opacity: 0.3; 
-        transform: scale(1); 
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
     }
-    50% { 
-        opacity: 1; 
-        transform: scale(1.2); 
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
     }
 }
 
@@ -135,8 +138,15 @@ body {
 }
 
 @keyframes float {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(30px, 30px); }
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(30px, 30px);
+    }
 }
 
 /* ===========================================
@@ -156,13 +166,43 @@ body {
 /* ===========================================
    5. 标题与文字
    =========================================== */
-.title {
-    font-size: 2.2rem;
-    color: var(--text-primary);
+/* 品牌组合 */
+.brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 0.5rem;
-    text-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
-    font-weight: 300;
-    letter-spacing: 0.3em;
+}
+
+.brand-icon {
+    width: 88px;
+    height: 88px;
+    margin-bottom: 0.8rem;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+    animation: iconFloat 4s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.title {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin: 0;
+    text-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
+    font-weight: 200;
+    letter-spacing: 0.5em;
+    padding-left: 0.5em;
 }
 
 .subtitle {
@@ -273,21 +313,21 @@ body {
     transition: all var(--transition-normal);
 }
 
-.theme-btn.healing { 
-    background: linear-gradient(135deg, #667eea, #764ba2); 
+.theme-btn.healing {
+    background: linear-gradient(135deg, #667eea, #764ba2);
 }
 
-.theme-btn.forest { 
-    background: linear-gradient(135deg, #134E5E, #71B280); 
+.theme-btn.forest {
+    background: linear-gradient(135deg, #134E5E, #71B280);
 }
 
-.theme-btn.sunset { 
-    background: linear-gradient(135deg, #FF5122, #DD2476); 
+.theme-btn.sunset {
+    background: linear-gradient(135deg, #FF5122, #DD2476);
 }
 
-.theme-btn.active { 
-    border-color: var(--text-primary); 
-    transform: scale(1.1); 
+.theme-btn.active {
+    border-color: var(--text-primary);
+    transform: scale(1.1);
 }
 
 /* ===========================================
@@ -359,7 +399,7 @@ body {
     opacity: 1;
     transform: scale(1);
     will-change: transform, opacity;
-    animation: 
+    animation:
         floatInPlace 6s ease-in-out infinite,
         bubblePulse 3s ease-in-out infinite;
 }
@@ -370,26 +410,32 @@ body {
         opacity: 0;
         transform: scale(0.4) translateY(25px);
     }
+
     15% {
         opacity: 0.2;
         transform: scale(0.5) translateY(20px);
     }
+
     30% {
         opacity: 0.4;
         transform: scale(0.65) translateY(14px);
     }
+
     50% {
         opacity: 0.65;
         transform: scale(0.8) translateY(8px);
     }
+
     70% {
         opacity: 0.85;
         transform: scale(0.92) translateY(3px);
     }
+
     85% {
         opacity: 0.95;
         transform: scale(0.98) translateY(0);
     }
+
     100% {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -398,10 +444,23 @@ body {
 
 /* 气泡原地漂浮动画 */
 @keyframes floatInPlace {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(15px, -10px) scale(1.03); }
-    50% { transform: translate(-10px, -20px) scale(0.98); }
-    75% { transform: translate(20px, -5px) scale(1.02); }
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate(15px, -10px) scale(1.03);
+    }
+
+    50% {
+        transform: translate(-10px, -20px) scale(0.98);
+    }
+
+    75% {
+        transform: translate(20px, -5px) scale(1.02);
+    }
 }
 
 /* 气泡淡入（保留兼容） */
@@ -410,6 +469,7 @@ body {
         opacity: 0;
         transform: scale(0.3) translateY(20px);
     }
+
     100% {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -418,15 +478,18 @@ body {
 
 /* 气泡脉冲 */
 @keyframes bubblePulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.85;
         box-shadow: 0 0 20px var(--bubble-color, rgba(102, 126, 234, 0.4)),
-                    inset 0 0 15px rgba(255, 255, 255, 0.3);
+            inset 0 0 15px rgba(255, 255, 255, 0.3);
     }
+
     50% {
         opacity: 1;
         box-shadow: 0 0 35px var(--bubble-color, rgba(102, 126, 234, 0.6)),
-                    inset 0 0 20px rgba(255, 255, 255, 0.4);
+            inset 0 0 20px rgba(255, 255, 255, 0.4);
     }
 }
 
@@ -441,6 +504,7 @@ body {
         opacity: 1;
         transform: scale(1);
     }
+
     100% {
         opacity: 0;
         transform: scale(0.6);
@@ -469,10 +533,25 @@ body {
 }
 
 @keyframes pop {
-    0% { transform: scale(1); opacity: 1; }
-    30% { transform: scale(1.35); opacity: 0.8; }
-    60% { transform: scale(1.1); opacity: 0.5; }
-    100% { transform: scale(0); opacity: 0; }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    30% {
+        transform: scale(1.35);
+        opacity: 0.8;
+    }
+
+    60% {
+        transform: scale(1.1);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
 }
 
 /* 气泡文字 */
@@ -489,8 +568,15 @@ body {
 }
 
 @keyframes textFloat {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
 }
 
 /* ===========================================
@@ -509,10 +595,12 @@ body {
         transform: translate(0, 0) scale(1) rotate(0deg);
         opacity: 1;
     }
+
     50% {
         transform: translate(var(--tx), var(--ty)) scale(0.6) rotate(180deg);
         opacity: 0.7;
     }
+
     100% {
         transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg);
         opacity: 0;
@@ -612,8 +700,17 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
 }
 
 /* 结果面板 */
@@ -639,8 +736,13 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .result-title {
@@ -792,49 +894,59 @@ body.theme-minimal .hint-top {
    13. 响应式适配
    =========================================== */
 @media (max-width: 600px) {
-    .title {
-        font-size: 1.6rem;
+    .brand-icon {
+        width: 70px;
+        height: 70px;
     }
-    
+
+    .title {
+        font-size: 2rem;
+    }
+
     .timer-display {
         font-size: 2rem;
     }
-    
+
     .btn {
         padding: 0.7rem 1.5rem;
         font-size: 0.9rem;
     }
-    
+
     .time-btn {
         padding: 0.5rem 1rem;
         min-width: 70px;
         font-size: 0.85rem;
     }
-    
+
     .time-options {
         gap: 0.5rem;
     }
-    
+
     .bubble-text {
         font-size: 0.75rem;
     }
-    
+
     .result-panel,
     .stats-panel {
         padding: 1rem;
     }
-    
+
     .ai-suggestion {
         padding: 1rem;
     }
 }
 
 @media (max-width: 360px) {
-    .title {
-        font-size: 1.4rem;
-        letter-spacing: 0.2em;
+    .brand-icon {
+        width: 60px;
+        height: 60px;
     }
-    
+
+    .title {
+        font-size: 1.8rem;
+        letter-spacing: 0.3em;
+    }
+
     .subtitle {
         font-size: 0.8rem;
     }
