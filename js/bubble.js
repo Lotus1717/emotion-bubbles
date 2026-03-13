@@ -156,17 +156,6 @@ class BubbleManager {
         bubble.style.setProperty('--bubble-color', glowColor);
         bubble.style.boxShadow = `0 0 25px ${glowColor}, inset 0 0 18px rgba(255,255,255,0.3), inset 0 0 8px rgba(255,255,255,0.15)`;
 
-        // 随机动画延迟
-        const animDelayX = (Math.random() * -4) + 's';
-        const animDelayY = (Math.random() * -5) + 's';
-        const animDelayPulse = (Math.random() * -3) + 's';
-        bubble.style.animationDelay = `${animDelayX}, ${animDelayY}, ${animDelayPulse}`;
-
-        // 随机动画持续时间
-        const durationX = 3 + Math.random() * 3;
-        const durationY = 4 + Math.random() * 3;
-        bubble.style.animationDuration = `${durationX}s, ${durationY}s, 3s`;
-
         // 气泡内容
         bubble.innerHTML = `<span class="bubble-text">${emotion}</span>`;
 
@@ -179,6 +168,9 @@ class BubbleManager {
         }
 
         this.container.appendChild(bubble);
+
+        // 启动入场动画
+        this._startEnterAnimation(bubble);
 
         // 设置生命周期
         this._setLifecycle(bubble);
@@ -218,10 +210,6 @@ class BubbleManager {
         bubble.style.setProperty('--bubble-color', glowColor);
         bubble.style.boxShadow = `0 0 25px ${glowColor}, inset 0 0 18px rgba(255,255,255,0.3)`;
 
-        // 动画
-        bubble.style.animation = 'bubbleFadeIn 0.6s ease-out forwards, floatInPlace 6s ease-in-out 0.6s infinite, bubblePulse 3s ease-in-out 0.6s infinite';
-        bubble.style.opacity = '0';
-
         bubble.innerHTML = `<span class="bubble-text">${emotion}</span>`;
 
         // 绑定事件
@@ -229,8 +217,37 @@ class BubbleManager {
 
         this.container.appendChild(bubble);
         
-        // 【修复】设置生命周期，确保气泡会自然消失
+        // 启动入场动画
+        this._startEnterAnimation(bubble);
+        
+        // 设置生命周期，确保气泡会自然消失
         this._setLifecycle(bubble);
+    }
+
+    /**
+     * 启动气泡入场动画
+     * @private
+     */
+    _startEnterAnimation(bubble) {
+        // 添加入场动画类
+        bubble.classList.add('entering');
+        
+        // 随机漂浮动画的延迟，让气泡看起来更自然
+        const floatDelay = Math.random() * 2;
+        const pulseDelay = Math.random() * 1.5;
+        const floatDuration = 5 + Math.random() * 2;
+        
+        // 入场动画结束后切换到漂浮状态
+        bubble.addEventListener('animationend', function handler(e) {
+            if (e.animationName === 'bubbleEnter') {
+                bubble.classList.remove('entering');
+                bubble.classList.add('floating');
+                // 设置随机的漂浮动画参数
+                bubble.style.animationDelay = `${-floatDelay}s, ${-pulseDelay}s`;
+                bubble.style.animationDuration = `${floatDuration}s, 3s`;
+                bubble.removeEventListener('animationend', handler);
+            }
+        });
     }
 
     /**

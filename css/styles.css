@@ -335,11 +335,56 @@ body {
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     backdrop-filter: blur(2px);
-    animation:
-        bubbleFadeIn 1.2s ease-out forwards,
-        floatInPlace 6s ease-in-out 1.2s infinite,
-        bubblePulse 3s ease-in-out 1.2s infinite;
     opacity: 0;
+    transform: scale(0.3);
+}
+
+/* 气泡入场动画（通过 JS 添加） */
+.bubble.entering {
+    animation: bubbleEnter 1.5s ease-out forwards;
+    will-change: opacity, transform;
+}
+
+/* 气泡入场完成后的漂浮状态 */
+.bubble.floating {
+    opacity: 1;
+    transform: scale(1);
+    will-change: transform, opacity;
+    animation: 
+        floatInPlace 6s ease-in-out infinite,
+        bubblePulse 3s ease-in-out infinite;
+}
+
+/* 气泡入场动画 - 缓缓浮现 */
+@keyframes bubbleEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.4) translateY(25px);
+    }
+    15% {
+        opacity: 0.2;
+        transform: scale(0.5) translateY(20px);
+    }
+    30% {
+        opacity: 0.4;
+        transform: scale(0.65) translateY(14px);
+    }
+    50% {
+        opacity: 0.65;
+        transform: scale(0.8) translateY(8px);
+    }
+    70% {
+        opacity: 0.85;
+        transform: scale(0.92) translateY(3px);
+    }
+    85% {
+        opacity: 0.95;
+        transform: scale(0.98) translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* 气泡原地漂浮动画 */
@@ -350,15 +395,15 @@ body {
     75% { transform: translate(20px, -5px) scale(1.02); }
 }
 
-/* 气泡淡入 */
+/* 气泡淡入（保留兼容） */
 @keyframes bubbleFadeIn {
     0% {
         opacity: 0;
-        transform: scale(0.2);
+        transform: scale(0.3) translateY(20px);
     }
     100% {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
