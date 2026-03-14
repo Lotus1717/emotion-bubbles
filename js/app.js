@@ -7,6 +7,7 @@
 import { CONFIG } from './constants.js';
 import { gameController, GameState } from './game.js';
 import { shareManager } from './share.js';
+import { reminderManager } from './reminder.js';
 
 /**
  * 应用初始化
@@ -27,6 +28,10 @@ class App {
         
         // 初始化分享管理器
         shareManager.init();
+        
+        // 初始化提醒管理器
+        reminderManager.init();
+        this._initReminderUI();
         
         console.log('🫧 念起已加载');
     }
@@ -77,6 +82,13 @@ class App {
             
             // 星空
             stars: document.getElementById('stars'),
+            
+            // 提醒
+            reminderSection: document.getElementById('reminderSection'),
+            reminderToggle: document.getElementById('reminderToggle'),
+            reminderTimeWrapper: document.getElementById('reminderTimeWrapper'),
+            reminderTime: document.getElementById('reminderTime'),
+            testReminderBtn: document.getElementById('testReminderBtn'),
         };
     }
 
@@ -283,6 +295,92 @@ class App {
                 elements.statsPanel.style.display = 'flex';
                 break;
         }
+    }
+
+    /**
+     * 初始化提醒 UI
+     * @private
+     */
+    _initReminderUI() {
+        const { elements } = this;
+        
+        // 获取 DOM 元素
+        const reminderSection = elements.reminderSection;
+        const reminderToggle = elements.reminderToggle;
+        const reminderTimeWrapper = elements.reminderTimeWrapper;
+        const reminderTime = elements.reminderTime;
+        const testReminderBtn = elements.testReminderBtn;
+        
+        if (!reminderSection || !reminderToggle || !reminderTimeWrapper || !reminderTime || !testReminderBtn) {
+            return;
+        }
+
+        const syncControls = ({ enabled, showTime }) => {
+            reminderToggle.checked = enabled;
+            reminderTimeWrapper.style.display = showTime ? 'flex' : 'none';
+            testReminderBtn.style.display = enabled ? 'inline-block' : 'none';
+        };
+        
+        // 加载当前设置
+        const settings = reminderManager.getSettings();
+        
+        // 检查通知支持状态
+        if (!settings.supported) {
+            reminderSection.style.display = 'none';
+            return;
+        }
+
+        reminderSection.style.display = 'flex';
+        reminderTime.value = settings.time;
+        syncControls({
+            enabled: settings.enabled,
+            showTime: settings.enabled || settings.hasStoredTime,
+        });
+        
+        // 开关事件
+        reminderToggle?.addEventListener('change', async (e) => {
+            const enabled = e.target.checked;
+
+            const success = await reminderManager.setEnabled(enabled);
+            const latest = reminderManager.getSettings();
+
+            if (!success) {
+                syncControls({
+                    enabled: false,
+                    showTime: latest.hasStoredTime,
+                });
+
+                if (latest.permission === 'denied') {
+                    alert('通知功能已被拒绝，请在浏览器设置中手动开启');
+                }
+                return;
+            }
+
+            syncControls({
+                enabled,
+                showTime: enabled || latest.hasStoredTime,
+            });
+        });
+        
+        // 时间选择事件
+        reminderTime?.addEventListener('change', (e) => {
+            const updated = reminderManager.setTime(e.target.value);
+            if (!updated) {
+                reminderTime.value = reminderManager.getSettings().time;
+                alert('请选择有效时间（格式：HH:MM）');
+            }
+        });
+        
+        // 测试通知事件
+        testReminderBtn?.addEventListener('click', async () => {
+            const success = await reminderManager.test();
+            if (!success) {
+                const latest = reminderManager.getSettings();
+                if (latest.permission === 'denied') {
+                    alert('通知权限未开启，请在浏览器设置中允许通知');
+                }
+            }
+        });
     }
 }
 
