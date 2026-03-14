@@ -84,7 +84,8 @@ class App {
             stars: document.getElementById('stars'),
             
             // 提醒
-            reminderSection: document.getElementById('reminderSection'),
+            reminderPanel: document.getElementById('reminderPanel'),
+            reminderToggleBtn: document.getElementById('reminderToggleBtn'),
             reminderToggle: document.getElementById('reminderToggle'),
             reminderTimeWrapper: document.getElementById('reminderTimeWrapper'),
             reminderTime: document.getElementById('reminderTime'),
@@ -305,74 +306,78 @@ class App {
         const { elements } = this;
         
         // 获取 DOM 元素
-        const reminderSection = elements.reminderSection;
+        const reminderPanel = elements.reminderPanel;
+        const reminderToggleBtn = elements.reminderToggleBtn;
         const reminderToggle = elements.reminderToggle;
         const reminderTimeWrapper = elements.reminderTimeWrapper;
         const reminderTime = elements.reminderTime;
         const testReminderBtn = elements.testReminderBtn;
         
-        if (!reminderSection || !reminderToggle || !reminderTimeWrapper || !reminderTime || !testReminderBtn) {
+        if (!reminderPanel || !reminderToggleBtn || !reminderToggle || !reminderTimeWrapper || !reminderTime || !testReminderBtn) {
             return;
         }
-
-        const syncControls = ({ enabled, showTime }) => {
-            reminderToggle.checked = enabled;
-            reminderTimeWrapper.style.display = showTime ? 'flex' : 'none';
-            testReminderBtn.style.display = enabled ? 'inline-block' : 'none';
-        };
         
         // 加载当前设置
         const settings = reminderManager.getSettings();
         
         // 检查通知支持状态
         if (!settings.supported) {
-            reminderSection.style.display = 'none';
+            reminderToggleBtn.style.display = 'none';
+            reminderPanel.style.display = 'none';
             return;
         }
 
-        reminderSection.style.display = 'flex';
-        reminderTime.value = settings.time;
-        syncControls({
-            enabled: settings.enabled,
-            showTime: settings.enabled || settings.hasStoredTime,
-        });
-        
-        // 开关事件
-        reminderToggle?.addEventListener('change', async (e) => {
-            const enabled = e.target.checked;
+        let expanded = settings.enabled || settings.hasStoredTime;
+        const render = (state = reminderManager.getSettings()) => {
+            reminderToggle.checked = state.enabled;
+            reminderTime.value = state.time;
+            reminderTimeWrapper.style.display = (state.enabled || state.hasStoredTime) ? 'flex' : 'none';
+            testReminderBtn.style.display = state.enabled ? 'inline-block' : 'none';
+            reminderPanel.style.display = expanded ? 'block' : 'none';
 
+            reminderToggleBtn.setAttribute('aria-expanded', String(expanded));
+            reminderToggleBtn.textContent = expanded ? '收起提醒' : '每日提醒';
+        };
+
+        reminderManager.subscribe((state) => {
+            // 权限被回收后，若存在历史时间也保持面板可见，避免用户找不到入口
+            expanded = expanded || state.hasStoredTime || state.enabled;
+            render(state);
+        });
+
+        // 点击切换按钮展开/收起面板
+        reminderToggleBtn.addEventListener('click', () => {
+            expanded = !expanded;
+            render();
+        });
+
+        // 开关事件
+        reminderToggle.addEventListener('change', async (e) => {
+            const enabled = e.target.checked;
             const success = await reminderManager.setEnabled(enabled);
             const latest = reminderManager.getSettings();
 
-            if (!success) {
-                syncControls({
-                    enabled: false,
-                    showTime: latest.hasStoredTime,
-                });
-
-                if (latest.permission === 'denied') {
-                    alert('通知功能已被拒绝，请在浏览器设置中手动开启');
-                }
-                return;
+            if (!success && latest.permission === 'denied') {
+                alert('通知功能已被拒绝，请在浏览器设置中手动开启');
             }
 
-            syncControls({
-                enabled,
-                showTime: enabled || latest.hasStoredTime,
-            });
+            expanded = expanded || enabled || latest.hasStoredTime;
+            render(latest);
         });
         
         // 时间选择事件
-        reminderTime?.addEventListener('change', (e) => {
+        reminderTime.addEventListener('change', (e) => {
             const updated = reminderManager.setTime(e.target.value);
             if (!updated) {
                 reminderTime.value = reminderManager.getSettings().time;
                 alert('请选择有效时间（格式：HH:MM）');
             }
+            expanded = true;
+            render();
         });
         
         // 测试通知事件
-        testReminderBtn?.addEventListener('click', async () => {
+        testReminderBtn.addEventListener('click', async () => {
             const success = await reminderManager.test();
             if (!success) {
                 const latest = reminderManager.getSettings();
@@ -381,6 +386,8 @@ class App {
                 }
             }
         });
+
+        render(settings);
     }
 }
 

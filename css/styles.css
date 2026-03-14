@@ -1244,3 +1244,143 @@ input:checked + .slider:before {
     outline: none;
     border-color: rgba(255, 215, 0, 0.5);
 }
+
+/* ===========================================
+   首页布局优化
+   =========================================== */
+
+/* 开始面板头部 */
+.start-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* 设置区域 */
+.start-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 2rem;
+}
+
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.setting-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* 主题选项 */
+.theme-options {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.theme-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    opacity: 0.6;
+}
+
+.theme-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.theme-btn.active {
+    opacity: 1;
+    border-color: rgba(255, 215, 0, 0.8);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+/* 时间选项 */
+.time-options {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.time-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+}
+
+/* 大按钮 */
+.btn-large {
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+/* 辅助按钮组 */
+.start-actions {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.btn-text:hover {
+    color: rgba(255, 215, 0, 0.8);
+}
+
+.btn-text:focus-visible {
+    outline: 1px solid rgba(255, 215, 0, 0.6);
+    border-radius: 0.4rem;
+}
+
+/* 提醒面板 */
+.reminder-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    padding: 1rem;
+    width: 100%;
+    max-width: 280px;
+}
+
+.reminder-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+}
+
+.reminder-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+}
+
+.reminder-toggle {
+    flex-shrink: 0;
+}
+
+.reminder-panel .reminder-time-wrapper {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+}
