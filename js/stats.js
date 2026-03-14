@@ -265,9 +265,12 @@ class EmotionStats {
     getStats(range = 'week') {
         const data = this.getFilteredData(range);
         
+        // 趋势图天数：本周7天，本月/全部显示14天以适配移动端
+        const trendDays = range === 'week' ? 7 : 14;
+        
         return {
             overview: this.calculateStats(data),
-            trend: this.getTrendData(range === 'week' ? 7 : 30),
+            trend: this.getTrendData(trendDays),
             change: this.getEmotionChange(range)
         };
     }

@@ -21,6 +21,7 @@
 :root {
     /* 主题色 */
     --primary: #667eea;
+    --primary-rgb: 102, 126, 234;
     --secondary: #764ba2;
 
     /* 背景色 */
@@ -293,8 +294,8 @@ body {
 }
 
 .time-btn.active {
-    background: rgba(102, 126, 234, 0.5);
-    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
     color: var(--text-primary);
 }
 
@@ -892,8 +893,8 @@ body {
 }
 
 .filter-btn.active {
-    background: rgba(102, 126, 234, 0.3);
-    border-color: rgba(102, 126, 234, 0.5);
+    background: rgba(var(--primary-rgb), 0.3);
+    border-color: rgba(var(--primary-rgb), 0.5);
     color: var(--text-primary);
 }
 
@@ -960,11 +961,12 @@ body {
     align-items: flex-end;
     justify-content: space-between;
     height: 80px;
-    gap: 6px;
+    gap: 2px;
 }
 
 .trend-bar {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -973,18 +975,20 @@ body {
 }
 
 .trend-bar-fill {
-    width: 100%;
-    max-width: 24px;
+    width: 80%;
+    max-width: 16px;
     background: linear-gradient(180deg, var(--primary), var(--secondary));
-    border-radius: 3px 3px 0 0;
+    border-radius: 2px 2px 0 0;
     min-height: 3px;
     transition: height 0.5s ease;
 }
 
 .trend-label {
-    font-size: 0.65rem;
+    font-size: 0.5rem;
     color: rgba(255, 255, 255, 0.35);
-    margin-top: 6px;
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Top 情绪 */
@@ -1209,6 +1213,15 @@ body.theme-minimal .hint-top {
 
     .trend-chart {
         height: 60px;
+        gap: 1px;
+    }
+
+    .trend-bar-fill {
+        max-width: 12px;
+    }
+
+    .trend-label {
+        font-size: 0.45rem;
     }
 
     .category-name {

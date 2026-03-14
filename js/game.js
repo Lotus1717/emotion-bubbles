@@ -92,6 +92,22 @@ class GameController {
 
         document.documentElement.style.setProperty('--primary', colors.primary);
         document.documentElement.style.setProperty('--secondary', colors.secondary);
+        
+        // 设置 RGB 变量用于透明度混合
+        const primaryRgb = this._hexToRgb(colors.primary);
+        if (primaryRgb) {
+            document.documentElement.style.setProperty('--primary-rgb', primaryRgb);
+        }
+    }
+
+    /**
+     * 将 hex 颜色转换为 RGB 字符串
+     * @private
+     */
+    _hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return null;
+        return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
     }
 
     /**
