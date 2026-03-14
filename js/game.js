@@ -422,11 +422,11 @@ class GameController {
      * @private
      */
     _saveHistory() {
-        const today = new Date().toLocaleDateString();
+        const today = this._getTodayDateKey();
         const counts = {};
         this.poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
 
-        const existing = this.history.findIndex(h => h.date === today);
+        const existing = this.history.findIndex(h => (h.date || '').toString() === today);
         if (existing >= 0) {
             // 合并今天的记录
             Object.entries(counts).forEach(([e, c]) => {
@@ -439,6 +439,18 @@ class GameController {
         // 只保留最近 N 天
         this.history = this.history.slice(-CONFIG.HISTORY.MAX_DAYS);
         localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(this.history));
+    }
+
+    /**
+     * 获取今日日期键（本地时区 YYYY-MM-DD）
+     * @private
+     */
+    _getTodayDateKey() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     /**
@@ -459,14 +471,14 @@ class GameController {
      * @private
      */
     _updateStatsDisplay(range = 'week') {
-        if (!this.elements.statsList) return;
+        if (!this._hasStatsPanelElements()) return;
         
         // 初始化统计模块
         emotionStats.init(this.history);
         
         // 获取统计数据
         const stats = emotionStats.getStats(range);
-        const { overview, change } = stats;
+        const { overview } = stats;
         
         // 检查是否有数据
         const hasData = overview.totalPopped > 0;
@@ -482,70 +494,108 @@ class GameController {
             this.elements.statAvgPerDay.textContent = overview.avgPerDay;
         }
         
-        // 更新分类统计
-        if (this.elements.categoryList) {
-            if (!hasData) {
-                this.elements.categoryList.innerHTML = '<p class="empty-tip">暂无数据</p>';
-            } else {
-                this.elements.categoryList.innerHTML = Object.entries(overview.categoryBreakdown)
-                    .filter(([_, data]) => data.count > 0)
-                    .map(([category, data]) => `
-                        <div class="category-item">
-                            <div class="category-name">${this._getCategoryName(category)}</div>
-                            <div class="category-bar">
-                                <div class="category-bar-fill" style="width: ${data.percentage}%"></div>
-                            </div>
-                            <div class="category-count">${data.count} (${data.percentage}%)</div>
-                        </div>
-                    `).join('');
-            }
-        }
-        
-        // 更新 Top 情绪
-        if (this.elements.topList) {
-            if (!hasData) {
-                this.elements.topList.innerHTML = '<p class="empty-tip">暂无数据</p>';
-            } else {
-                this.elements.topList.innerHTML = overview.topEmotions
-                    .map(item => `
-                        <div class="top-item">
-                            <span class="top-emotion">${item.emotion}</span>
-                            <span class="top-count">${item.count}次</span>
-                            <span class="top-percent">${item.percentage}%</span>
-                        </div>
-                    `).join('');
-            }
-        }
-        
-        // 更新趋势图
-        if (this.elements.trendChart) {
-            const trend = stats.trend;
-            const maxTotal = Math.max(...trend.map(d => d.total), 1);
-            
-            if (!hasData) {
-                this.elements.trendChart.innerHTML = '<p class="empty-tip">暂无数据</p>';
-            } else {
-                this.elements.trendChart.innerHTML = trend.map(d => `
-                    <div class="trend-bar">
-                        <div class="trend-bar-fill" style="height: ${(d.total / maxTotal) * 100}%"></div>
-                        <div class="trend-label">${d.shortDate}</div>
-                    </div>
-                `).join('');
-            }
+        this._renderCategoryBreakdown(overview, hasData);
+        this._renderTopEmotions(overview, hasData);
+        this._renderTrendChart(stats.trend, hasData);
+        this._renderLegacyStatsList(overview);
+    }
+
+    /**
+     * 检查统计面板节点是否可用
+     * @private
+     */
+    _hasStatsPanelElements() {
+        const { categoryList, topList, trendChart, statsList } = this.elements;
+        return Boolean(categoryList || topList || trendChart || statsList);
+    }
+
+    /**
+     * 渲染分类占比
+     * @private
+     */
+    _renderCategoryBreakdown(overview, hasData) {
+        if (!this.elements.categoryList) return;
+
+        if (!hasData) {
+            this.elements.categoryList.innerHTML = '<p class="empty-tip">暂无数据</p>';
+            return;
         }
 
-        // 兼容旧版列表（如果 statsList 还在）
-        if (this.elements.statsList) {
-            if (this.history.length === 0) {
-                this.elements.statsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">暂无历史记录</p>';
-            } else {
-                // 兼容旧代码，但使用新数据
-                const topEmotions = overview.topEmotions.slice(0, 5);
-                this.elements.statsList.innerHTML = topEmotions
-                    .map(item => `<div class="stats-item"><span>${item.emotion}</span><span class="stats-count">${item.count}</span></div>`)
-                    .join('');
-            }
+        const rows = Object.entries(overview.categoryBreakdown)
+            .filter(([_, data]) => data.count > 0)
+            .map(([category, data]) => `
+                <div class="category-item">
+                    <div class="category-name">${this._getCategoryName(category)}</div>
+                    <div class="category-bar">
+                        <div class="category-bar-fill" style="width: ${data.percentage}%"></div>
+                    </div>
+                    <div class="category-count">${data.count} (${data.percentage}%)</div>
+                </div>
+            `);
+
+        this.elements.categoryList.innerHTML = rows.join('') || '<p class="empty-tip">暂无数据</p>';
+    }
+
+    /**
+     * 渲染高频情绪
+     * @private
+     */
+    _renderTopEmotions(overview, hasData) {
+        if (!this.elements.topList) return;
+
+        if (!hasData) {
+            this.elements.topList.innerHTML = '<p class="empty-tip">暂无数据</p>';
+            return;
         }
+
+        const rows = overview.topEmotions.map(item => `
+            <div class="top-item">
+                <span class="top-emotion">${item.emotion}</span>
+                <span class="top-count">${item.count}次</span>
+                <span class="top-percent">${item.percentage}%</span>
+            </div>
+        `);
+
+        this.elements.topList.innerHTML = rows.join('') || '<p class="empty-tip">暂无数据</p>';
+    }
+
+    /**
+     * 渲染趋势图
+     * @private
+     */
+    _renderTrendChart(trend, hasData) {
+        if (!this.elements.trendChart) return;
+
+        if (!hasData) {
+            this.elements.trendChart.innerHTML = '<p class="empty-tip">暂无数据</p>';
+            return;
+        }
+
+        const maxTotal = Math.max(...trend.map(d => d.total), 1);
+        this.elements.trendChart.innerHTML = trend.map(d => `
+            <div class="trend-bar">
+                <div class="trend-bar-fill" style="height: ${(d.total / maxTotal) * 100}%"></div>
+                <div class="trend-label">${d.shortDate}</div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * 渲染旧版兼容列表（若节点仍存在）
+     * @private
+     */
+    _renderLegacyStatsList(overview) {
+        if (!this.elements.statsList) return;
+
+        if (this.history.length === 0) {
+            this.elements.statsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">暂无历史记录</p>';
+            return;
+        }
+
+        const topEmotions = overview.topEmotions.slice(0, 5);
+        this.elements.statsList.innerHTML = topEmotions
+            .map(item => `<div class="stats-item"><span>${item.emotion}</span><span class="stats-count">${item.count}</span></div>`)
+            .join('');
     }
 
     /**
