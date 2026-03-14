@@ -1,13 +1,23 @@
 /* 念起 - 首页样式 */
-
-/* 容器 */
 .container {
   min-height: 100vh;
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease;
 }
 
-/* 背景星星 */
+.theme-healing {
+  background: linear-gradient(180deg, #0a1033 0%, #1a1c4d 40%, #2e1f5e 100%);
+}
+
+.theme-forest {
+  background: linear-gradient(180deg, #0a1f24 0%, #103534 45%, #1e4e45 100%);
+}
+
+.theme-sunset {
+  background: linear-gradient(180deg, #2f1637 0%, #602447 45%, #8b3d48 100%);
+}
+
 .stars {
   position: fixed;
   top: 0;
@@ -15,23 +25,29 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 50px 160px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.95), rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 50px 160px, rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 90px 40px, rgba(255, 255, 255, 0.95), rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.75), rgba(0, 0, 0, 0));
   background-repeat: repeat;
   background-size: 200px 200px;
-  animation: twinkle 4s ease-in-out infinite;
+  animation: twinkle 5s ease-in-out infinite;
 }
 
 @keyframes twinkle {
-  0%, 100% { opacity: 0.5; }
+  0% { opacity: 0.5; }
   50% { opacity: 1; }
+  100% { opacity: 0.5; }
 }
 
-/* 开始面板 */
+@keyframes float {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -16rpx, 0) scale(1.03); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
 .start-panel {
   display: flex;
   flex-direction: column;
@@ -48,21 +64,20 @@
   font-size: 72rpx;
   font-weight: bold;
   letter-spacing: 0.3em;
-  background: linear-gradient(135deg, #fff 0%, #ffd700 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #ffd978 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.65);
   margin-top: 20rpx;
 }
 
 .start-settings {
   display: flex;
   flex-direction: column;
-  gap: 40rpx;
   width: 100%;
   max-width: 500rpx;
   margin-bottom: 60rpx;
@@ -72,20 +87,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16rpx;
+  margin-bottom: 34rpx;
 }
 
 .setting-label {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.58);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  margin-bottom: 16rpx;
 }
 
-/* 主题选项 */
 .theme-options {
   display: flex;
-  gap: 32rpx;
   justify-content: center;
 }
 
@@ -93,34 +107,31 @@
   width: 80rpx;
   height: 80rpx;
   border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
   border: 4rpx solid transparent;
-  opacity: 0.6;
+  opacity: 0.62;
+  margin: 0 16rpx;
 }
 
 .theme-btn.healing {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6576ff 0%, #7854c9 100%);
 }
 
 .theme-btn.forest {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: linear-gradient(135deg, #17a385 0%, #4be080 100%);
 }
 
 .theme-btn.sunset {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #ff8fb1 0%, #ff6b61 100%);
 }
 
 .theme-btn.active {
   opacity: 1;
-  border-color: rgba(255, 215, 0, 0.8);
-  box-shadow: 0 0 40rpx rgba(255, 215, 0, 0.3);
+  border-color: rgba(255, 215, 0, 0.86);
+  box-shadow: 0 0 40rpx rgba(255, 215, 0, 0.28);
 }
 
-/* 时间选项 */
 .time-options {
   display: flex;
-  gap: 16rpx;
   justify-content: center;
 }
 
@@ -128,20 +139,20 @@
   padding: 16rpx 48rpx;
   border-radius: 40rpx;
   font-size: 28rpx;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2rpx solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.12);
+  border: 2rpx solid rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.76);
+  margin: 0 8rpx;
 }
 
 .time-btn.active {
   background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.5);
+  border-color: rgba(255, 215, 0, 0.52);
   color: #ffd700;
 }
 
-/* 按钮 */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6e8aff 0%, #8a58ca 100%);
   color: #fff;
   border: none;
   border-radius: 60rpx;
@@ -149,9 +160,9 @@
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2rpx solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.12);
+  border: 2rpx solid rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.85);
   border-radius: 40rpx;
 }
 
@@ -167,24 +178,21 @@
   border-radius: 30rpx;
 }
 
-/* 辅助按钮 */
 .start-actions {
   display: flex;
-  gap: 48rpx;
 }
 
 .btn-text {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.58);
   font-size: 26rpx;
-  padding: 16rpx;
+  padding: 16rpx 28rpx;
 }
 
-/* 提醒面板 */
 .reminder-panel {
-  background: rgba(255, 255, 255, 0.03);
-  border: 2rpx solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
   border-radius: 20rpx;
   padding: 32rpx;
   width: 100%;
@@ -200,7 +208,7 @@
 }
 
 .reminder-label {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.76);
   font-size: 26rpx;
 }
 
@@ -209,7 +217,6 @@
   font-size: 32rpx;
 }
 
-/* 游戏面板 */
 .play-panel {
   position: fixed;
   top: 0;
@@ -224,7 +231,7 @@
   left: 0;
   width: 100%;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.65);
   font-size: 24rpx;
   z-index: 10;
 }
@@ -243,46 +250,63 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: float 6s ease-in-out infinite;
+  border: 2rpx solid rgba(255, 255, 255, 0.42);
+  box-shadow:
+    inset -10rpx -10rpx 20rpx rgba(255, 255, 255, 0.08),
+    0 10rpx 28rpx rgba(0, 0, 0, 0.25);
+  animation-name: float;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.bubble-base {
+  background: radial-gradient(circle at 32% 24%, rgba(255, 204, 213, 0.8) 0%, rgba(250, 110, 145, 0.46) 100%);
+}
+
+.bubble-complex {
+  background: radial-gradient(circle at 28% 26%, rgba(192, 218, 255, 0.85) 0%, rgba(108, 122, 255, 0.45) 100%);
+}
+
+.bubble-healing {
+  background: radial-gradient(circle at 30% 24%, rgba(211, 255, 223, 0.9) 0%, rgba(101, 198, 160, 0.44) 100%);
 }
 
 .bubble-text {
   font-size: 24rpx;
-  color: #fff;
+  color: #ffffff;
   text-align: center;
+  text-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.2);
 }
 
 .play-footer {
   position: absolute;
   bottom: 40rpx;
-  left: 0;
-  width: 100%;
+  left: 40rpx;
+  right: 40rpx;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 32rpx;
 }
 
 .progress-bar {
   flex: 1;
-  max-width: 400rpx;
-  height: 8rpx;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4rpx;
+  height: 10rpx;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999rpx;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #8ab6ff, #a276ff);
+  transition: width 0.28s ease;
 }
 
 .timer-display {
   font-size: 32rpx;
-  color: rgba(255, 255, 255, 0.8);
-  min-width: 80rpx;
-  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  min-width: 96rpx;
+  text-align: right;
+  margin-left: 24rpx;
 }
 
 .btn-end-early {
@@ -291,13 +315,12 @@
   right: 20rpx;
   padding: 16rpx 32rpx;
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.1);
-  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.14);
+  border: 2rpx solid rgba(255, 255, 255, 0.26);
   border-radius: 40rpx;
 }
 
-/* 结果面板 */
 .result-panel {
   position: fixed;
   top: 0;
@@ -320,9 +343,8 @@
 .emotion-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
   justify-content: center;
-  max-width: 600rpx;
+  max-width: 620rpx;
   margin-bottom: 40rpx;
 }
 
@@ -333,13 +355,20 @@
   border-radius: 30rpx;
   font-size: 26rpx;
   color: #ffd700;
+  margin: 8rpx;
+}
+
+.emotion-tag-empty {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .ai-suggestion {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 20rpx;
   padding: 32rpx;
-  max-width: 600rpx;
+  max-width: 620rpx;
   margin-bottom: 40rpx;
 }
 
@@ -352,18 +381,21 @@
 
 .ai-suggestion-text {
   font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.78);
   line-height: 1.6;
 }
 
 .result-buttons {
   display: flex;
-  gap: 24rpx;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-/* 统计面板 */
+.result-buttons .btn-primary,
+.result-buttons .btn-secondary {
+  margin: 10rpx;
+}
+
 .stats-panel {
   position: fixed;
   top: 0;
@@ -380,17 +412,17 @@
 
 .stats-filter {
   display: flex;
-  gap: 16rpx;
   margin-bottom: 40rpx;
 }
 
 .filter-btn {
   padding: 12rpx 32rpx;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border: 2rpx solid rgba(255, 255, 255, 0.25);
   border-radius: 30rpx;
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.66);
+  margin: 0 8rpx;
 }
 
 .filter-btn.active {
@@ -401,19 +433,19 @@
 
 .stats-overview {
   display: flex;
-  gap: 24rpx;
-  margin-bottom: 40rpx;
   flex-wrap: wrap;
   justify-content: center;
+  margin-bottom: 40rpx;
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 2rpx solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 2rpx solid rgba(255, 255, 255, 0.14);
   border-radius: 20rpx;
   padding: 24rpx 32rpx;
   text-align: center;
-  min-width: 160rpx;
+  min-width: 170rpx;
+  margin: 10rpx;
 }
 
 .stat-value {
@@ -424,11 +456,14 @@
 
 .stat-label {
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.58);
   margin-top: 8rpx;
 }
 
 .stats-buttons {
   display: flex;
-  gap: 24rpx;
+}
+
+.stats-buttons .btn-small {
+  margin: 0 10rpx;
 }

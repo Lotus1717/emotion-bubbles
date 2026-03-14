@@ -1,6 +1,4 @@
 // 念起 - 首页逻辑
-const app = getApp()
-
 const EMOTIONS = {
   base: ['焦虑', '烦躁', '不安', '紧张', '压力', '郁闷', '失落', '疲惫', '无奈', '孤独'],
   complex: ['迷茫', '纠结', '后悔', '自责', '愧疚', '遗憾', '抱怨', '委屈', '失落', '空洞'],
@@ -8,12 +6,83 @@ const EMOTIONS = {
 }
 
 const OPPOSITE_EMOTIONS = {
-  '焦虑': '平静', '烦躁': '平静', '不安': '释然',
-  '紧张': '放松', '压力': '释放', '郁闷': '开朗',
-  '失落': '希望', '疲惫': '恢复', '无奈': '放下', '孤独': '陪伴',
-  '迷茫': '清晰', '纠结': '果断', '后悔': '放下',
-  '自责': '接纳', '愧疚': '原谅', '遗憾': '珍惜',
-  '抱怨': '感恩', '委屈': '理解', '空洞': '充实'
+  '焦虑': '平静',
+  '烦躁': '平静',
+  '不安': '释然',
+  '紧张': '放松',
+  '压力': '释放',
+  '郁闷': '开朗',
+  '失落': '希望',
+  '疲惫': '恢复',
+  '无奈': '放下',
+  '孤独': '陪伴',
+  '迷茫': '清晰',
+  '纠结': '果断',
+  '后悔': '放下',
+  '自责': '接纳',
+  '愧疚': '原谅',
+  '遗憾': '珍惜',
+  '抱怨': '感恩',
+  '委屈': '理解',
+  '空洞': '充实'
+}
+
+const RANGE_DAYS = {
+  week: 7,
+  month: 30,
+  all: Infinity
+}
+
+const BUBBLE_CONFIG = {
+  maxCount: 10,
+  refillThreshold: 5,
+  spawnBatch: 8,
+  refillDelay: 700,
+  minSize: 84,
+  maxSize: 132
+}
+
+function formatDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function parseHistoryDate(input) {
+  if (typeof input !== 'string') return null
+  if (/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return new Date(`${input}T00:00:00`)
+  }
+  const parsed = new Date(input)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function countEmotions(emotions) {
+  const counts = {}
+  emotions.forEach((emotion) => {
+    counts[emotion] = (counts[emotion] || 0) + 1
+  })
+  return counts
+}
+
+function mergeEmotionCounts(target, source) {
+  Object.entries(source).forEach(([emotion, count]) => {
+    target[emotion] = (target[emotion] || 0) + count
+  })
+}
+
+function getRangeStartDate(range) {
+  const days = RANGE_DAYS[range] || RANGE_DAYS.week
+  if (days === Infinity) return null
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  start.setDate(start.getDate() - (days - 1))
+  return start
+}
+
+function getTodayDateKey() {
+  return formatDateKey(new Date())
 }
 
 Page({
@@ -29,132 +98,366 @@ Page({
     statsRange: 'week',
     stats: { totalPopped: 0, totalDays: 0, avgPerDay: 0 },
     showReminder: false,
-    reminderTime: '21:00'
+    reminderTime: '21:00',
+    viewportWidthRpx: 750,
+    playAreaHeightRpx: 900
   },
-  
+
+  timer: null,
+  replenishTimer: null,
+
   onLoad() {
+    this._initViewport()
     this.loadHistory()
   },
-  
-  setTheme(e) {
-    this.setData({ theme: e.currentTarget.dataset.theme })
+
+  onHide() {
+    this._clearRuntimeTimers()
   },
-  
-  setDuration(e) {
-    const time = parseInt(e.currentTarget.dataset.time)
-    this.setData({ duration: time, displayTime: Math.floor(time/60) + ':00' })
+
+  onUnload() {
+    this._clearRuntimeTimers()
   },
-  
-  startGame() {
-    this.setData({ state: 'playing', bubbles: [], poppedEmotions: [], progress: 0 })
-    this.generateBubbles()
-    this.startTimer()
-  },
-  
-  generateBubbles() {
-    const bubbles = []
-    const count = Math.min(8, 10 - this.data.bubbles.length)
-    for (let i = 0; i < count; i++) {
-      const category = ['base', 'complex', 'healing'][Math.floor(Math.random() * 3)]
-      const emotionList = EMOTIONS[category]
-      bubbles.push({
-        id: Date.now() + i,
-        emotion: emotionList[Math.floor(Math.random() * emotionList.length)],
-        x: Math.random() * 600,
-        y: Math.random() * 800 + 200,
-        size: Math.random() * 40 + 80
-      })
-    }
-    this.setData({ bubbles: [...this.data.bubbles, ...bubbles] })
-  },
-  
-  popBubble(e) {
-    const id = e.currentTarget.dataset.id
-    const bubble = this.data.bubbles.find(b => b.id === id)
-    if (!bubble) return
-    const poppedEmotions = [...this.data.poppedEmotions, bubble.emotion]
-    const bubbles = this.data.bubbles.filter(b => b.id !== id)
-    this.setData({ bubbles, poppedEmotions })
-    if (bubbles.length < 5) setTimeout(() => this.generateBubbles(), 1000)
-  },
-  
-  timer: null,
-  startTimer() {
-    let remaining = this.data.duration
-    this.timer = setInterval(() => {
-      remaining--
+
+  _initViewport() {
+    try {
+      const systemInfo = wx.getSystemInfoSync()
+      const rpxRatio = 750 / systemInfo.windowWidth
+      const viewportHeightRpx = Math.floor(systemInfo.windowHeight * rpxRatio)
       this.setData({
-        displayTime: Math.floor(remaining/60) + ':' + (remaining%60).toString().padStart(2,'0'),
-        progress: ((this.data.duration - remaining) / this.data.duration) * 100
+        viewportWidthRpx: 750,
+        playAreaHeightRpx: Math.max(680, viewportHeightRpx - 300)
       })
-      if (remaining <= 0) this.endGame()
+    } catch (error) {
+      console.warn('获取视口信息失败，使用默认值', error)
+    }
+  },
+
+  _clearRuntimeTimers() {
+    if (this.timer) {
+      clearInterval(this.timer)
+      this.timer = null
+    }
+    if (this.replenishTimer) {
+      clearTimeout(this.replenishTimer)
+      this.replenishTimer = null
+    }
+  },
+
+  _formatSeconds(seconds) {
+    const safe = Math.max(0, seconds)
+    const minutes = Math.floor(safe / 60)
+    const remainingSeconds = String(safe % 60).padStart(2, '0')
+    return `${minutes}:${remainingSeconds}`
+  },
+
+  _randomInRange(min, max) {
+    return min + Math.random() * (max - min)
+  },
+
+  _pickEmotionCategory() {
+    const categories = ['base', 'complex', 'healing']
+    return categories[Math.floor(Math.random() * categories.length)]
+  },
+
+  _createBubble(category) {
+    const emotionPool = EMOTIONS[category] || EMOTIONS.base
+    const emotion = emotionPool[Math.floor(Math.random() * emotionPool.length)]
+    return this._createBubbleByEmotion(emotion, category)
+  },
+
+  _createBubbleByEmotion(emotion, category) {
+    const size = Math.floor(this._randomInRange(BUBBLE_CONFIG.minSize, BUBBLE_CONFIG.maxSize))
+    const maxX = Math.max(20, this.data.viewportWidthRpx - size - 20)
+    const maxY = Math.max(20, this.data.playAreaHeightRpx - size - 20)
+
+    return {
+      id: `${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+      emotion,
+      category,
+      x: Math.floor(this._randomInRange(20, maxX)),
+      y: Math.floor(this._randomInRange(20, maxY)),
+      size,
+      floatDuration: Number(this._randomInRange(4.8, 8.2).toFixed(2)),
+      floatDelay: Number(this._randomInRange(-1.8, 0.2).toFixed(2))
+    }
+  },
+
+  _updateTimerView(remainingSeconds) {
+    const progress = ((this.data.duration - remainingSeconds) / this.data.duration) * 100
+    this.setData({
+      displayTime: this._formatSeconds(remainingSeconds),
+      progress: Math.min(100, Math.max(0, Number(progress.toFixed(2))))
+    })
+  },
+
+  _buildSuggestion(isEarlyEnd) {
+    const total = this.data.poppedEmotions.length
+    if (total === 0) {
+      return '你停下来照看自己，本身就很珍贵。下一次，试着多停留一会儿。'
+    }
+
+    const counts = countEmotions(this.data.poppedEmotions)
+    const topEmotion = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
+    const templates = [
+      `你一共看见了 ${total} 个情绪泡泡，最常出现的是「${topEmotion}」。`,
+      `谢谢你的信任。${topEmotion} 被反复看见，说明它正等待你温柔回应。`,
+      '情绪如云，来去自如。你已经迈出了觉察与接纳的关键一步。'
+    ]
+
+    if (isEarlyEnd) {
+      templates.push('你选择了提前结束，也是在练习尊重自己的节奏。')
+    }
+
+    return templates[Math.floor(Math.random() * templates.length)]
+  },
+
+  _getFilteredHistory(history, range) {
+    const startDate = getRangeStartDate(range)
+    if (!startDate) return history
+
+    return history.filter((item) => {
+      const parsed = parseHistoryDate(item.date)
+      if (!parsed) return false
+      parsed.setHours(0, 0, 0, 0)
+      return parsed >= startDate
+    })
+  },
+
+  setTheme(e) {
+    const theme = e.currentTarget.dataset.theme
+    if (!theme) return
+    this.setData({ theme })
+  },
+
+  setDuration(e) {
+    const duration = Number(e.currentTarget.dataset.time)
+    if (![60, 180].includes(duration)) return
+    this.setData({
+      duration,
+      displayTime: this._formatSeconds(duration)
+    })
+  },
+
+  startGame() {
+    this._clearRuntimeTimers()
+    this.setData(
+      {
+        state: 'playing',
+        bubbles: [],
+        poppedEmotions: [],
+        suggestion: '',
+        progress: 0,
+        displayTime: this._formatSeconds(this.data.duration)
+      },
+      () => {
+        this.generateBubbles()
+        this.startTimer()
+      }
+    )
+  },
+
+  generateBubbles() {
+    const current = this.data.bubbles
+    const availableSlots = Math.max(0, BUBBLE_CONFIG.maxCount - current.length)
+    const count = Math.min(BUBBLE_CONFIG.spawnBatch, availableSlots)
+    if (count === 0) return
+
+    const nextBubbles = []
+    for (let i = 0; i < count; i += 1) {
+      nextBubbles.push(this._createBubble(this._pickEmotionCategory()))
+    }
+
+    this.setData({
+      bubbles: current.concat(nextBubbles)
+    })
+  },
+
+  popBubble(e) {
+    const targetId = String(e.currentTarget.dataset.id)
+    const currentBubbles = this.data.bubbles
+    const index = currentBubbles.findIndex((bubble) => String(bubble.id) === targetId)
+    if (index === -1) return
+
+    const targetBubble = currentBubbles[index]
+    const bubbles = currentBubbles.slice(0, index).concat(currentBubbles.slice(index + 1))
+    const poppedEmotions = this.data.poppedEmotions.concat(targetBubble.emotion)
+
+    const oppositeEmotion = OPPOSITE_EMOTIONS[targetBubble.emotion]
+    if (oppositeEmotion && bubbles.length < BUBBLE_CONFIG.maxCount && Math.random() > 0.55) {
+      bubbles.push(this._createBubbleByEmotion(oppositeEmotion, 'healing'))
+    }
+
+    this.setData({ bubbles, poppedEmotions })
+
+    if (bubbles.length < BUBBLE_CONFIG.refillThreshold) {
+      if (this.replenishTimer) {
+        clearTimeout(this.replenishTimer)
+      }
+      this.replenishTimer = setTimeout(() => {
+        if (this.data.state === 'playing') {
+          this.generateBubbles()
+        }
+      }, BUBBLE_CONFIG.refillDelay)
+    }
+  },
+
+  startTimer() {
+    this._clearRuntimeTimers()
+    let remaining = this.data.duration
+    this._updateTimerView(remaining)
+
+    this.timer = setInterval(() => {
+      remaining -= 1
+      this._updateTimerView(remaining)
+
+      if (remaining <= 0) {
+        this.endGame(false)
+      }
     }, 1000)
   },
-  
-  endEarly() { this.endGame() },
-  
-  endGame() {
-    clearInterval(this.timer)
-    const suggestions = [
-      '谢谢你的信任。每一种情绪都值得被看见。',
-      '你戳破了' + this.data.poppedEmotions.length + '个情绪气泡。',
-      '情绪如云，来去自如。你已经迈出了觉察的第一步。'
-    ]
-    this.setData({ state: 'result', suggestion: suggestions[Math.floor(Math.random()*3)], progress: 100 })
-    this.saveHistory()
+
+  endEarly() {
+    this.endGame(true)
   },
-  
+
+  endGame(isEarlyEnd) {
+    if (this.data.state !== 'playing') return
+    this._clearRuntimeTimers()
+
+    this.setData({
+      state: 'result',
+      bubbles: [],
+      suggestion: this._buildSuggestion(isEarlyEnd),
+      progress: 100
+    })
+
+    this.saveHistory()
+    this.loadHistory()
+  },
+
   saveHistory() {
     if (this.data.poppedEmotions.length === 0) return
+
     const history = wx.getStorageSync('emotionHistory') || []
-    const today = new Date().toLocaleDateString()
-    const counts = {}
-    this.data.poppedEmotions.forEach(e => counts[e] = (counts[e]||0) + 1)
-    const existingIndex = history.findIndex(h => h.date === today)
-    if (existingIndex >= 0) {
-      Object.entries(counts).forEach(([e,c]) => history[existingIndex].emotions[e] = (history[existingIndex].emotions[e]||0) + c)
+    const validHistory = Array.isArray(history)
+      ? history.filter((item) => item && typeof item.date === 'string' && item.emotions && typeof item.emotions === 'object')
+      : []
+
+    const today = getTodayDateKey()
+    const todayCounts = countEmotions(this.data.poppedEmotions)
+    const existingItem = validHistory.find((item) => item.date === today)
+
+    if (existingItem) {
+      mergeEmotionCounts(existingItem.emotions, todayCounts)
     } else {
-      history.push({ date: today, emotions: counts })
+      validHistory.push({
+        date: today,
+        emotions: todayCounts
+      })
     }
-    wx.setStorageSync('emotionHistory', history)
+
+    validHistory.sort((a, b) => {
+      const dateA = parseHistoryDate(a.date)
+      const dateB = parseHistoryDate(b.date)
+      if (!dateA || !dateB) return 0
+      return dateA.getTime() - dateB.getTime()
+    })
+
+    wx.setStorageSync('emotionHistory', validHistory)
   },
-  
+
   loadHistory() {
     const history = wx.getStorageSync('emotionHistory') || []
+    const validHistory = Array.isArray(history)
+      ? history.filter((item) => item && item.emotions && typeof item.emotions === 'object')
+      : []
+    const filteredHistory = this._getFilteredHistory(validHistory, this.data.statsRange)
+
     let totalPopped = 0
-    history.forEach(h => Object.values(h.emotions).forEach(c => totalPopped += c))
-    this.setData({ stats: { totalPopped, totalDays: history.length, avgPerDay: (totalPopped/history.length||0).toFixed(1) } })
+    filteredHistory.forEach((item) => {
+      Object.values(item.emotions).forEach((count) => {
+        totalPopped += Number(count) || 0
+      })
+    })
+
+    const totalDays = filteredHistory.length
+    const avgPerDay = totalDays > 0 ? Number((totalPopped / totalDays).toFixed(1)) : 0
+    this.setData({
+      stats: {
+        totalPopped,
+        totalDays,
+        avgPerDay
+      }
+    })
   },
-  
-  restartGame() { this.setData({ state: 'idle' }) },
-  showStats() { this.loadHistory(); this.setData({ state: 'stats' }) },
-  closeStats() { this.setData({ state: 'idle' }) },
-  clearHistory() { wx.removeStorageSync('emotionHistory'); this.setData({ stats:{totalPopped:0,totalDays:0,avgPerDay:0} }) },
-  setStatsRange(e) { this.setData({ statsRange: e.currentTarget.dataset.range }) },
-  toggleReminder() { this.setData({ showReminder: !this.data.showReminder }) },
-  bindTimeChange(e) { this.setData({ reminderTime: e.detail.value }) },
-  // 分享结果
+
+  restartGame() {
+    this._clearRuntimeTimers()
+    this.setData({
+      state: 'idle',
+      bubbles: [],
+      poppedEmotions: [],
+      progress: 0,
+      suggestion: '',
+      displayTime: this._formatSeconds(this.data.duration)
+    })
+  },
+
+  showStats() {
+    this.loadHistory()
+    this.setData({ state: 'stats' })
+  },
+
+  closeStats() {
+    this.setData({ state: 'idle' })
+  },
+
+  clearHistory() {
+    wx.showModal({
+      title: '确认清空',
+      content: '清空后不可恢复，是否继续？',
+      success: (res) => {
+        if (!res.confirm) return
+        wx.removeStorageSync('emotionHistory')
+        this.setData({
+          stats: { totalPopped: 0, totalDays: 0, avgPerDay: 0 }
+        })
+      }
+    })
+  },
+
+  setStatsRange(e) {
+    const range = e.currentTarget.dataset.range
+    if (!RANGE_DAYS[range]) return
+    this.setData({ statsRange: range }, () => this.loadHistory())
+  },
+
+  toggleReminder() {
+    this.setData({ showReminder: !this.data.showReminder })
+  },
+
+  bindTimeChange(e) {
+    this.setData({ reminderTime: e.detail.value })
+  },
+
   shareResult() {
-    // 生成小程序码
+    if (this.data.poppedEmotions.length === 0) {
+      wx.showToast({ title: '还没有可分享内容', icon: 'none' })
+      return
+    }
+
     wx.showLoading({ title: '生成中...' })
-    
-    // 获取用户信息
-    const userInfo = wx.getStorageSync('userInfo') || {}
-    
-    // 统计情绪
-    const counts = {}
-    this.data.poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1)
+
+    const counts = countEmotions(this.data.poppedEmotions)
     const topEmotions = Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([e]) => e)
-    
-    // 生成分享文案
+      .map(([emotion]) => emotion)
+
     const shareText = `我在「念起」戳破了 ${this.data.poppedEmotions.length} 个情绪气泡：${topEmotions.join('、')}。\n\n「念起即觉，觉已不随」\n一起觉察情绪吧~`
-    
     wx.hideLoading()
-    
-    // 复制到剪贴板
+
     wx.setClipboardData({
       data: shareText,
       success: () => {
@@ -162,53 +465,49 @@ Page({
       }
     })
   },
-  
-  // 分享给朋友
+
   onShareAppMessage() {
     return {
       title: '念起 - 戳破情绪气泡，觉察内心',
-      path: '/pages/index/index',
-      imageUrl: '/images/share.png'
+      path: '/pages/index/index'
     }
   },
-  
-  // 分享到朋友圈
+
   onShareTimeline() {
     return {
       title: '念起 - 戳破情绪气泡，觉察内心',
       query: ''
     }
   },
-  
-  // 订阅提醒
+
   subscribeReminder() {
-    // 小程序订阅消息
     wx.requestSubscribeMessage({
-      tmplIds: ['YOUR_TEMPLATE_ID'], // 需要在微信后台获取模板ID
+      tmplIds: ['YOUR_TEMPLATE_ID'],
       success: (res) => {
-        if (res.errMsg === 'requestSubscribeMessage:ok') {
-          // 保存订阅状态
+        const statuses = Object.values(res || {})
+        const accepted = statuses.some((status) => status === 'accept')
+        if (accepted) {
           wx.setStorageSync('subscribed', true)
           wx.showToast({ title: '订阅成功', icon: 'success' })
+          return
         }
+        wx.showToast({ title: '你可以稍后再开启提醒', icon: 'none' })
       },
-      fail: (err) => {
-        console.log('订阅失败', err)
-        // 引导用户手动设置
+      fail: (error) => {
+        console.warn('订阅失败', error)
         wx.showModal({
           title: '订阅提醒',
-          content: '需要您允许订阅消息才能接收提醒哦~',
+          content: '需要允许订阅消息才能接收提醒。',
           showCancel: false
         })
       }
     })
   },
-  
-  // 测试通知（模拟）
+
   testNotification() {
     wx.showModal({
       title: '通知提醒',
-      content: '点击"允许"后，每天21:00会收到提醒消息',
+      content: `点击“允许”后，可在 ${this.data.reminderTime} 接收提醒消息`,
       confirmText: '允许',
       success: (res) => {
         if (res.confirm) {
@@ -216,6 +515,5 @@ Page({
         }
       }
     })
-  },
-  onUnload() { clearInterval(this.timer) }
+  }
 })

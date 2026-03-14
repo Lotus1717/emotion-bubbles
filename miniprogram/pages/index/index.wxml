@@ -1,5 +1,5 @@
 <!-- 念起 - 首页 -->
-<view class="container">
+<view class="container theme-{{theme}}">
   <!-- 背景 -->
   <view class="stars"></view>
   
@@ -54,10 +54,10 @@
   <!-- 游戏面板 -->
   <view class="play-panel" wx:if="{{state === 'playing'}}">
     <text class="hint-top">轻触泡影，让念头自然流过</text>
-    <view class="bubble-container">
+      <view class="bubble-container">
       <view wx:for="{{bubbles}}" wx:key="id" 
-            class="bubble {{item.emotion}}"
-            style="left:{{item.x}}rpx;top:{{item.y}}rpx;width:{{item.size}}rpx;height:{{item.size}}rpx;"
+            class="bubble bubble-{{item.category}}"
+            style="left:{{item.x}}rpx;top:{{item.y}}rpx;width:{{item.size}}rpx;height:{{item.size}}rpx;animation-duration:{{item.floatDuration}}s;animation-delay:{{item.floatDelay}}s;"
             bindtap="popBubble" data-id="{{item.id}}">
         <text class="bubble-text">{{item.emotion}}</text>
       </view>
@@ -76,6 +76,7 @@
     <text class="result-title">你戳破的情绪</text>
     <view class="emotion-tags">
       <text wx:for="{{poppedEmotions}}" wx:key="index" class="emotion-tag">{{item}}</text>
+      <text wx:if="{{poppedEmotions.length===0}}" class="emotion-tag emotion-tag-empty">这次你选择了暂停，也很好</text>
     </view>
     <view class="ai-suggestion">
       <text class="ai-suggestion-title">✨ 小花的建议</text>
