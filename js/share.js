@@ -258,7 +258,7 @@ class ShareManager {
         ctx.fillStyle = 'rgba(102, 126, 234, 0.9)';
         ctx.font = '500 24px "PingFang SC", "Noto Sans SC", sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('✨ 小花的建议', cardX + 32, cardY + 50);
+        ctx.fillText('✨ 小念的锦囊', cardX + 32, cardY + 50);
         
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.font = '400 24px "PingFang SC", "Noto Sans SC", sans-serif';
@@ -304,17 +304,13 @@ class ShareManager {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.font = '300 22px "PingFang SC", "Noto Sans SC", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`冥想时长 ${timeText}`, this.width / 2, y - 20);
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.font = '300 20px "PingFang SC", "Noto Sans SC", sans-serif';
-        ctx.fillText('念起 · 念起即觉，觉已不随', this.width / 2, y + 20);
+        ctx.fillText(`冥想时长 ${timeText}`, this.width / 2, y - 10);
         
         const date = new Date();
         const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.font = '300 18px "PingFang SC", "Noto Sans SC", sans-serif';
-        ctx.fillText(dateStr, this.width / 2, y + 55);
+        ctx.fillText(dateStr, this.width / 2, y + 25);
     }
 
     _wrapText(ctx, text, maxWidth) {
