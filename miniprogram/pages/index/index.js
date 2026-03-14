@@ -133,6 +133,89 @@ Page({
   setStatsRange(e) { this.setData({ statsRange: e.currentTarget.dataset.range }) },
   toggleReminder() { this.setData({ showReminder: !this.data.showReminder }) },
   bindTimeChange(e) { this.setData({ reminderTime: e.detail.value }) },
-  testNotification() { wx.showToast({ title: '通知已发送', icon: 'success' }) },
+  // 分享结果
+  shareResult() {
+    // 生成小程序码
+    wx.showLoading({ title: '生成中...' })
+    
+    // 获取用户信息
+    const userInfo = wx.getStorageSync('userInfo') || {}
+    
+    // 统计情绪
+    const counts = {}
+    this.data.poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1)
+    const topEmotions = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([e]) => e)
+    
+    // 生成分享文案
+    const shareText = `我在「念起」戳破了 ${this.data.poppedEmotions.length} 个情绪气泡：${topEmotions.join('、')}。\n\n「念起即觉，觉已不随」\n一起觉察情绪吧~`
+    
+    wx.hideLoading()
+    
+    // 复制到剪贴板
+    wx.setClipboardData({
+      data: shareText,
+      success: () => {
+        wx.showToast({ title: '文案已复制', icon: 'success' })
+      }
+    })
+  },
+  
+  // 分享给朋友
+  onShareAppMessage() {
+    return {
+      title: '念起 - 戳破情绪气泡，觉察内心',
+      path: '/pages/index/index',
+      imageUrl: '/images/share.png'
+    }
+  },
+  
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '念起 - 戳破情绪气泡，觉察内心',
+      query: ''
+    }
+  },
+  
+  // 订阅提醒
+  subscribeReminder() {
+    // 小程序订阅消息
+    wx.requestSubscribeMessage({
+      tmplIds: ['YOUR_TEMPLATE_ID'], // 需要在微信后台获取模板ID
+      success: (res) => {
+        if (res.errMsg === 'requestSubscribeMessage:ok') {
+          // 保存订阅状态
+          wx.setStorageSync('subscribed', true)
+          wx.showToast({ title: '订阅成功', icon: 'success' })
+        }
+      },
+      fail: (err) => {
+        console.log('订阅失败', err)
+        // 引导用户手动设置
+        wx.showModal({
+          title: '订阅提醒',
+          content: '需要您允许订阅消息才能接收提醒哦~',
+          showCancel: false
+        })
+      }
+    })
+  },
+  
+  // 测试通知（模拟）
+  testNotification() {
+    wx.showModal({
+      title: '通知提醒',
+      content: '点击"允许"后，每天21:00会收到提醒消息',
+      confirmText: '允许',
+      success: (res) => {
+        if (res.confirm) {
+          this.subscribeReminder()
+        }
+      }
+    })
+  },
   onUnload() { clearInterval(this.timer) }
 })
