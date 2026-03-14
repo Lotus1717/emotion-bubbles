@@ -3,7 +3,7 @@
  * 分析和可视化用户情绪数据
  */
 
-import { EMOTION_CATEGORIES } from './emotions.js';
+import { EMOTION_TREE } from './emotions.js';
 
 /**
  * 将日期格式化为本地 YYYY-MM-DD
@@ -145,7 +145,7 @@ class EmotionStats {
     calculateCategoryBreakdown(emotionCounts, total) {
         const breakdown = {};
         
-        Object.entries(EMOTION_CATEGORIES).forEach(([category, emotions]) => {
+        Object.entries(EMOTION_TREE).forEach(([category, emotions]) => {
             let categoryCount = 0;
             emotions.forEach(emotion => {
                 categoryCount += emotionCounts[emotion] || 0;
@@ -243,7 +243,7 @@ class EmotionStats {
         };
         
         // 各类别变化
-        Object.keys(EMOTION_CATEGORIES).forEach(category => {
+        Object.keys(EMOTION_TREE).forEach(category => {
             const current = currentStats.categoryBreakdown[category]?.count || 0;
             const previous = previousStats.categoryBreakdown[category]?.count || 0;
             

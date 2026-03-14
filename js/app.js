@@ -89,7 +89,7 @@ class App {
             reminderToggle: document.getElementById('reminderToggle'),
             reminderTimeWrapper: document.getElementById('reminderTimeWrapper'),
             reminderTime: document.getElementById('reminderTime'),
-            testReminderBtn: document.getElementById('testReminderBtn'),
+            closeReminderBtn: document.getElementById('closeReminderBtn'),
         };
     }
 
@@ -311,9 +311,9 @@ class App {
         const reminderToggle = elements.reminderToggle;
         const reminderTimeWrapper = elements.reminderTimeWrapper;
         const reminderTime = elements.reminderTime;
-        const testReminderBtn = elements.testReminderBtn;
+        const closeReminderBtn = elements.closeReminderBtn;
         
-        if (!reminderPanel || !reminderToggleBtn || !reminderToggle || !reminderTimeWrapper || !reminderTime || !testReminderBtn) {
+        if (!reminderPanel || !reminderToggleBtn || !reminderToggle || !reminderTime) {
             return;
         }
         
@@ -323,32 +323,41 @@ class App {
         // 检查通知支持状态
         if (!settings.supported) {
             reminderToggleBtn.style.display = 'none';
-            reminderPanel.style.display = 'none';
             return;
         }
 
-        let expanded = settings.enabled || settings.hasStoredTime;
         const render = (state = reminderManager.getSettings()) => {
             reminderToggle.checked = state.enabled;
             reminderTime.value = state.time;
-            reminderTimeWrapper.style.display = (state.enabled || state.hasStoredTime) ? 'flex' : 'none';
-            testReminderBtn.style.display = state.enabled ? 'inline-block' : 'none';
-            reminderPanel.style.display = expanded ? 'block' : 'none';
-
-            reminderToggleBtn.setAttribute('aria-expanded', String(expanded));
-            reminderToggleBtn.textContent = expanded ? '收起提醒' : '每日提醒';
+            // 时间选择器始终显示，但未开启时降低透明度
+            if (reminderTimeWrapper) {
+                reminderTimeWrapper.style.opacity = state.enabled ? '1' : '0.5';
+                reminderTimeWrapper.style.pointerEvents = state.enabled ? 'auto' : 'none';
+            }
         };
 
         reminderManager.subscribe((state) => {
-            // 权限被回收后，若存在历史时间也保持面板可见，避免用户找不到入口
-            expanded = expanded || state.hasStoredTime || state.enabled;
             render(state);
         });
 
-        // 点击切换按钮展开/收起面板
+        // 点击打开模态框
         reminderToggleBtn.addEventListener('click', () => {
-            expanded = !expanded;
             render();
+            reminderPanel.classList.add('show');
+        });
+
+        // 关闭模态框
+        const closeModal = () => {
+            reminderPanel.classList.remove('show');
+        };
+
+        closeReminderBtn?.addEventListener('click', closeModal);
+
+        // 点击遮罩关闭
+        reminderPanel.addEventListener('click', (e) => {
+            if (e.target === reminderPanel) {
+                closeModal();
+            }
         });
 
         // 开关事件
@@ -361,7 +370,6 @@ class App {
                 alert('通知功能已被拒绝，请在浏览器设置中手动开启');
             }
 
-            expanded = expanded || enabled || latest.hasStoredTime;
             render(latest);
         });
         
@@ -372,19 +380,7 @@ class App {
                 reminderTime.value = reminderManager.getSettings().time;
                 alert('请选择有效时间（格式：HH:MM）');
             }
-            expanded = true;
             render();
-        });
-        
-        // 测试通知事件
-        testReminderBtn.addEventListener('click', async () => {
-            const success = await reminderManager.test();
-            if (!success) {
-                const latest = reminderManager.getSettings();
-                if (latest.permission === 'denied') {
-                    alert('通知权限未开启，请在浏览器设置中允许通知');
-                }
-            }
         });
 
         render(settings);

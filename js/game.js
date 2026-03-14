@@ -9,6 +9,7 @@ import { audioManager } from './audio.js';
 import { physicsEngine } from './physics.js';
 import { bubbleManager } from './bubble.js';
 import { generateSuggestion } from './suggestions.js';
+import { emotionStats } from './stats.js';
 
 /**
  * 游戏状态枚举
@@ -523,13 +524,15 @@ class GameController {
 
         const rows = Object.entries(overview.categoryBreakdown)
             .filter(([_, data]) => data.count > 0)
+            .sort((a, b) => b[1].count - a[1].count)
+            .slice(0, 8)
             .map(([category, data]) => `
                 <div class="category-item">
-                    <div class="category-name">${this._getCategoryName(category)}</div>
+                    <div class="category-name">${category}</div>
                     <div class="category-bar">
                         <div class="category-bar-fill" style="width: ${data.percentage}%"></div>
                     </div>
-                    <div class="category-count">${data.count} (${data.percentage}%)</div>
+                    <div class="category-count">${data.count}</div>
                 </div>
             `);
 
@@ -548,11 +551,10 @@ class GameController {
             return;
         }
 
-        const rows = overview.topEmotions.map(item => `
+        const rows = overview.topEmotions.slice(0, 8).map(item => `
             <div class="top-item">
                 <span class="top-emotion">${item.emotion}</span>
-                <span class="top-count">${item.count}次</span>
-                <span class="top-percent">${item.percentage}%</span>
+                <span class="top-count">×${item.count}</span>
             </div>
         `);
 

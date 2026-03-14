@@ -57,21 +57,29 @@
                 <button class="btn-text" id="statsBtn">查看历史</button>
                 <button class="btn-text" id="reminderToggleBtn">每日提醒</button>
             </div>
-            
-            <!-- 提醒设置（默认隐藏） -->
-            <div class="reminder-panel" id="reminderPanel" style="display: none;">
-                <div class="reminder-row">
-                    <span class="reminder-label">开启提醒</span>
-                    <label class="switch reminder-toggle">
-                        <input type="checkbox" id="reminderToggle">
-                        <span class="slider"></span>
-                    </label>
+        </div>
+
+        <!-- 提醒设置模态框 -->
+        <div class="reminder-modal" id="reminderPanel">
+            <div class="reminder-modal-content">
+                <button class="reminder-close-btn" id="closeReminderBtn">✕</button>
+                <h3 class="reminder-modal-title">每日提醒</h3>
+                <p class="reminder-modal-desc">设置一个固定时间<br>提醒自己觉察情绪</p>
+                
+                <div class="reminder-settings">
+                    <div class="reminder-row">
+                        <span class="reminder-label">开启提醒</span>
+                        <label class="switch reminder-toggle">
+                            <input type="checkbox" id="reminderToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="reminder-time-wrapper" id="reminderTimeWrapper">
+                        <span class="reminder-label">提醒时间</span>
+                        <input type="time" id="reminderTime" class="reminder-time-input" value="21:00">
+                    </div>
                 </div>
-                <div class="reminder-time-wrapper" id="reminderTimeWrapper" style="display: none;">
-                    <span class="reminder-label">提醒时间</span>
-                    <input type="time" id="reminderTime" class="reminder-time-input" value="21:00">
-                </div>
-                <button class="btn btn-secondary btn-small" id="testReminderBtn" style="display: none;">测试通知</button>
             </div>
         </div>
 
@@ -95,50 +103,59 @@
 
         <!-- 统计面板 -->
         <div class="stats-panel" id="statsPanel">
-            <!-- 时间筛选 -->
-            <div class="stats-filter">
-                <button class="filter-btn active" data-range="week">本周</button>
-                <button class="filter-btn" data-range="month">本月</button>
-                <button class="filter-btn" data-range="all">全部</button>
+            <!-- 头部 -->
+            <div class="stats-header">
+                <h2 class="stats-title">情绪记录</h2>
+                <button class="stats-close-btn" id="backBtn">✕</button>
             </div>
             
-            <!-- 概览统计 -->
-            <div class="stats-overview" id="statsOverview">
-                <div class="stat-card">
-                    <div class="stat-value" id="statTotalPopped">0</div>
-                    <div class="stat-label">戳破总数</div>
+            <!-- 可滚动内容区 -->
+            <div class="stats-content">
+                <!-- 时间筛选 -->
+                <div class="stats-filter">
+                    <button class="filter-btn active" data-range="week">本周</button>
+                    <button class="filter-btn" data-range="month">本月</button>
+                    <button class="filter-btn" data-range="all">全部</button>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statTotalDays">0</div>
-                    <div class="stat-label">练习天数</div>
+                
+                <!-- 概览统计 -->
+                <div class="stats-overview" id="statsOverview">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotalPopped">0</div>
+                        <div class="stat-label">戳破总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotalDays">0</div>
+                        <div class="stat-label">练习天数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statAvgPerDay">0</div>
+                        <div class="stat-label">日均戳破</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statAvgPerDay">0</div>
-                    <div class="stat-label">日均戳破</div>
+                
+                <!-- 趋势图表 -->
+                <div class="stats-trend" id="statsTrend">
+                    <h3 class="stats-section-title">练习趋势</h3>
+                    <div class="trend-chart" id="trendChart"></div>
+                </div>
+                
+                <!-- Top 情绪 -->
+                <div class="stats-top" id="statsTop">
+                    <h3 class="stats-section-title">高频情绪</h3>
+                    <div class="top-list" id="topList"></div>
+                </div>
+                
+                <!-- 分类统计 -->
+                <div class="stats-category" id="statsCategory">
+                    <h3 class="stats-section-title">情绪分类</h3>
+                    <div class="category-list" id="categoryList"></div>
                 </div>
             </div>
             
-            <!-- 分类统计 -->
-            <div class="stats-category" id="statsCategory">
-                <h3 class="stats-section-title">情绪分类</h3>
-                <div class="category-list" id="categoryList"></div>
-            </div>
-            
-            <!-- Top 情绪 -->
-            <div class="stats-top" id="statsTop">
-                <h3 class="stats-section-title">高频情绪</h3>
-                <div class="top-list" id="topList"></div>
-            </div>
-            
-            <!-- 趋势图表 -->
-            <div class="stats-trend" id="statsTrend">
-                <h3 class="stats-section-title">情绪趋势</h3>
-                <div class="trend-chart" id="trendChart"></div>
-            </div>
-            
-            <div class="stats-buttons">
-                <button class="btn btn-secondary btn-small" id="clearStatsBtn">清空历史</button>
-                <button class="btn btn-primary btn-small" id="backBtn">返回</button>
+            <!-- 底部按钮 -->
+            <div class="stats-footer">
+                <button class="btn-text-danger" id="clearStatsBtn">清空历史</button>
             </div>
         </div>
     </div>
