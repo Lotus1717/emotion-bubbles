@@ -18,6 +18,7 @@ class ReminderManager {
         this.hasStoredTime = false;
         this.timer = null;
         this.permission = 'default';
+        this.listeners = new Set();
     }
 
     /**
@@ -26,6 +27,12 @@ class ReminderManager {
     init() {
         this._loadSettings();
         this._checkPermission();
+
+        // 若权限已失效，强制回收开启状态，避免 UI 展示与真实能力不一致
+        if (this.enabled && this.permission !== 'granted') {
+            this.enabled = false;
+            this._saveSettings();
+        }
 
         // 仅在“已开启且已授权”时调度提醒，避免误触发
         if (this.enabled && this.permission === 'granted') {
@@ -42,6 +49,8 @@ class ReminderManager {
                 this._syncTimerWithCurrentState(previousPermission);
             }
         });
+
+        this._emitChange('init');
     }
 
     /**
@@ -99,6 +108,7 @@ class ReminderManager {
         try {
             const permission = await Notification.requestPermission();
             this.permission = permission;
+            this._emitChange('permission');
             return permission === 'granted';
         } catch (e) {
             console.error('Failed to request notification permission:', e);
@@ -114,6 +124,10 @@ class ReminderManager {
         if (enabled && this.permission !== 'granted') {
             const granted = await this.requestPermission();
             if (!granted) {
+                this.enabled = false;
+                this._saveSettings();
+                this._stopTimer();
+                this._emitChange('toggle');
                 return false;
             }
         }
@@ -126,6 +140,8 @@ class ReminderManager {
         } else {
             this._stopTimer();
         }
+
+        this._emitChange('toggle');
         
         return true;
     }
@@ -148,7 +164,24 @@ class ReminderManager {
             this._startTimer();
         }
 
+        this._emitChange('time');
+
         return true;
+    }
+
+    /**
+     * 订阅状态变化
+     * @param {(settings: object, reason: string) => void} listener
+     * @returns {() => void}
+     */
+    subscribe(listener) {
+        if (typeof listener !== 'function') {
+            return () => {};
+        }
+
+        this.listeners.add(listener);
+        listener(this.getSettings(), 'subscribe');
+        return () => this.listeners.delete(listener);
     }
 
     /**
@@ -269,22 +302,44 @@ class ReminderManager {
      * @private
      */
     _syncTimerWithCurrentState(previousPermission) {
+        const previousEnabled = this.enabled;
+
         if (!this.enabled) {
             this._stopTimer();
-            return;
-        }
-
-        if (this.permission === 'granted') {
+        } else if (this.permission === 'granted') {
             if (previousPermission !== 'granted' || !this.timer) {
                 this._startTimer();
             }
+        } else {
+            // 权限被回收后立即停用并持久化，避免 UI 与真实状态不一致
+            this.enabled = false;
+            this._saveSettings();
+            this._stopTimer();
+        }
+
+        if (previousPermission !== this.permission || previousEnabled !== this.enabled) {
+            this._emitChange('permission-sync');
+        }
+    }
+
+    /**
+     * 通知订阅者状态变化
+     * @param {string} reason
+     * @private
+     */
+    _emitChange(reason) {
+        if (this.listeners.size === 0) {
             return;
         }
 
-        // 权限被回收后立即停用并持久化，避免 UI 与真实状态不一致
-        this.enabled = false;
-        this._saveSettings();
-        this._stopTimer();
+        const snapshot = this.getSettings();
+        this.listeners.forEach((listener) => {
+            try {
+                listener(snapshot, reason);
+            } catch (e) {
+                console.error('Reminder listener failed:', e);
+            }
+        });
     }
 
     /**

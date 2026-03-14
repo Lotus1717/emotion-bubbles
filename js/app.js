@@ -310,51 +310,54 @@ class App {
             return;
         }
 
-        const syncControls = ({ enabled, showTime }) => {
-            reminderToggle.checked = enabled;
-            reminderTimeWrapper.style.display = showTime ? 'flex' : 'none';
-            testReminderBtn.style.display = enabled ? 'inline-block' : 'none';
+        const renderReminderState = (settings) => {
+            if (!settings.supported) {
+                reminderSection.style.display = 'none';
+                return;
+            }
+
+            reminderSection.style.display = 'flex';
+            reminderToggle.checked = settings.enabled;
+            reminderTime.value = settings.time;
+            reminderTimeWrapper.style.display =
+                (settings.enabled || settings.hasStoredTime) ? 'flex' : 'none';
+            testReminderBtn.style.display = settings.enabled ? 'inline-block' : 'none';
         };
-        
-        // 加载当前设置
-        const settings = reminderManager.getSettings();
-        
-        // 检查通知支持状态
-        if (!settings.supported) {
+
+        const initialSettings = reminderManager.getSettings();
+        if (!initialSettings.supported) {
             reminderSection.style.display = 'none';
             return;
         }
 
-        reminderSection.style.display = 'flex';
-        reminderTime.value = settings.time;
-        syncControls({
-            enabled: settings.enabled,
-            showTime: settings.enabled || settings.hasStoredTime,
+        reminderManager.subscribe((settings) => {
+            renderReminderState(settings);
         });
+
+        let toggling = false;
         
         // 开关事件
         reminderToggle?.addEventListener('change', async (e) => {
-            const enabled = e.target.checked;
-
-            const success = await reminderManager.setEnabled(enabled);
-            const latest = reminderManager.getSettings();
-
-            if (!success) {
-                syncControls({
-                    enabled: false,
-                    showTime: latest.hasStoredTime,
-                });
-
-                if (latest.permission === 'denied') {
-                    alert('通知功能已被拒绝，请在浏览器设置中手动开启');
-                }
+            if (toggling) {
                 return;
             }
 
-            syncControls({
-                enabled,
-                showTime: enabled || latest.hasStoredTime,
-            });
+            toggling = true;
+            reminderToggle.disabled = true;
+            const enabled = e.target.checked;
+
+            try {
+                const success = await reminderManager.setEnabled(enabled);
+                if (!success) {
+                    const latest = reminderManager.getSettings();
+                    if (latest.permission === 'denied') {
+                        alert('通知功能已被拒绝，请在浏览器设置中手动开启');
+                    }
+                }
+            } finally {
+                toggling = false;
+                reminderToggle.disabled = false;
+            }
         });
         
         // 时间选择事件
@@ -368,12 +371,17 @@ class App {
         
         // 测试通知事件
         testReminderBtn?.addEventListener('click', async () => {
-            const success = await reminderManager.test();
-            if (!success) {
-                const latest = reminderManager.getSettings();
-                if (latest.permission === 'denied') {
-                    alert('通知权限未开启，请在浏览器设置中允许通知');
+            testReminderBtn.disabled = true;
+            try {
+                const success = await reminderManager.test();
+                if (!success) {
+                    const latest = reminderManager.getSettings();
+                    if (latest.permission === 'denied') {
+                        alert('通知权限未开启，请在浏览器设置中允许通知');
+                    }
                 }
+            } finally {
+                testReminderBtn.disabled = false;
             }
         });
     }
