@@ -12,231 +12,311 @@ class ShareManager {
     constructor() {
         this.canvas = null;
         this.ctx = null;
+        this.width = 1080;
+        this.height = 1440;
     }
 
-    /**
-     * 初始化
-     */
     init() {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d');
     }
 
-    /**
-     * 生成分享卡片
-     * @param {Object} gameResult - 游戏结果数据
-     * @returns {string} 图片 dataURL
-     */
     generateCard(gameResult) {
         const { emotions, duration, suggestion } = gameResult;
         
-        // 设置画布尺寸 (1080x1920 for vertical social media)
-        this.canvas.width = 1080;
-        this.canvas.height = 1920;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
         
         const ctx = this.ctx;
         
-        // 1. 绘制背景渐变
         this._drawBackground(ctx);
-        
-        // 2. 绘制标题
-        this._drawTitle(ctx);
-        
-        // 3. 绘制戳破的情绪
-        this._drawEmotions(ctx, emotions);
-        
-        // 4. 绘制建议
-        this._drawSuggestion(ctx, suggestion);
-        
-        // 5. 绘制底部信息
-        this._drawFooter(ctx, duration);
-        
-        // 6. 绘制装饰元素
         this._drawDecorations(ctx);
+        this._drawHeader(ctx);
+        this._drawEmotionCloud(ctx, emotions);
+        this._drawSuggestionCard(ctx, suggestion);
+        this._drawFooter(ctx, duration);
         
         return this.canvas.toDataURL('image/png');
     }
 
-    /**
-     * 绘制背景
-     */
     _drawBackground(ctx) {
-        const gradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#0a0a1a');
-        gradient.addColorStop(0.5, '#1a1a2e');
-        gradient.addColorStop(1, '#16213e');
+        const gradient = ctx.createLinearGradient(0, 0, this.width, this.height);
+        gradient.addColorStop(0, '#0f0c29');
+        gradient.addColorStop(0.5, '#302b63');
+        gradient.addColorStop(1, '#24243e');
         
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fillRect(0, 0, this.width, this.height);
+        
+        ctx.fillStyle = 'rgba(102, 126, 234, 0.03)';
+        ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    /**
-     * 绘制标题
-     */
-    _drawTitle(ctx) {
-        // 主标题
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 120px "Noto Serif SC", serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('念起', this.canvas.width / 2, 280);
-        
-        // 副标题
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.font = '36px "Noto Sans SC", sans-serif';
-        ctx.fillText('念起即觉，觉已不随', this.canvas.width / 2, 350);
-        
-        // 分隔线
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(200, 400);
-        ctx.lineTo(880, 400);
-        ctx.stroke();
-    }
-
-    /**
-     * 绘制情绪标签
-     */
-    _drawEmotions(ctx, emotions) {
-        const startY = 520;
-        const lineHeight = 80;
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.font = 'bold 48px "Noto Sans SC", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('今日戳破的情绪', this.canvas.width / 2, startY);
-        
-        // 绘制情绪气泡
-        const bubbleRadius = 40;
-        const emotionsToShow = emotions.slice(0, 6);
-        
-        emotionsToShow.forEach((emotion, index) => {
-            const row = Math.floor(index / 3);
-            const col = index % 3;
-            const x = 240 + col * 240;
-            const y = startY + 120 + row * lineHeight + 80;
-            
-            // 气泡背景
-            const gradient = ctx.createRadialGradient(x, y, 0, x, y, bubbleRadius);
-            gradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
-            gradient.addColorStop(1, 'rgba(255, 215, 0, 0.2)');
-            
-            ctx.beginPath();
-            ctx.arc(x, y, bubbleRadius, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            
-            // 气泡边框
-            ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // 文字
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '28px "Noto Sans SC", sans-serif';
-            ctx.fillText(emotion, x, y + 10);
-        });
-        
-        // 如果有更多情绪
-        if (emotions.length > 6) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.font = '24px "Noto Sans SC", sans-serif';
-            ctx.fillText(`等 ${emotions.length} 种情绪`, this.canvas.width / 2, startY + 340);
-        }
-    }
-
-    /**
-     * 绘制建议
-     */
-    _drawSuggestion(ctx, suggestion) {
-        const startY = 1200;
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.font = 'bold 40px "Noto Sans SC", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('✨ 小花的建议', this.canvas.width / 2, startY);
-        
-        // 建议文字（换行处理）
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '32px "Noto Sans SC", sans-serif';
-        
-        const maxWidth = 800;
-        const lines = this._wrapText(ctx, suggestion, maxWidth);
-        lines.forEach((line, index) => {
-            ctx.fillText(line, this.canvas.width / 2, startY + 70 + index * 50);
-        });
-    }
-
-    /**
-     * 绘制底部信息
-     */
-    _drawFooter(ctx, duration) {
-        const y = this.canvas.height - 200;
-        
-        // 分隔线
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(200, y - 40);
-        ctx.lineTo(880, y - 40);
-        ctx.stroke();
-        
-        // 游戏时长
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '28px "Noto Sans SC", sans-serif';
-        ctx.textAlign = 'center';
-        
-        const minutes = Math.floor(duration / 60);
-        ctx.fillText(`冥想时长 ${minutes} 分钟`, this.canvas.width / 2, y);
-        
-        // 提示文字
-        ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
-        ctx.fillText('扫码开始你的觉察之旅', this.canvas.width / 2, y + 50);
-        
-        // TODO: 添加小程序码占位
-    }
-
-    /**
-     * 绘制装饰元素
-     */
     _drawDecorations(ctx) {
-        // 绘制星星
-        const starCount = 30;
-        for (let i = 0; i < starCount; i++) {
-            const x = Math.random() * this.canvas.width;
-            const y = Math.random() * (this.canvas.height * 0.6);
-            const radius = Math.random() * 2 + 1;
-            const opacity = Math.random() * 0.5 + 0.3;
-            
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-            ctx.fill();
-        }
-        
-        // 绘制光晕气泡
-        const bubblePositions = [
-            { x: 150, y: 600, r: 80 },
-            { x: 930, y: 800, r: 60 },
-            { x: 100, y: 1400, r: 50 },
-            { x: 980, y: 1600, r: 70 },
+        const glows = [
+            { x: 0, y: 0, r: 400, color: 'rgba(102, 126, 234, 0.15)' },
+            { x: this.width, y: this.height * 0.4, r: 350, color: 'rgba(118, 75, 162, 0.12)' },
+            { x: this.width * 0.3, y: this.height, r: 300, color: 'rgba(236, 72, 153, 0.08)' },
         ];
         
-        bubblePositions.forEach(b => {
+        glows.forEach(g => {
+            const gradient = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r);
+            gradient.addColorStop(0, g.color);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, this.width, this.height);
+        });
+        
+        const starPositions = [];
+        for (let i = 0; i < 60; i++) {
+            starPositions.push({
+                x: Math.random() * this.width,
+                y: Math.random() * this.height * 0.7,
+                r: Math.random() * 1.5 + 0.5,
+                opacity: Math.random() * 0.6 + 0.2
+            });
+        }
+        
+        starPositions.forEach(star => {
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+            ctx.fill();
+        });
+        
+        const floatingBubbles = [
+            { x: 100, y: 300, r: 60, opacity: 0.08 },
+            { x: 980, y: 500, r: 45, opacity: 0.06 },
+            { x: 150, y: 900, r: 35, opacity: 0.05 },
+            { x: 950, y: 1100, r: 50, opacity: 0.07 },
+            { x: 540, y: 200, r: 25, opacity: 0.04 },
+        ];
+        
+        floatingBubbles.forEach(b => {
             const gradient = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-            gradient.addColorStop(0, 'rgba(255, 215, 0, 0.1)');
-            gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${b.opacity})`);
+            gradient.addColorStop(0.5, `rgba(255, 255, 255, ${b.opacity * 0.5})`);
+            gradient.addColorStop(1, 'transparent');
             
             ctx.beginPath();
             ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
             ctx.fillStyle = gradient;
             ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${b.opacity * 0.5})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
         });
     }
 
-    /**
-     * 文字换行处理
-     */
+    _drawHeader(ctx) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '200 88px "PingFang SC", "Noto Serif SC", serif';
+        ctx.textAlign = 'center';
+        ctx.letterSpacing = '0.3em';
+        ctx.fillText('念  起', this.width / 2, 160);
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.font = '300 28px "PingFang SC", "Noto Sans SC", sans-serif';
+        ctx.fillText('念起即觉，觉已不随', this.width / 2, 210);
+        
+        const lineY = 260;
+        const lineWidth = 120;
+        const gradient = ctx.createLinearGradient(
+            this.width / 2 - lineWidth, lineY,
+            this.width / 2 + lineWidth, lineY
+        );
+        gradient.addColorStop(0, 'transparent');
+        gradient.addColorStop(0.3, 'rgba(102, 126, 234, 0.6)');
+        gradient.addColorStop(0.5, 'rgba(118, 75, 162, 0.8)');
+        gradient.addColorStop(0.7, 'rgba(102, 126, 234, 0.6)');
+        gradient.addColorStop(1, 'transparent');
+        
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.width / 2 - lineWidth, lineY);
+        ctx.lineTo(this.width / 2 + lineWidth, lineY);
+        ctx.stroke();
+    }
+
+    _drawEmotionCloud(ctx, emotions) {
+        const centerY = 520;
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.font = '500 32px "PingFang SC", "Noto Sans SC", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('今日觉察的情绪', this.width / 2, 320);
+        
+        const emotionsToShow = emotions.slice(0, 8);
+        const tagHeight = 52;
+        const tagPaddingX = 32;
+        const tagGapX = 16;
+        const tagGapY = 16;
+        
+        ctx.font = '400 26px "PingFang SC", "Noto Sans SC", sans-serif';
+        
+        const tagWidths = emotionsToShow.map(e => ctx.measureText(e).width + tagPaddingX * 2);
+        
+        const rows = [];
+        let currentRow = [];
+        let currentRowWidth = 0;
+        const maxRowWidth = this.width - 160;
+        
+        tagWidths.forEach((width, i) => {
+            if (currentRowWidth + width + (currentRow.length > 0 ? tagGapX : 0) > maxRowWidth) {
+                rows.push(currentRow);
+                currentRow = [i];
+                currentRowWidth = width;
+            } else {
+                currentRow.push(i);
+                currentRowWidth += width + (currentRow.length > 1 ? tagGapX : 0);
+            }
+        });
+        if (currentRow.length > 0) rows.push(currentRow);
+        
+        const totalHeight = rows.length * tagHeight + (rows.length - 1) * tagGapY;
+        let yOffset = centerY - totalHeight / 2;
+        
+        const colors = [
+            { bg: 'rgba(102, 126, 234, 0.25)', border: 'rgba(102, 126, 234, 0.5)' },
+            { bg: 'rgba(118, 75, 162, 0.25)', border: 'rgba(118, 75, 162, 0.5)' },
+            { bg: 'rgba(236, 72, 153, 0.2)', border: 'rgba(236, 72, 153, 0.4)' },
+            { bg: 'rgba(99, 179, 237, 0.2)', border: 'rgba(99, 179, 237, 0.4)' },
+            { bg: 'rgba(129, 230, 217, 0.2)', border: 'rgba(129, 230, 217, 0.4)' },
+            { bg: 'rgba(246, 173, 85, 0.2)', border: 'rgba(246, 173, 85, 0.4)' },
+        ];
+        
+        rows.forEach((row, rowIndex) => {
+            const rowWidth = row.reduce((sum, i) => sum + tagWidths[i], 0) + (row.length - 1) * tagGapX;
+            let xOffset = (this.width - rowWidth) / 2;
+            
+            row.forEach((emotionIndex, colIndex) => {
+                const emotion = emotionsToShow[emotionIndex];
+                const tagWidth = tagWidths[emotionIndex];
+                const colorIndex = (rowIndex * 3 + colIndex) % colors.length;
+                const color = colors[colorIndex];
+                
+                const x = xOffset;
+                const y = yOffset;
+                const radius = tagHeight / 2;
+                
+                ctx.beginPath();
+                ctx.roundRect(x, y, tagWidth, tagHeight, radius);
+                ctx.fillStyle = color.bg;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.roundRect(x, y, tagWidth, tagHeight, radius);
+                ctx.strokeStyle = color.border;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.font = '400 26px "PingFang SC", "Noto Sans SC", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(emotion, x + tagWidth / 2, y + tagHeight / 2 + 9);
+                
+                xOffset += tagWidth + tagGapX;
+            });
+            
+            yOffset += tagHeight + tagGapY;
+        });
+        
+        if (emotions.length > 8) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.font = '300 22px "PingFang SC", "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`还有 ${emotions.length - 8} 种情绪...`, this.width / 2, yOffset + 30);
+        }
+    }
+
+    _drawSuggestionCard(ctx, suggestion) {
+        const cardX = 80;
+        const cardY = 780;
+        const cardWidth = this.width - 160;
+        const cardHeight = 280;
+        const radius = 24;
+        
+        const gradient = ctx.createLinearGradient(cardX, cardY, cardX + cardWidth, cardY + cardHeight);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.03)');
+        
+        ctx.beginPath();
+        ctx.roundRect(cardX, cardY, cardWidth, cardHeight, radius);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.roundRect(cardX, cardY, cardWidth, cardHeight, radius);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        ctx.fillStyle = 'rgba(102, 126, 234, 0.9)';
+        ctx.font = '500 24px "PingFang SC", "Noto Sans SC", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('✨ 小花的建议', cardX + 32, cardY + 50);
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = '400 24px "PingFang SC", "Noto Sans SC", sans-serif';
+        
+        const maxWidth = cardWidth - 64;
+        const lines = this._wrapText(ctx, suggestion, maxWidth);
+        const lineHeight = 40;
+        const maxLines = 4;
+        
+        lines.slice(0, maxLines).forEach((line, index) => {
+            ctx.fillText(line, cardX + 32, cardY + 100 + index * lineHeight);
+        });
+        
+        if (lines.length > maxLines) {
+            const lastLine = lines[maxLines - 1];
+            ctx.fillText(lastLine.slice(0, -3) + '...', cardX + 32, cardY + 100 + (maxLines - 1) * lineHeight);
+        }
+    }
+
+    _drawFooter(ctx, duration) {
+        const y = this.height - 140;
+        
+        const lineWidth = 80;
+        const gradient = ctx.createLinearGradient(
+            this.width / 2 - lineWidth, y - 60,
+            this.width / 2 + lineWidth, y - 60
+        );
+        gradient.addColorStop(0, 'transparent');
+        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+        gradient.addColorStop(1, 'transparent');
+        
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(this.width / 2 - lineWidth, y - 60);
+        ctx.lineTo(this.width / 2 + lineWidth, y - 60);
+        ctx.stroke();
+        
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        let timeText = minutes > 0 ? `${minutes} 分钟` : `${seconds} 秒`;
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = '300 22px "PingFang SC", "Noto Sans SC", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`冥想时长 ${timeText}`, this.width / 2, y - 20);
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.font = '300 20px "PingFang SC", "Noto Sans SC", sans-serif';
+        ctx.fillText('念起 · 念起即觉，觉已不随', this.width / 2, y + 20);
+        
+        const date = new Date();
+        const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.font = '300 18px "PingFang SC", "Noto Sans SC", sans-serif';
+        ctx.fillText(dateStr, this.width / 2, y + 55);
+    }
+
     _wrapText(ctx, text, maxWidth) {
         const lines = [];
         let currentLine = '';
@@ -261,11 +341,6 @@ class ShareManager {
         return lines;
     }
 
-    /**
-     * 保存图片到本地
-     * @param {string} dataURL - 图片数据
-     * @param {string} filename - 文件名
-     */
     async saveImage(dataURL, filename = '念起分享.png') {
         try {
             const link = document.createElement('a');
@@ -279,10 +354,6 @@ class ShareManager {
         }
     }
 
-    /**
-     * 复制图片到剪贴板
-     * @param {string} dataURL - 图片数据
-     */
     async copyToClipboard(dataURL) {
         try {
             const response = await fetch(dataURL);
@@ -299,7 +370,68 @@ class ShareManager {
             return false;
         }
     }
+
+    showToast(type = 'copied') {
+        const existing = document.querySelector('.toast-container');
+        if (existing) existing.remove();
+        const existingBackdrop = document.querySelector('.toast-backdrop');
+        if (existingBackdrop) existingBackdrop.remove();
+        
+        const configs = {
+            copied: {
+                icon: '✨',
+                title: '已复制到剪贴板',
+                message: '可以直接粘贴到 <span class="highlight">微信</span> 或 <span class="highlight">微博</span> 分享～'
+            },
+            saved: {
+                icon: '📥',
+                title: '图片已保存',
+                message: '请在相册中找到「<span class="highlight">念起分享.png</span>」分享～'
+            },
+            error: {
+                icon: '😅',
+                title: '分享失败',
+                message: '当前浏览器不支持分享功能，请尝试使用最新版 Chrome 或 Safari'
+            },
+            empty: {
+                icon: '🫧',
+                title: '还没有情绪哦',
+                message: '先戳破一些情绪气泡再来分享吧～'
+            }
+        };
+        
+        const config = configs[type] || configs.copied;
+        
+        const backdrop = document.createElement('div');
+        backdrop.className = 'toast-backdrop';
+        document.body.appendChild(backdrop);
+        
+        const container = document.createElement('div');
+        container.className = 'toast-container';
+        container.innerHTML = `
+            <div class="toast">
+                <span class="toast-icon">${config.icon}</span>
+                <div class="toast-title">${config.title}</div>
+                <div class="toast-message">${config.message}</div>
+            </div>
+        `;
+        document.body.appendChild(container);
+        
+        const dismiss = () => {
+            const toast = container.querySelector('.toast');
+            toast.classList.add('leaving');
+            backdrop.classList.add('leaving');
+            setTimeout(() => {
+                container.remove();
+                backdrop.remove();
+            }, 300);
+        };
+        
+        backdrop.addEventListener('click', dismiss);
+        container.addEventListener('click', dismiss);
+        
+        setTimeout(dismiss, 2500);
+    }
 }
 
-// 导出单例
 export const shareManager = new ShareManager();
