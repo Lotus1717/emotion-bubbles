@@ -1,0 +1,10 @@
+{
+  "description": "念起小程序项目",
+  "packOptions": {"ignore": []},
+  "setting": {"urlCheck": false},
+  "compileType": "miniprogram",
+  "libVersion": "2.19.0",
+  "appid": "YOUR_APPID",
+  "projectname": "nianqi",
+  "condition": {}
+}
