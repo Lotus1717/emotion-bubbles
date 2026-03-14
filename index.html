@@ -64,10 +64,51 @@
 
         <!-- 统计面板 -->
         <div class="stats-panel" id="statsPanel">
-            <h2 class="stats-title">戳破历史</h2>
-            <div class="stats-list" id="statsList"></div>
-            <button class="btn btn-secondary btn-small" id="clearStatsBtn">清空历史</button>
-            <button class="btn btn-primary btn-small" id="backBtn" style="margin-top: 1rem;">返回</button>
+            <!-- 时间筛选 -->
+            <div class="stats-filter">
+                <button class="filter-btn active" data-range="week">本周</button>
+                <button class="filter-btn" data-range="month">本月</button>
+                <button class="filter-btn" data-range="all">全部</button>
+            </div>
+            
+            <!-- 概览统计 -->
+            <div class="stats-overview" id="statsOverview">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotalPopped">0</div>
+                    <div class="stat-label">戳破总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotalDays">0</div>
+                    <div class="stat-label">练习天数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statAvgPerDay">0</div>
+                    <div class="stat-label">日均戳破</div>
+                </div>
+            </div>
+            
+            <!-- 分类统计 -->
+            <div class="stats-category" id="statsCategory">
+                <h3 class="stats-section-title">情绪分类</h3>
+                <div class="category-list" id="categoryList"></div>
+            </div>
+            
+            <!-- Top 情绪 -->
+            <div class="stats-top" id="statsTop">
+                <h3 class="stats-section-title">高频情绪</h3>
+                <div class="top-list" id="topList"></div>
+            </div>
+            
+            <!-- 趋势图表 -->
+            <div class="stats-trend" id="statsTrend">
+                <h3 class="stats-section-title">情绪趋势</h3>
+                <div class="trend-chart" id="trendChart"></div>
+            </div>
+            
+            <div class="stats-buttons">
+                <button class="btn btn-secondary btn-small" id="clearStatsBtn">清空历史</button>
+                <button class="btn btn-primary btn-small" id="backBtn">返回</button>
+            </div>
         </div>
     </div>
 
@@ -84,6 +125,7 @@
         </div>
         <div class="result-buttons">
             <button class="btn btn-primary" id="restartBtn">再来一轮</button>
+            <button class="btn btn-secondary" id="shareBtn">📤 分享</button>
             <button class="btn btn-secondary" id="closeResultBtn">关闭</button>
         </div>
     </div>

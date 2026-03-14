@@ -31,18 +31,18 @@ class GameController {
         this.duration = CONFIG.DEFAULT_DURATION;
         this.timeLeft = CONFIG.DEFAULT_DURATION;
         this.currentTheme = 'healing';
-        
+
         // 计时器
         this.gameTimer = null;
         this.countdownTimer = null;
-        
+
         // 数据
         this.poppedEmotions = [];
         this.history = [];
-        
+
         // DOM 引用
         this.elements = {};
-        
+
         // 回调
         this.onStateChange = null;
         this.onTimeUpdate = null;
@@ -85,10 +85,10 @@ class GameController {
      */
     setTheme(theme) {
         if (!THEMES[theme]) return;
-        
+
         this.currentTheme = theme;
         const colors = THEMES[theme];
-        
+
         document.documentElement.style.setProperty('--primary', colors.primary);
         document.documentElement.style.setProperty('--secondary', colors.secondary);
     }
@@ -98,7 +98,7 @@ class GameController {
      */
     start() {
         if (this.state !== GameState.IDLE) return;
-        
+
         this._setState(GameState.COUNTDOWN);
         this._startCountdown();
     }
@@ -109,7 +109,7 @@ class GameController {
      */
     _startCountdown() {
         let count = CONFIG.COUNTDOWN_SECONDS;
-        
+
         if (this.elements.countdownText) {
             this.elements.countdownText.textContent = count;
         }
@@ -117,7 +117,7 @@ class GameController {
         this.countdownTimer = setInterval(() => {
             count--;
             audioManager.playTick();
-            
+
             if (count > 0) {
                 if (this.elements.countdownText) {
                     this.elements.countdownText.textContent = count;
@@ -135,30 +135,30 @@ class GameController {
      */
     _startPlay() {
         this._setState(GameState.PLAYING);
-        
+
         this.timeLeft = this.duration;
         this.poppedEmotions = [];
-        
+
         this._updateTimerDisplay();
         this._updateProgress();
-        
+
         // 启动音频
         audioManager.resume();
         audioManager.startAmbient();
-        
+
         // 启动物理引擎
         physicsEngine.start(() => bubbleManager.getAllBubbles());
-        
+
         // 启动气泡生成（使用随机初始情绪）
         const initialEmotions = getRandomInitialEmotions();
         bubbleManager.start(initialEmotions);
-        
+
         // 启动游戏计时
         this.gameTimer = setInterval(() => {
             this.timeLeft--;
             this._updateTimerDisplay();
             this._updateProgress();
-            
+
             if (this.timeLeft <= 0) {
                 this._endGame();
             }
@@ -172,15 +172,15 @@ class GameController {
     _endGame() {
         clearInterval(this.gameTimer);
         this.gameTimer = null;
-        
+
         bubbleManager.stop();
         physicsEngine.stop();
         audioManager.stopAmbient();
         audioManager.playEnd();
-        
+
         this._saveHistory();
         this._showResult();
-        
+
         this._setState(GameState.RESULT);
     }
 
@@ -224,6 +224,14 @@ class GameController {
     }
 
     /**
+     * 更新统计时间范围
+     * @param {string} range - 时间范围
+     */
+    updateStatsRange(range) {
+        this._updateStatsDisplay(range);
+    }
+
+    /**
      * 清空历史记录
      */
     clearHistory() {
@@ -241,16 +249,16 @@ class GameController {
         clearInterval(this.countdownTimer);
         this.gameTimer = null;
         this.countdownTimer = null;
-        
+
         bubbleManager.stop();
         bubbleManager.clear();
         physicsEngine.stop();
         audioManager.stopAmbient();
-        
+
         this.poppedEmotions = [];
         this.timeLeft = this.duration;
         this.emotionBalanceTracker = [];
-        
+
         // 重置状态为 IDLE，以便可以重新开始
         this.state = GameState.IDLE;
     }
@@ -323,7 +331,7 @@ class GameController {
         }
 
         this.emotionBalanceTracker.push(category);
-        
+
         // 只保留最近 10 次
         if (this.emotionBalanceTracker.length > 10) {
             this.emotionBalanceTracker.shift();
@@ -333,18 +341,18 @@ class GameController {
         if (this.emotionBalanceTracker.length >= 6) {
             const recent = this.emotionBalanceTracker.slice(-6);
             const categoryCount = {};
-            
+
             recent.forEach(cat => {
                 categoryCount[cat] = (categoryCount[cat] || 0) + 1;
             });
 
             const maxCount = Math.max(...Object.values(categoryCount));
-            
+
             // 如果某类占比过高，补充对立情绪
             if (maxCount >= 4) {
                 const dominantCategory = Object.keys(categoryCount).find(k => categoryCount[k] === maxCount);
                 const opposite = OPPOSITE_EMOTIONS[dominantCategory] || [];
-                
+
                 if (opposite.length > 0) {
                     setTimeout(() => {
                         const oppositeCategory = opposite[Math.floor(Math.random() * opposite.length)];
@@ -364,7 +372,7 @@ class GameController {
      */
     _updateTimerDisplay() {
         if (!this.elements.timerDisplay) return;
-        
+
         const m = Math.floor(this.timeLeft / 60);
         const s = this.timeLeft % 60;
         this.elements.timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
@@ -376,7 +384,7 @@ class GameController {
      */
     _updateProgress() {
         if (!this.elements.progressBar) return;
-        
+
         const progress = ((this.duration - this.timeLeft) / this.duration) * 100;
         this.elements.progressBar.style.width = progress + '%';
     }
@@ -389,7 +397,7 @@ class GameController {
         // 统计情绪出现次数
         const counts = {};
         this.poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
-        
+
         // 排序取前 N 个
         const sorted = Object.entries(counts)
             .sort((a, b) => b[1] - a[1])
@@ -414,11 +422,11 @@ class GameController {
      * @private
      */
     _saveHistory() {
-        const today = new Date().toLocaleDateString();
+        const today = this._getTodayDateKey();
         const counts = {};
         this.poppedEmotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
 
-        const existing = this.history.findIndex(h => h.date === today);
+        const existing = this.history.findIndex(h => (h.date || '').toString() === today);
         if (existing >= 0) {
             // 合并今天的记录
             Object.entries(counts).forEach(([e, c]) => {
@@ -431,6 +439,18 @@ class GameController {
         // 只保留最近 N 天
         this.history = this.history.slice(-CONFIG.HISTORY.MAX_DAYS);
         localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(this.history));
+    }
+
+    /**
+     * 获取今日日期键（本地时区 YYYY-MM-DD）
+     * @private
+     */
+    _getTodayDateKey() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     /**
@@ -450,7 +470,121 @@ class GameController {
      * 更新统计显示
      * @private
      */
-    _updateStatsDisplay() {
+    _updateStatsDisplay(range = 'week') {
+        if (!this._hasStatsPanelElements()) return;
+        
+        // 初始化统计模块
+        emotionStats.init(this.history);
+        
+        // 获取统计数据
+        const stats = emotionStats.getStats(range);
+        const { overview } = stats;
+        
+        // 检查是否有数据
+        const hasData = overview.totalPopped > 0;
+        
+        // 更新概览数字
+        if (this.elements.statTotalPopped) {
+            this.elements.statTotalPopped.textContent = overview.totalPopped;
+        }
+        if (this.elements.statTotalDays) {
+            this.elements.statTotalDays.textContent = overview.totalDays;
+        }
+        if (this.elements.statAvgPerDay) {
+            this.elements.statAvgPerDay.textContent = overview.avgPerDay;
+        }
+        
+        this._renderCategoryBreakdown(overview, hasData);
+        this._renderTopEmotions(overview, hasData);
+        this._renderTrendChart(stats.trend, hasData);
+        this._renderLegacyStatsList(overview);
+    }
+
+    /**
+     * 检查统计面板节点是否可用
+     * @private
+     */
+    _hasStatsPanelElements() {
+        const { categoryList, topList, trendChart, statsList } = this.elements;
+        return Boolean(categoryList || topList || trendChart || statsList);
+    }
+
+    /**
+     * 渲染分类占比
+     * @private
+     */
+    _renderCategoryBreakdown(overview, hasData) {
+        if (!this.elements.categoryList) return;
+
+        if (!hasData) {
+            this.elements.categoryList.innerHTML = '<p class="empty-tip">暂无数据</p>';
+            return;
+        }
+
+        const rows = Object.entries(overview.categoryBreakdown)
+            .filter(([_, data]) => data.count > 0)
+            .map(([category, data]) => `
+                <div class="category-item">
+                    <div class="category-name">${this._getCategoryName(category)}</div>
+                    <div class="category-bar">
+                        <div class="category-bar-fill" style="width: ${data.percentage}%"></div>
+                    </div>
+                    <div class="category-count">${data.count} (${data.percentage}%)</div>
+                </div>
+            `);
+
+        this.elements.categoryList.innerHTML = rows.join('') || '<p class="empty-tip">暂无数据</p>';
+    }
+
+    /**
+     * 渲染高频情绪
+     * @private
+     */
+    _renderTopEmotions(overview, hasData) {
+        if (!this.elements.topList) return;
+
+        if (!hasData) {
+            this.elements.topList.innerHTML = '<p class="empty-tip">暂无数据</p>';
+            return;
+        }
+
+        const rows = overview.topEmotions.map(item => `
+            <div class="top-item">
+                <span class="top-emotion">${item.emotion}</span>
+                <span class="top-count">${item.count}次</span>
+                <span class="top-percent">${item.percentage}%</span>
+            </div>
+        `);
+
+        this.elements.topList.innerHTML = rows.join('') || '<p class="empty-tip">暂无数据</p>';
+    }
+
+    /**
+     * 渲染趋势图
+     * @private
+     */
+    _renderTrendChart(trend, hasData) {
+        if (!this.elements.trendChart) return;
+
+        if (!hasData) {
+            this.elements.trendChart.innerHTML = '<p class="empty-tip">暂无数据</p>';
+            return;
+        }
+
+        const maxTotal = Math.max(...trend.map(d => d.total), 1);
+        this.elements.trendChart.innerHTML = trend.map(d => `
+            <div class="trend-bar">
+                <div class="trend-bar-fill" style="height: ${(d.total / maxTotal) * 100}%"></div>
+                <div class="trend-label">${d.shortDate}</div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * 渲染旧版兼容列表（若节点仍存在）
+     * @private
+     */
+    _renderLegacyStatsList(overview) {
         if (!this.elements.statsList) return;
 
         if (this.history.length === 0) {
@@ -458,22 +592,25 @@ class GameController {
             return;
         }
 
-        // 汇总所有情绪
-        const allEmotions = {};
-        this.history.forEach(h => {
-            Object.entries(h.emotions).forEach(([e, c]) => {
-                allEmotions[e] = (allEmotions[e] || 0) + c;
-            });
-        });
-
-        // 排序取前 N 个
-        const sorted = Object.entries(allEmotions)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, CONFIG.HISTORY.DISPLAY_TOP);
-
-        this.elements.statsList.innerHTML = sorted
-            .map(([e, c]) => `<div class="stats-item"><span>${e}</span><span class="stats-count">${c}</span></div>`)
+        const topEmotions = overview.topEmotions.slice(0, 5);
+        this.elements.statsList.innerHTML = topEmotions
+            .map(item => `<div class="stats-item"><span>${item.emotion}</span><span class="stats-count">${item.count}</span></div>`)
             .join('');
+    }
+
+    /**
+     * 获取分类中文名
+     * @private
+     */
+    _getCategoryName(category) {
+        const names = {
+            'base': '基础情绪',
+            'complex': '复杂情绪',
+            'healing': '治愈情绪',
+            'social': '社恐情绪',
+            'work': '职场情绪'
+        };
+        return names[category] || category;
     }
 }
 
