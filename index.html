@@ -21,41 +21,57 @@
 
         <!-- 开始面板 -->
         <div class="start-panel" id="startPanel">
-            <h1 class="title">念起</h1>
-            <p class="subtitle">
-                念起即觉，觉已不随
-            </p>
-
-            <!-- 主题选择 -->
-            <div class="theme-options">
-                <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
-                <div class="theme-btn forest" data-theme="forest" title="森林"></div>
-                <div class="theme-btn sunset" data-theme="sunset" title="日落"></div>
+            <!-- 标题区 -->
+            <div class="start-header">
+                <h1 class="title">念起</h1>
+                <p class="subtitle">念起即觉，觉已不随</p>
             </div>
-
-            <!-- 时间选择 -->
-            <div class="time-options">
-                <button class="time-btn active" data-time="60">1分钟</button>
-                <button class="time-btn" data-time="180">3分钟</button>
-            </div>
-
-            <!-- 按钮组 -->
-            <button class="btn btn-primary" id="startBtn">开始</button>
-            <button class="btn btn-secondary btn-small" id="statsBtn" style="margin-top: 1rem;">查看历史</button>
             
-            <!-- 每日提醒设置 -->
-            <div class="reminder-section" id="reminderSection" style="margin-top: 1.5rem;">
-                <div class="reminder-title">每日提醒</div>
-                <div class="reminder-toggle">
-                    <label class="switch">
+            <!-- 设置区 -->
+            <div class="start-settings">
+                <!-- 主题选择 -->
+                <div class="setting-group">
+                    <div class="setting-label">主题</div>
+                    <div class="theme-options">
+                        <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
+                        <div class="theme-btn forest" data-theme="forest" title="森林"></div>
+                        <div class="theme-btn sunset" data-theme="sunset" title="日落"></div>
+                    </div>
+                </div>
+                
+                <!-- 时间选择 -->
+                <div class="setting-group">
+                    <div class="setting-label">时长</div>
+                    <div class="time-options">
+                        <button class="time-btn active" data-time="60">1分钟</button>
+                        <button class="time-btn" data-time="180">3分钟</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 主按钮 -->
+            <button class="btn btn-primary btn-large" id="startBtn">开始</button>
+            
+            <!-- 辅助按钮 -->
+            <div class="start-actions">
+                <button class="btn-text" id="statsBtn">查看历史</button>
+                <button class="btn-text" id="reminderToggleBtn" aria-controls="reminderPanel" aria-expanded="false">每日提醒</button>
+            </div>
+            
+            <!-- 提醒设置（默认隐藏） -->
+            <div class="reminder-panel" id="reminderPanel" style="display: none;">
+                <div class="reminder-row">
+                    <span class="reminder-label">开启提醒</span>
+                    <label class="switch reminder-toggle">
                         <input type="checkbox" id="reminderToggle">
                         <span class="slider"></span>
                     </label>
                 </div>
                 <div class="reminder-time-wrapper" id="reminderTimeWrapper" style="display: none;">
+                    <span class="reminder-label">提醒时间</span>
                     <input type="time" id="reminderTime" class="reminder-time-input" value="21:00">
                 </div>
-                <button class="btn btn-secondary btn-small" id="testReminderBtn" style="display: none; margin-top: 0.5rem;">测试通知</button>
+                <button class="btn btn-secondary btn-small" id="testReminderBtn" style="display: none;">测试通知</button>
             </div>
         </div>
 
