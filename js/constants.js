@@ -112,4 +112,8 @@ export const THEMES = {
 // 本地存储键名
 export const STORAGE_KEYS = {
     HISTORY: 'emotionBubbleHistory',
+    REMINDER: {
+        ENABLED: 'reminderEnabled',
+        TIME: 'reminderTime',
+    },
 };

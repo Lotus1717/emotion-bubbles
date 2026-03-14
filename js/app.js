@@ -8,6 +8,7 @@ import { CONFIG } from './constants.js';
 import { gameController, GameState } from './game.js';
 import { shareManager } from './share.js';
 import { emotionStats } from './stats.js';
+import { reminderManager } from './reminder.js';
 
 /**
  * 应用初始化
@@ -28,6 +29,10 @@ class App {
         
         // 初始化分享管理器
         shareManager.init();
+        
+        // 初始化提醒管理器
+        reminderManager.init();
+        this._initReminderUI();
         
         console.log('🫧 念起已加载');
     }
@@ -72,6 +77,12 @@ class App {
             
             // 星空
             stars: document.getElementById('stars'),
+            
+            // 提醒
+            reminderToggle: document.getElementById('reminderToggle'),
+            reminderTimeWrapper: document.getElementById('reminderTimeWrapper'),
+            reminderTime: document.getElementById('reminderTime'),
+            testReminderBtn: document.getElementById('testReminderBtn'),
         };
     }
 
@@ -278,6 +289,63 @@ class App {
                 elements.statsPanel.style.display = 'flex';
                 break;
         }
+    }
+
+    /**
+     * 初始化提醒 UI
+     * @private
+     */
+    _initReminderUI() {
+        const { elements } = this;
+        
+        // 获取 DOM 元素
+        const reminderToggle = elements.reminderToggle;
+        const reminderTimeWrapper = elements.reminderTimeWrapper;
+        const reminderTime = elements.reminderTime;
+        const testReminderBtn = elements.testReminderBtn;
+        
+        if (!reminderToggle) return;
+        
+        // 加载当前设置
+        const settings = reminderManager.getSettings();
+        
+        // 更新开关状态
+        reminderToggle.checked = settings.enabled;
+        
+        // 显示时间选择（如果有开启过）
+        if (settings.enabled || localStorage.getItem(STORAGE_KEYS.REMINDER.TIME)) {
+            reminderTimeWrapper.style.display = 'flex';
+            reminderTime.value = settings.time;
+            testReminderBtn.style.display = 'inline-block';
+        }
+        
+        // 开关事件
+        reminderToggle?.addEventListener('change', async (e) => {
+            const enabled = e.target.checked;
+            
+            if (enabled) {
+                const success = await reminderManager.setEnabled(true);
+                if (success) {
+                    reminderTimeWrapper.style.display = 'flex';
+                    testReminderBtn.style.display = 'inline-block';
+                } else {
+                    reminderToggle.checked = false;
+                }
+            } else {
+                reminderManager.setEnabled(false);
+                // 不隐藏时间选择，让用户下次开启更方便
+            }
+        });
+        
+        // 时间选择事件
+        reminderTime?.addEventListener('change', (e) => {
+            reminderManager.setTime(e.target.value);
+        });
+        
+        // 测试通知事件
+        testReminderBtn?.addEventListener('click', () => {
+            reminderManager.test();
+        });
     }
 }
 

@@ -42,6 +42,21 @@
             <!-- 按钮组 -->
             <button class="btn btn-primary" id="startBtn">开始</button>
             <button class="btn btn-secondary btn-small" id="statsBtn" style="margin-top: 1rem;">查看历史</button>
+            
+            <!-- 每日提醒设置 -->
+            <div class="reminder-section" id="reminderSection" style="margin-top: 1.5rem;">
+                <div class="reminder-title">每日提醒</div>
+                <div class="reminder-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="reminderToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="reminder-time-wrapper" id="reminderTimeWrapper" style="display: none;">
+                    <input type="time" id="reminderTime" class="reminder-time-input" value="21:00">
+                </div>
+                <button class="btn btn-secondary btn-small" id="testReminderBtn" style="display: none; margin-top: 0.5rem;">测试通知</button>
+            </div>
         </div>
 
         <!-- 游戏面板 -->
