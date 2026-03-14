@@ -3,7 +3,10 @@
  * 管理提醒时间设置和浏览器通知
  */
 
-import { CONFIG, STORAGE_KEYS } from './constants.js';
+import { STORAGE_KEYS } from './constants.js';
+
+const DEFAULT_REMINDER_TIME = '21:00';
+const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 /**
  * 每日提醒管理器
@@ -11,7 +14,8 @@ import { CONFIG, STORAGE_KEYS } from './constants.js';
 class ReminderManager {
     constructor() {
         this.enabled = false;
-        this.time = '21:00'; // 默认21:00
+        this.time = DEFAULT_REMINDER_TIME;
+        this.hasStoredTime = false;
         this.timer = null;
         this.permission = 'default';
     }
@@ -22,12 +26,20 @@ class ReminderManager {
     init() {
         this._loadSettings();
         this._checkPermission();
-        this._startTimer();
+
+        // 仅在“已开启且已授权”时调度提醒，避免误触发
+        if (this.enabled && this.permission === 'granted') {
+            this._startTimer();
+        } else {
+            this._stopTimer();
+        }
         
         // 页面可见性变化时重新检查
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
+                const previousPermission = this.permission;
                 this._checkPermission();
+                this._syncTimerWithCurrentState(previousPermission);
             }
         });
     }
@@ -42,7 +54,8 @@ class ReminderManager {
             const time = localStorage.getItem(STORAGE_KEYS.REMINDER.TIME);
             
             this.enabled = enabled === 'true';
-            this.time = time || '21:00';
+            this.hasStoredTime = this._isValidTime(time);
+            this.time = this.hasStoredTime ? time : DEFAULT_REMINDER_TIME;
         } catch (e) {
             console.warn('Failed to load reminder settings:', e);
         }
@@ -122,13 +135,20 @@ class ReminderManager {
      * @param {string} time - 时间字符串 HH:MM
      */
     setTime(time) {
+        if (!this._isValidTime(time)) {
+            return false;
+        }
+
         this.time = time;
+        this.hasStoredTime = true;
         this._saveSettings();
         
         // 重新启动定时器
         if (this.enabled) {
             this._startTimer();
         }
+
+        return true;
     }
 
     /**
@@ -139,6 +159,7 @@ class ReminderManager {
         return {
             enabled: this.enabled,
             time: this.time,
+            hasStoredTime: this.hasStoredTime,
             permission: this.permission,
             supported: 'Notification' in window
         };
@@ -150,6 +171,10 @@ class ReminderManager {
      */
     _startTimer() {
         this._stopTimer();
+
+        if (!this.enabled || this.permission !== 'granted') {
+            return;
+        }
         
         const now = new Date();
         const [hours, minutes] = this.time.split(':').map(Number);
@@ -189,7 +214,7 @@ class ReminderManager {
      * @private
      */
     _sendNotification() {
-        if (this.permission !== 'granted') {
+        if (!this.enabled || this.permission !== 'granted') {
             return;
         }
         
@@ -206,8 +231,8 @@ class ReminderManager {
         try {
             const notification = new Notification('念起', {
                 body: randomMessage,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🫧</text></svg>',
-                badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🫧</text></svg>',
+                icon: 'nianqi-icon.png',
+                badge: 'nianqi-icon.png',
                 tag: 'nianqi-reminder',
                 requireInteraction: false
             });
@@ -226,6 +251,40 @@ class ReminderManager {
         } catch (e) {
             console.error('Failed to send notification:', e);
         }
+    }
+
+    /**
+     * 校验时间字符串
+     * @param {string | null} time
+     * @returns {boolean}
+     * @private
+     */
+    _isValidTime(time) {
+        return typeof time === 'string' && TIME_PATTERN.test(time);
+    }
+
+    /**
+     * 权限变化后同步定时器状态
+     * @param {string} previousPermission
+     * @private
+     */
+    _syncTimerWithCurrentState(previousPermission) {
+        if (!this.enabled) {
+            this._stopTimer();
+            return;
+        }
+
+        if (this.permission === 'granted') {
+            if (previousPermission !== 'granted' || !this.timer) {
+                this._startTimer();
+            }
+            return;
+        }
+
+        // 权限被回收后立即停用并持久化，避免 UI 与真实状态不一致
+        this.enabled = false;
+        this._saveSettings();
+        this._stopTimer();
     }
 
     /**
