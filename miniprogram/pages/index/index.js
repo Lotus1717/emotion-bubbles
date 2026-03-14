@@ -42,6 +42,14 @@ const BUBBLE_CONFIG = {
   maxSize: 132
 }
 
+const STORAGE_KEYS = {
+  history: 'emotionHistory',
+  reminderTime: 'reminderTime',
+  subscribed: 'subscribed'
+}
+
+const REMINDER_TEMPLATE_IDS = ['YOUR_TEMPLATE_ID']
+
 function formatDateKey(date) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -68,8 +76,52 @@ function countEmotions(emotions) {
 
 function mergeEmotionCounts(target, source) {
   Object.entries(source).forEach(([emotion, count]) => {
-    target[emotion] = (target[emotion] || 0) + count
+    const safeTargetCount = Number(target[emotion]) || 0
+    const safeSourceCount = Number(count) || 0
+    if (safeSourceCount <= 0) return
+    target[emotion] = safeTargetCount + safeSourceCount
   })
+}
+
+function normalizeEmotionCounts(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {}
+
+  const normalized = {}
+  Object.entries(input).forEach(([emotion, count]) => {
+    if (typeof emotion !== 'string' || !emotion) return
+    const safeCount = Number.parseInt(count, 10)
+    if (Number.isNaN(safeCount) || safeCount <= 0) return
+    normalized[emotion] = (normalized[emotion] || 0) + safeCount
+  })
+  return normalized
+}
+
+function normalizeHistoryRecords(records) {
+  if (!Array.isArray(records)) return []
+
+  const mergedByDate = {}
+  records.forEach((item) => {
+    if (!item || typeof item !== 'object') return
+    const parsedDate = parseHistoryDate(item.date)
+    if (!parsedDate) return
+    parsedDate.setHours(0, 0, 0, 0)
+
+    const dateKey = formatDateKey(parsedDate)
+    const normalizedCounts = normalizeEmotionCounts(item.emotions)
+    if (Object.keys(normalizedCounts).length === 0) return
+
+    if (!mergedByDate[dateKey]) {
+      mergedByDate[dateKey] = {}
+    }
+    mergeEmotionCounts(mergedByDate[dateKey], normalizedCounts)
+  })
+
+  return Object.keys(mergedByDate)
+    .sort()
+    .map((date) => ({
+      date,
+      emotions: mergedByDate[date]
+    }))
 }
 
 function getRangeStartDate(range) {
@@ -90,6 +142,7 @@ Page({
     state: 'idle',
     theme: 'healing',
     duration: 60,
+    remainingSeconds: 60,
     displayTime: '1:00',
     progress: 0,
     bubbles: [],
@@ -105,18 +158,29 @@ Page({
 
   timer: null,
   replenishTimer: null,
+  backgroundAt: null,
 
   onLoad() {
     this._initViewport()
+    this._loadReminderSettings()
     this.loadHistory()
   },
 
+  onShow() {
+    this._resumeGameFromBackground()
+  },
+
   onHide() {
+    if (this.data.state === 'playing') {
+      this._pauseGameForBackground()
+      return
+    }
     this._clearRuntimeTimers()
   },
 
   onUnload() {
     this._clearRuntimeTimers()
+    this.backgroundAt = null
   },
 
   _initViewport() {
@@ -141,6 +205,43 @@ Page({
     if (this.replenishTimer) {
       clearTimeout(this.replenishTimer)
       this.replenishTimer = null
+    }
+  },
+
+  _pauseGameForBackground() {
+    this.backgroundAt = Date.now()
+    this._clearRuntimeTimers()
+  },
+
+  _resumeGameFromBackground() {
+    if (this.data.state !== 'playing' || this.timer) return
+
+    if (!this.backgroundAt) {
+      if (this.data.remainingSeconds > 0) {
+        this.startTimer(this.data.remainingSeconds)
+      }
+      return
+    }
+
+    const elapsed = Math.floor((Date.now() - this.backgroundAt) / 1000)
+    this.backgroundAt = null
+
+    const nextRemaining = Math.max(0, this.data.remainingSeconds - elapsed)
+    this._updateTimerView(nextRemaining)
+    this.setData({ remainingSeconds: nextRemaining })
+
+    if (nextRemaining <= 0) {
+      this.endGame(false)
+      return
+    }
+
+    this.startTimer(nextRemaining)
+  },
+
+  _loadReminderSettings() {
+    const savedTime = wx.getStorageSync(STORAGE_KEYS.reminderTime)
+    if (typeof savedTime === 'string' && /^\d{2}:\d{2}$/.test(savedTime)) {
+      this.setData({ reminderTime: savedTime })
     }
   },
 
@@ -235,6 +336,7 @@ Page({
     if (![60, 180].includes(duration)) return
     this.setData({
       duration,
+      remainingSeconds: duration,
       displayTime: this._formatSeconds(duration)
     })
   },
@@ -248,11 +350,12 @@ Page({
         poppedEmotions: [],
         suggestion: '',
         progress: 0,
+        remainingSeconds: this.data.duration,
         displayTime: this._formatSeconds(this.data.duration)
       },
       () => {
         this.generateBubbles()
-        this.startTimer()
+        this.startTimer(this.data.duration)
       }
     )
   },
@@ -302,14 +405,21 @@ Page({
     }
   },
 
-  startTimer() {
+  startTimer(initialRemaining = this.data.remainingSeconds) {
     this._clearRuntimeTimers()
-    let remaining = this.data.duration
+    let remaining = Math.max(0, Math.floor(Number(initialRemaining) || 0))
+    this.setData({ remainingSeconds: remaining })
     this._updateTimerView(remaining)
+
+    if (remaining <= 0) {
+      this.endGame(false)
+      return
+    }
 
     this.timer = setInterval(() => {
       remaining -= 1
       this._updateTimerView(remaining)
+      this.setData({ remainingSeconds: Math.max(0, remaining) })
 
       if (remaining <= 0) {
         this.endGame(false)
@@ -324,12 +434,14 @@ Page({
   endGame(isEarlyEnd) {
     if (this.data.state !== 'playing') return
     this._clearRuntimeTimers()
+    this.backgroundAt = null
 
     this.setData({
       state: 'result',
       bubbles: [],
       suggestion: this._buildSuggestion(isEarlyEnd),
-      progress: 100
+      progress: 100,
+      remainingSeconds: 0
     })
 
     this.saveHistory()
@@ -339,10 +451,7 @@ Page({
   saveHistory() {
     if (this.data.poppedEmotions.length === 0) return
 
-    const history = wx.getStorageSync('emotionHistory') || []
-    const validHistory = Array.isArray(history)
-      ? history.filter((item) => item && typeof item.date === 'string' && item.emotions && typeof item.emotions === 'object')
-      : []
+    const validHistory = normalizeHistoryRecords(wx.getStorageSync(STORAGE_KEYS.history) || [])
 
     const today = getTodayDateKey()
     const todayCounts = countEmotions(this.data.poppedEmotions)
@@ -364,15 +473,12 @@ Page({
       return dateA.getTime() - dateB.getTime()
     })
 
-    wx.setStorageSync('emotionHistory', validHistory)
+    wx.setStorageSync(STORAGE_KEYS.history, validHistory)
   },
 
   loadHistory() {
-    const history = wx.getStorageSync('emotionHistory') || []
-    const validHistory = Array.isArray(history)
-      ? history.filter((item) => item && item.emotions && typeof item.emotions === 'object')
-      : []
-    const filteredHistory = this._getFilteredHistory(validHistory, this.data.statsRange)
+    const history = normalizeHistoryRecords(wx.getStorageSync(STORAGE_KEYS.history) || [])
+    const filteredHistory = this._getFilteredHistory(history, this.data.statsRange)
 
     let totalPopped = 0
     filteredHistory.forEach((item) => {
@@ -400,6 +506,7 @@ Page({
       poppedEmotions: [],
       progress: 0,
       suggestion: '',
+      remainingSeconds: this.data.duration,
       displayTime: this._formatSeconds(this.data.duration)
     })
   },
@@ -419,7 +526,7 @@ Page({
       content: '清空后不可恢复，是否继续？',
       success: (res) => {
         if (!res.confirm) return
-        wx.removeStorageSync('emotionHistory')
+        wx.removeStorageSync(STORAGE_KEYS.history)
         this.setData({
           stats: { totalPopped: 0, totalDays: 0, avgPerDay: 0 }
         })
@@ -438,7 +545,10 @@ Page({
   },
 
   bindTimeChange(e) {
-    this.setData({ reminderTime: e.detail.value })
+    const nextTime = e.detail.value
+    if (!/^\d{2}:\d{2}$/.test(nextTime)) return
+    this.setData({ reminderTime: nextTime })
+    wx.setStorageSync(STORAGE_KEYS.reminderTime, nextTime)
   },
 
   shareResult() {
@@ -481,16 +591,27 @@ Page({
   },
 
   subscribeReminder() {
+    const templateIds = REMINDER_TEMPLATE_IDS.filter((id) => id && id !== 'YOUR_TEMPLATE_ID')
+    if (templateIds.length === 0) {
+      wx.showModal({
+        title: '提醒暂不可用',
+        content: '提醒模板尚未配置，请先在小程序后台配置订阅模板。',
+        showCancel: false
+      })
+      return
+    }
+
     wx.requestSubscribeMessage({
-      tmplIds: ['YOUR_TEMPLATE_ID'],
+      tmplIds: templateIds,
       success: (res) => {
         const statuses = Object.values(res || {})
         const accepted = statuses.some((status) => status === 'accept')
         if (accepted) {
-          wx.setStorageSync('subscribed', true)
+          wx.setStorageSync(STORAGE_KEYS.subscribed, true)
           wx.showToast({ title: '订阅成功', icon: 'success' })
           return
         }
+        wx.setStorageSync(STORAGE_KEYS.subscribed, false)
         wx.showToast({ title: '你可以稍后再开启提醒', icon: 'none' })
       },
       fail: (error) => {
