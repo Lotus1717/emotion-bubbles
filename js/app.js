@@ -313,11 +313,11 @@ class App {
         // 加载当前设置
         const settings = reminderManager.getSettings();
         
-        // 检查通知支持状态
+        // 检查通知支持状态，支持时才显示按钮（避免闪烁）
         if (!settings.supported) {
-            reminderToggleBtn.style.display = 'none';
             return;
         }
+        reminderToggleBtn.classList.add('supported');
 
         const render = (state = reminderManager.getSettings()) => {
             reminderToggle.checked = state.enabled;

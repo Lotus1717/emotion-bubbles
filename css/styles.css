@@ -1433,6 +1433,14 @@ input:checked + .slider:before {
     border-radius: 0.4rem;
 }
 
+#reminderToggleBtn {
+    display: none;
+}
+
+#reminderToggleBtn.supported {
+    display: inline-block;
+}
+
 /* 提醒模态框 */
 .reminder-modal {
     position: fixed;
