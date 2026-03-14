@@ -97,8 +97,12 @@ Page({
     suggestion: '',
     statsRange: 'week',
     stats: { totalPopped: 0, totalDays: 0, avgPerDay: 0 },
+    trendData: [],
+    topEmotions: [],
     showReminder: false,
+    reminderEnabled: false,
     reminderTime: '21:00',
+    countdownNum: 3,
     viewportWidthRpx: 750,
     playAreaHeightRpx: 900
   },
@@ -280,26 +284,46 @@ Page({
     if (index === -1) return
 
     const targetBubble = currentBubbles[index]
-    const bubbles = currentBubbles.slice(0, index).concat(currentBubbles.slice(index + 1))
-    const poppedEmotions = this.data.poppedEmotions.concat(targetBubble.emotion)
-
-    const oppositeEmotion = OPPOSITE_EMOTIONS[targetBubble.emotion]
-    if (oppositeEmotion && bubbles.length < BUBBLE_CONFIG.maxCount && Math.random() > 0.55) {
-      bubbles.push(this._createBubbleByEmotion(oppositeEmotion, 'healing'))
-    }
-
-    this.setData({ bubbles, poppedEmotions })
-
-    if (bubbles.length < BUBBLE_CONFIG.refillThreshold) {
-      if (this.replenishTimer) {
-        clearTimeout(this.replenishTimer)
+    
+    if (targetBubble.popping) return
+    
+    const updatedBubbles = currentBubbles.map((bubble, i) => {
+      if (i === index) {
+        return { ...bubble, popping: true }
       }
-      this.replenishTimer = setTimeout(() => {
-        if (this.data.state === 'playing') {
-          this.generateBubbles()
-        }
-      }, BUBBLE_CONFIG.refillDelay)
+      return bubble
+    })
+    
+    this.setData({ 
+      bubbles: updatedBubbles,
+      poppedEmotions: this.data.poppedEmotions.concat(targetBubble.emotion)
+    })
+    
+    setTimeout(() => {
+      const latestBubbles = this.data.bubbles.filter((b) => b.id !== targetId)
+      
+      const oppositeEmotion = OPPOSITE_EMOTIONS[targetBubble.emotion]
+      if (oppositeEmotion && latestBubbles.length < BUBBLE_CONFIG.maxCount && Math.random() > 0.55) {
+        latestBubbles.push(this._createBubbleByEmotion(oppositeEmotion, 'healing'))
+      }
+      
+      this.setData({ bubbles: latestBubbles })
+      
+      if (latestBubbles.length < BUBBLE_CONFIG.refillThreshold && this.data.state === 'playing') {
+        this._scheduleReplenish()
+      }
+    }, 350)
+  },
+  
+  _scheduleReplenish() {
+    if (this.replenishTimer) {
+      clearTimeout(this.replenishTimer)
     }
+    this.replenishTimer = setTimeout(() => {
+      if (this.data.state === 'playing') {
+        this.generateBubbles()
+      }
+    }, BUBBLE_CONFIG.refillDelay)
   },
 
   startTimer() {
@@ -375,21 +399,71 @@ Page({
     const filteredHistory = this._getFilteredHistory(validHistory, this.data.statsRange)
 
     let totalPopped = 0
+    const allEmotionCounts = {}
+    
     filteredHistory.forEach((item) => {
-      Object.values(item.emotions).forEach((count) => {
-        totalPopped += Number(count) || 0
+      Object.entries(item.emotions).forEach(([emotion, count]) => {
+        const num = Number(count) || 0
+        totalPopped += num
+        allEmotionCounts[emotion] = (allEmotionCounts[emotion] || 0) + num
       })
     })
 
     const totalDays = filteredHistory.length
     const avgPerDay = totalDays > 0 ? Number((totalPopped / totalDays).toFixed(1)) : 0
+    
+    const topEmotions = Object.entries(allEmotionCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([emotion, count]) => ({ emotion, count }))
+    
+    const trendData = this._buildTrendData(filteredHistory)
+    
     this.setData({
       stats: {
         totalPopped,
         totalDays,
         avgPerDay
-      }
+      },
+      topEmotions,
+      trendData
     })
+  },
+  
+  _buildTrendData(history) {
+    const range = this.data.statsRange
+    const days = range === 'week' ? 7 : range === 'month' ? 14 : 10
+    const result = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const historyMap = {}
+    history.forEach((item) => {
+      let dayTotal = 0
+      Object.values(item.emotions).forEach((count) => {
+        dayTotal += Number(count) || 0
+      })
+      historyMap[item.date] = dayTotal
+    })
+    
+    let maxCount = 1
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(today)
+      date.setDate(date.getDate() - i)
+      const dateKey = formatDateKey(date)
+      const count = historyMap[dateKey] || 0
+      if (count > maxCount) maxCount = count
+      result.push({
+        date: dateKey,
+        count,
+        label: `${date.getMonth() + 1}/${date.getDate()}`
+      })
+    }
+    
+    return result.map((item) => ({
+      ...item,
+      height: item.count > 0 ? Math.max(10, Math.round((item.count / maxCount) * 100)) : 5
+    }))
   },
 
   restartGame() {
@@ -401,6 +475,14 @@ Page({
       progress: 0,
       suggestion: '',
       displayTime: this._formatSeconds(this.data.duration)
+    })
+  },
+
+  closeResult() {
+    this.setData({
+      state: 'idle',
+      poppedEmotions: [],
+      suggestion: ''
     })
   },
 
@@ -435,6 +517,15 @@ Page({
 
   toggleReminder() {
     this.setData({ showReminder: !this.data.showReminder })
+  },
+
+  toggleReminderSwitch() {
+    const newValue = !this.data.reminderEnabled
+    this.setData({ reminderEnabled: newValue })
+    
+    if (newValue) {
+      this.subscribeReminder()
+    }
   },
 
   bindTimeChange(e) {
@@ -478,6 +569,10 @@ Page({
       title: '念起 - 戳破情绪气泡，觉察内心',
       query: ''
     }
+  },
+
+  preventTouchMove() {
+    return false
   },
 
   subscribeReminder() {

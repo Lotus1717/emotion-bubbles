@@ -1,23 +1,38 @@
-/* 念起 - 首页样式 */
+/**
+ * 念起 - 首页样式（深度适配版）
+ * 使用 view 替代 button，完全控制样式
+ */
+
+/* ===========================================
+   1. 主容器与主题
+   =========================================== */
 .container {
-  min-height: 100vh;
   position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  transition: background 0.3s ease;
 }
 
 .theme-healing {
-  background: linear-gradient(180deg, #0a1033 0%, #1a1c4d 40%, #2e1f5e 100%);
+  background: linear-gradient(180deg, #0a0f2e 0%, #1a1c4d 40%, #2e1f5e 100%);
 }
 
 .theme-forest {
-  background: linear-gradient(180deg, #0a1f24 0%, #103534 45%, #1e4e45 100%);
+  background: linear-gradient(180deg, #071a1e 0%, #103534 45%, #1e4e45 100%);
 }
 
 .theme-sunset {
-  background: linear-gradient(180deg, #2f1637 0%, #602447 45%, #8b3d48 100%);
+  background: linear-gradient(180deg, #2a1230 0%, #602447 45%, #8b3d48 100%);
 }
 
+/* ===========================================
+   2. 背景星空效果
+   =========================================== */
 .stars {
   position: fixed;
   top: 0;
@@ -25,61 +40,141 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 0;
   background-image:
-    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.95), rgba(0, 0, 0, 0)),
-    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0)),
-    radial-gradient(2px 2px at 50px 160px, rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0)),
-    radial-gradient(2px 2px at 90px 40px, rgba(255, 255, 255, 0.95), rgba(0, 0, 0, 0)),
-    radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.75), rgba(0, 0, 0, 0));
+    radial-gradient(2rpx 2rpx at 20rpx 40rpx, rgba(255, 255, 255, 1), transparent),
+    radial-gradient(2rpx 2rpx at 80rpx 120rpx, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1rpx 1rpx at 140rpx 60rpx, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2rpx 2rpx at 200rpx 180rpx, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1rpx 1rpx at 280rpx 90rpx, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2rpx 2rpx at 340rpx 200rpx, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1rpx 1rpx at 400rpx 140rpx, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(2rpx 2rpx at 460rpx 50rpx, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1rpx 1rpx at 520rpx 220rpx, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2rpx 2rpx at 600rpx 100rpx, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1rpx 1rpx at 680rpx 160rpx, rgba(255, 255, 255, 0.7), transparent);
   background-repeat: repeat;
-  background-size: 200px 200px;
-  animation: twinkle 5s ease-in-out infinite;
+  background-size: 750rpx 300rpx;
+  animation: twinkle 4s ease-in-out infinite;
 }
 
 @keyframes twinkle {
-  0% { opacity: 0.5; }
+  0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
-  100% { opacity: 0.5; }
 }
 
-@keyframes float {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(0, -16rpx, 0) scale(1.03); }
-  100% { transform: translate3d(0, 0, 0) scale(1); }
+/* ===========================================
+   3. 通用按钮样式（用 view 实现）
+   =========================================== */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 60rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
+.btn text {
+  line-height: 1;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 
+    0 8rpx 30rpx rgba(102, 126, 234, 0.5),
+    0 2rpx 10rpx rgba(0, 0, 0, 0.2),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.2);
+  padding: 28rpx 80rpx;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  padding: 26rpx 48rpx;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.15);
+}
+
+.btn-large {
+  padding: 32rpx 120rpx;
+  font-size: 34rpx;
+  margin-bottom: 40rpx;
+  border-radius: 70rpx;
+}
+
+.btn-hover {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.btn-text {
+  padding: 20rpx 32rpx;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 28rpx;
+}
+
+.btn-text text {
+  line-height: 1;
+}
+
+.btn-text-hover {
+  color: rgba(255, 215, 0, 0.8);
+}
+
+.btn-text-danger {
+  padding: 20rpx 32rpx;
+  color: rgba(255, 100, 100, 0.65);
+  font-size: 26rpx;
+}
+
+/* ===========================================
+   4. 开始面板
+   =========================================== */
 .start-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 120rpx 40rpx 40rpx;
+  padding: 100rpx 50rpx 80rpx;
+  z-index: 10;
 }
 
 .start-header {
   text-align: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 80rpx;
 }
 
 .title {
-  font-size: 72rpx;
-  font-weight: bold;
-  letter-spacing: 0.3em;
-  background: linear-gradient(135deg, #ffffff 0%, #ffd978 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  display: block;
+  font-size: 76rpx;
+  font-weight: 200;
+  letter-spacing: 0.5em;
+  padding-left: 0.5em;
+  color: #fff;
+  text-shadow: 
+    0 0 60rpx rgba(102, 126, 234, 0.6),
+    0 0 120rpx rgba(102, 126, 234, 0.3);
 }
 
 .subtitle {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.65);
-  margin-top: 20rpx;
+  display: block;
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 24rpx;
+  letter-spacing: 0.15em;
+  line-height: 1.8;
 }
 
+/* ===========================================
+   5. 设置区域
+   =========================================== */
 .start-settings {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 500rpx;
+  max-width: 600rpx;
   margin-bottom: 60rpx;
 }
 
@@ -87,257 +182,527 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 34rpx;
+  margin-bottom: 48rpx;
 }
 
 .setting-label {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.58);
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 16rpx;
+  letter-spacing: 0.15em;
+  margin-bottom: 24rpx;
 }
 
+/* 主题按钮 */
 .theme-options {
   display: flex;
   justify-content: center;
 }
 
 .theme-btn {
-  width: 80rpx;
-  height: 80rpx;
+  width: 88rpx;
+  height: 88rpx;
   border-radius: 50%;
+  margin: 0 24rpx;
   border: 4rpx solid transparent;
-  opacity: 0.62;
-  margin: 0 16rpx;
+  opacity: 0.55;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.3);
 }
 
 .theme-btn.healing {
-  background: linear-gradient(135deg, #6576ff 0%, #7854c9 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .theme-btn.forest {
-  background: linear-gradient(135deg, #17a385 0%, #4be080 100%);
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
 .theme-btn.sunset {
-  background: linear-gradient(135deg, #ff8fb1 0%, #ff6b61 100%);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 .theme-btn.active {
   opacity: 1;
-  border-color: rgba(255, 215, 0, 0.86);
-  box-shadow: 0 0 40rpx rgba(255, 215, 0, 0.28);
+  border-color: rgba(255, 215, 0, 0.9);
+  box-shadow: 
+    0 0 30rpx rgba(255, 215, 0, 0.4),
+    0 4rpx 20rpx rgba(0, 0, 0, 0.3);
+  transform: scale(1.12);
 }
 
+/* 时间按钮 */
 .time-options {
   display: flex;
   justify-content: center;
 }
 
 .time-btn {
-  padding: 16rpx 48rpx;
-  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22rpx 50rpx;
+  margin: 0 16rpx;
+  border-radius: 50rpx;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  min-width: 160rpx;
+  transition: all 0.25s ease;
+}
+
+.time-btn text {
   font-size: 28rpx;
-  background: rgba(255, 255, 255, 0.12);
-  border: 2rpx solid rgba(255, 255, 255, 0.24);
-  color: rgba(255, 255, 255, 0.76);
-  margin: 0 8rpx;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1;
 }
 
 .time-btn.active {
-  background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.52);
-  color: #ffd700;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4rpx 20rpx rgba(255, 255, 255, 0.1);
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #6e8aff 0%, #8a58ca 100%);
+.time-btn.active text {
   color: #fff;
-  border: none;
-  border-radius: 60rpx;
-  font-size: 32rpx;
 }
 
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.12);
-  border: 2rpx solid rgba(255, 255, 255, 0.24);
-  color: rgba(255, 255, 255, 0.85);
-  border-radius: 40rpx;
-}
-
-.btn-large {
-  padding: 24rpx 120rpx;
-  font-size: 36rpx;
-  margin-bottom: 32rpx;
-}
-
-.btn-small {
-  padding: 16rpx 32rpx;
-  font-size: 24rpx;
-  border-radius: 30rpx;
-}
-
+/* ===========================================
+   6. 辅助按钮组
+   =========================================== */
 .start-actions {
   display: flex;
+  margin-bottom: 40rpx;
 }
 
-.btn-text {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 26rpx;
-  padding: 16rpx 28rpx;
-}
-
-.reminder-panel {
-  background: rgba(255, 255, 255, 0.06);
-  border: 2rpx solid rgba(255, 255, 255, 0.1);
-  border-radius: 20rpx;
-  padding: 32rpx;
+/* ===========================================
+   7. 提醒模态框
+   =========================================== */
+.reminder-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 500rpx;
-  margin-top: 32rpx;
+  height: 100%;
+  background: rgba(5, 5, 20, 0.92);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.reminder-modal-content {
+  background: linear-gradient(160deg, rgba(40, 40, 70, 0.95) 0%, rgba(25, 25, 50, 0.98) 100%);
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+  border-radius: 40rpx;
+  padding: 60rpx 48rpx;
+  width: 100%;
+  max-width: 560rpx;
+  text-align: center;
+  position: relative;
+  box-shadow: 
+    0 30rpx 100rpx rgba(0, 0, 0, 0.5),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.1);
+}
+
+.reminder-close-btn {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reminder-close-btn text {
+  font-size: 36rpx;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1;
+}
+
+.reminder-modal-title {
+  display: block;
+  font-size: 38rpx;
+  color: #fff;
+  margin-bottom: 16rpx;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.reminder-modal-desc {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 48rpx;
+  line-height: 1.8;
+}
+
+.reminder-settings {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 24rpx;
+  padding: 8rpx;
+  overflow: hidden;
 }
 
 .reminder-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24rpx;
+  padding: 28rpx 32rpx;
 }
 
 .reminder-label {
-  color: rgba(255, 255, 255, 0.76);
-  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 28rpx;
+}
+
+.reminder-time-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+}
+
+.reminder-time-picker {
+  background: rgba(102, 126, 234, 0.2);
+  border: 2rpx solid rgba(102, 126, 234, 0.4);
+  border-radius: 16rpx;
+  padding: 16rpx 28rpx;
 }
 
 .reminder-time-text {
-  color: #ffd700;
+  color: #667eea;
   font-size: 32rpx;
+  font-weight: 500;
 }
 
+/* 自定义开关 */
+.switch {
+  position: relative;
+  width: 100rpx;
+  height: 56rpx;
+}
+
+.switch-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 56rpx;
+  transition: all 0.3s ease;
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 6rpx;
+  left: 6rpx;
+  width: 44rpx;
+  height: 44rpx;
+  background: #fff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
+}
+
+.switch.active .switch-track {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.switch.active .switch-thumb {
+  left: 50rpx;
+}
+
+/* ===========================================
+   8. 倒计时面板
+   =========================================== */
+.countdown-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 30, 0.95);
+  z-index: 200;
+}
+
+.countdown {
+  font-size: 200rpx;
+  color: #fff;
+  animation: countPulse 1s ease-in-out infinite;
+  text-shadow: 
+    0 0 80rpx rgba(102, 126, 234, 0.8),
+    0 0 160rpx rgba(102, 126, 234, 0.4);
+  font-weight: 200;
+}
+
+@keyframes countPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+/* ===========================================
+   9. 游戏面板
+   =========================================== */
 .play-panel {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 20;
 }
 
 .hint-top {
   position: absolute;
-  top: 40rpx;
+  top: 100rpx;
   left: 0;
   width: 100%;
   text-align: center;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 26rpx;
   z-index: 10;
+  letter-spacing: 0.05em;
 }
 
 .bubble-container {
   position: absolute;
-  top: 100rpx;
+  top: 180rpx;
   left: 0;
   width: 100%;
-  height: calc(100% - 300rpx);
+  height: calc(100% - 360rpx);
+  z-index: 10;
 }
 
+/* ===========================================
+   10. 气泡样式（自然泡泡效果）
+   =========================================== */
 .bubble {
   position: absolute;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid rgba(255, 255, 255, 0.42);
-  box-shadow:
-    inset -10rpx -10rpx 20rpx rgba(255, 255, 255, 0.08),
-    0 10rpx 28rpx rgba(0, 0, 0, 0.25);
-  animation-name: float;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
+  border-radius: 50%;
+  animation: bubbleFloat 5s ease-in-out infinite;
+  transition: transform 0.15s ease;
 }
 
+/* 气泡高光 - 模拟光泽 */
+.bubble-shine {
+  position: absolute;
+  top: 15%;
+  left: 15%;
+  width: 30%;
+  height: 20%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 40%, transparent 70%);
+  border-radius: 50%;
+  transform: rotate(-30deg);
+  pointer-events: none;
+}
+
+/* 基础情绪气泡 - 柔和粉色 */
 .bubble-base {
-  background: radial-gradient(circle at 32% 24%, rgba(255, 204, 213, 0.8) 0%, rgba(250, 110, 145, 0.46) 100%);
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(255, 220, 230, 0.95) 0%,
+    rgba(255, 160, 180, 0.8) 35%,
+    rgba(240, 100, 140, 0.65) 70%,
+    rgba(200, 80, 120, 0.5) 100%
+  );
+  border: 1rpx solid rgba(255, 180, 200, 0.5);
+  box-shadow: 
+    0 6rpx 25rpx rgba(240, 100, 140, 0.35),
+    inset 0 0 20rpx rgba(255, 255, 255, 0.2);
 }
 
+/* 复杂情绪气泡 - 柔和蓝紫 */
 .bubble-complex {
-  background: radial-gradient(circle at 28% 26%, rgba(192, 218, 255, 0.85) 0%, rgba(108, 122, 255, 0.45) 100%);
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(210, 220, 255, 0.95) 0%,
+    rgba(150, 170, 255, 0.8) 35%,
+    rgba(100, 120, 230, 0.65) 70%,
+    rgba(80, 100, 200, 0.5) 100%
+  );
+  border: 1rpx solid rgba(170, 190, 255, 0.5);
+  box-shadow: 
+    0 6rpx 25rpx rgba(100, 120, 230, 0.35),
+    inset 0 0 20rpx rgba(255, 255, 255, 0.2);
 }
 
+/* 治愈情绪气泡 - 柔和绿色 */
 .bubble-healing {
-  background: radial-gradient(circle at 30% 24%, rgba(211, 255, 223, 0.9) 0%, rgba(101, 198, 160, 0.44) 100%);
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(220, 255, 230, 0.95) 0%,
+    rgba(140, 230, 180, 0.8) 35%,
+    rgba(80, 190, 140, 0.65) 70%,
+    rgba(60, 160, 120, 0.5) 100%
+  );
+  border: 1rpx solid rgba(160, 240, 200, 0.5);
+  box-shadow: 
+    0 6rpx 25rpx rgba(80, 190, 140, 0.35),
+    inset 0 0 20rpx rgba(255, 255, 255, 0.2);
 }
 
 .bubble-text {
   font-size: 24rpx;
-  color: #ffffff;
+  color: #fff;
   text-align: center;
-  text-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.2);
+  padding: 12rpx;
+  max-width: 80%;
+  word-wrap: break-word;
+  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  z-index: 1;
+  line-height: 1.3;
 }
 
+/* 气泡自然漂浮动画 */
+@keyframes bubbleFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  33% {
+    transform: translateY(-12rpx) scale(1.02);
+  }
+  66% {
+    transform: translateY(-6rpx) scale(0.98);
+  }
+}
+
+/* 气泡戳破动画 */
+.bubble.popping {
+  animation: bubblePop 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  pointer-events: none;
+}
+
+@keyframes bubblePop {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(1.25);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* ===========================================
+   11. 游戏底部控制区
+   =========================================== */
 .play-footer {
   position: absolute;
-  bottom: 40rpx;
-  left: 40rpx;
-  right: 40rpx;
+  bottom: 80rpx;
+  left: 50rpx;
+  right: 50rpx;
   display: flex;
   align-items: center;
+  z-index: 10;
 }
 
 .progress-bar {
   flex: 1;
-  height: 10rpx;
-  background: rgba(255, 255, 255, 0.16);
+  height: 8rpx;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 999rpx;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #8ab6ff, #a276ff);
-  transition: width 0.28s ease;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 999rpx;
+  transition: width 0.3s linear;
+  box-shadow: 0 0 20rpx rgba(102, 126, 234, 0.6);
 }
 
 .timer-display {
-  font-size: 32rpx;
+  font-size: 38rpx;
   color: rgba(255, 255, 255, 0.9);
-  min-width: 96rpx;
+  min-width: 120rpx;
   text-align: right;
-  margin-left: 24rpx;
+  margin-left: 32rpx;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 30rpx rgba(255, 255, 255, 0.3);
 }
 
+/* 提前结束按钮 */
 .btn-end-early {
   position: absolute;
-  top: 20rpx;
-  right: 20rpx;
-  padding: 16rpx 32rpx;
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.14);
-  border: 2rpx solid rgba(255, 255, 255, 0.26);
-  border-radius: 40rpx;
+  top: 80rpx;
+  right: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx 36rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  border-radius: 50rpx;
+  z-index: 100;
 }
 
+.btn-end-early text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1;
+}
+
+/* ===========================================
+   12. 结果面板
+   =========================================== */
 .result-panel {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 26, 0.95);
+  background: rgba(8, 8, 25, 0.96);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 120rpx 40rpx;
+  justify-content: center;
+  padding: 60rpx 50rpx;
   overflow-y: auto;
+  animation: fadeIn 0.4s ease;
 }
 
 .result-title {
-  font-size: 40rpx;
+  font-size: 52rpx;
+  color: #fff;
   margin-bottom: 16rpx;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.result-subtitle {
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 48rpx;
+  font-size: 26rpx;
 }
 
 .emotion-tags {
@@ -345,125 +710,300 @@
   flex-wrap: wrap;
   justify-content: center;
   max-width: 620rpx;
-  margin-bottom: 40rpx;
+  margin-bottom: 48rpx;
 }
 
 .emotion-tag {
-  padding: 12rpx 24rpx;
-  background: rgba(255, 215, 0, 0.2);
-  border: 2rpx solid rgba(255, 215, 0, 0.5);
+  padding: 18rpx 32rpx;
+  margin: 10rpx;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(236, 72, 153, 0.25) 100%);
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
   border-radius: 30rpx;
-  font-size: 26rpx;
-  color: #ffd700;
-  margin: 8rpx;
+}
+
+.emotion-tag text {
+  color: #fff;
+  font-size: 28rpx;
+  line-height: 1;
 }
 
 .emotion-tag-empty {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
+.emotion-tag-empty text {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* AI 建议 */
 .ai-suggestion {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 20rpx;
-  padding: 32rpx;
   max-width: 620rpx;
-  margin-bottom: 40rpx;
+  padding: 40rpx;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: 32rpx;
+  margin-bottom: 48rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.08);
 }
 
 .ai-suggestion-title {
   display: block;
+  color: #667eea;
+  margin-bottom: 20rpx;
   font-size: 28rpx;
-  color: #ffd700;
-  margin-bottom: 16rpx;
 }
 
 .ai-suggestion-text {
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.78);
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.8;
+  font-size: 28rpx;
 }
 
+/* 结果按钮组 */
 .result-buttons {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-.result-buttons .btn-primary,
-.result-buttons .btn-secondary {
-  margin: 10rpx;
+.result-buttons .btn {
+  margin: 12rpx;
 }
 
+/* ===========================================
+   13. 统计面板
+   =========================================== */
 .stats-panel {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 26, 0.95);
+  background: rgba(8, 8, 25, 0.98);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40rpx;
+  padding: 60rpx 40rpx;
   overflow-y: auto;
+  animation: fadeIn 0.3s ease;
 }
 
+/* 统计头部 */
+.stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 620rpx;
+  padding-bottom: 40rpx;
+  position: relative;
+  border-bottom: 2rpx solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 40rpx;
+}
+
+.stats-title {
+  font-size: 36rpx;
+  color: #fff;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+.stats-close-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-close-btn text {
+  font-size: 40rpx;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1;
+}
+
+/* 时间筛选器 */
 .stats-filter {
   display: flex;
-  margin-bottom: 40rpx;
+  margin-bottom: 48rpx;
 }
 
 .filter-btn {
-  padding: 12rpx 32rpx;
-  background: rgba(255, 255, 255, 0.12);
-  border: 2rpx solid rgba(255, 255, 255, 0.25);
-  border-radius: 30rpx;
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.66);
-  margin: 0 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx 40rpx;
+  margin: 0 12rpx;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2rpx solid rgba(255, 255, 255, 0.12);
+  border-radius: 50rpx;
+  transition: all 0.25s ease;
+}
+
+.filter-btn text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1;
 }
 
 .filter-btn.active {
-  background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.5);
-  color: #ffd700;
+  background: rgba(102, 126, 234, 0.25);
+  border-color: rgba(102, 126, 234, 0.5);
 }
 
+.filter-btn.active text {
+  color: #fff;
+}
+
+/* 概览统计卡片 */
 .stats-overview {
   display: flex;
-  flex-wrap: wrap;
+  width: 100%;
+  max-width: 620rpx;
+  margin-bottom: 48rpx;
   justify-content: center;
-  margin-bottom: 40rpx;
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 2rpx solid rgba(255, 255, 255, 0.14);
-  border-radius: 20rpx;
-  padding: 24rpx 32rpx;
+  flex: 1;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 2rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 24rpx;
+  padding: 32rpx 16rpx;
   text-align: center;
-  min-width: 170rpx;
-  margin: 10rpx;
+  margin: 0 12rpx;
 }
 
 .stat-value {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #ffd700;
+  display: block;
+  font-size: 52rpx;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 8rpx;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-label {
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.58);
-  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.stats-buttons {
+/* ===========================================
+   14. 趋势图表
+   =========================================== */
+.stats-trend {
+  width: 100%;
+  max-width: 620rpx;
+  margin-bottom: 48rpx;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 24rpx;
+  padding: 32rpx;
+}
+
+.stats-section-title {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 28rpx;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.trend-chart {
   display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 160rpx;
 }
 
-.stats-buttons .btn-small {
-  margin: 0 10rpx;
+.trend-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  margin: 0 4rpx;
+}
+
+.trend-bar-fill {
+  width: 75%;
+  max-width: 32rpx;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 6rpx 6rpx 0 0;
+  min-height: 6rpx;
+  transition: height 0.4s ease;
+}
+
+.trend-label {
+  font-size: 18rpx;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 12rpx;
+}
+
+/* ===========================================
+   15. Top 情绪列表
+   =========================================== */
+.stats-top {
+  width: 100%;
+  max-width: 620rpx;
+  margin-bottom: 48rpx;
+}
+
+.top-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.top-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 28rpx;
+  margin: 8rpx;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.08);
+}
+
+.top-emotion {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 26rpx;
+  margin-right: 14rpx;
+}
+
+.top-count {
+  color: #667eea;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* ===========================================
+   16. 统计底部
+   =========================================== */
+.stats-footer {
+  padding: 40rpx;
+  text-align: center;
+  border-top: 2rpx solid rgba(255, 255, 255, 0.08);
+  margin-top: 20rpx;
+  width: 100%;
+  max-width: 620rpx;
+}
+
+/* ===========================================
+   17. 空状态提示
+   =========================================== */
+.empty-tip {
+  padding: 80rpx 32rpx;
+  text-align: center;
+}
+
+.empty-tip text {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 28rpx;
+  line-height: 1.8;
 }

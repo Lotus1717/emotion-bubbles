@@ -1,10 +1,27 @@
 {
   "description": "念起小程序项目",
-  "packOptions": {"ignore": []},
-  "setting": {"urlCheck": false},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "setting": {
+    "urlCheck": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "condition": false,
+    "es6": true,
+    "enhance": true
+  },
   "compileType": "miniprogram",
-  "libVersion": "2.19.0",
-  "appid": "YOUR_APPID",
+  "libVersion": "3.15.0",
+  "appid": "wxc4aa1c8136d66adb",
   "projectname": "nianqi",
-  "condition": {}
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
 }
