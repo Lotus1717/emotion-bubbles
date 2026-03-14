@@ -28,14 +28,8 @@ class ReminderManager {
         this._loadSettings();
         this._checkPermission();
 
-        // 仅在“已开启且已授权”时调度提醒，避免误触发
-        if (this.enabled && this.permission === 'granted') {
-            this._startTimer();
-        } else {
-            this._stopTimer();
-        }
-
-        this._emitChange();
+        // 初始化时按当前状态统一同步调度器与 UI
+        this._applyEnabledState(this.enabled, { persist: false, emit: true });
         
         // 页面可见性变化时重新检查
         document.addEventListener('visibilitychange', () => {
@@ -122,16 +116,7 @@ class ReminderManager {
             }
         }
         
-        this.enabled = enabled;
-        this._saveSettings();
-        
-        if (enabled) {
-            this._startTimer();
-        } else {
-            this._stopTimer();
-        }
-
-        this._emitChange();
+        this._applyEnabledState(enabled);
         
         return true;
     }
@@ -309,10 +294,7 @@ class ReminderManager {
         }
 
         // 权限被回收后立即停用并持久化，避免 UI 与真实状态不一致
-        this.enabled = false;
-        this._saveSettings();
-        this._stopTimer();
-        this._emitChange();
+        this._applyEnabledState(false);
     }
 
     /**
@@ -343,6 +325,32 @@ class ReminderManager {
                 console.warn('Reminder listener failed:', e);
             }
         });
+    }
+
+    /**
+     * 统一应用开关状态，避免“存储/计时器/UI 广播”分叉
+     * @param {boolean} enabled
+     * @param {{ persist?: boolean, emit?: boolean }} options
+     * @private
+     */
+    _applyEnabledState(enabled, options = {}) {
+        const { persist = true, emit = true } = options;
+
+        this.enabled = enabled;
+
+        if (persist) {
+            this._saveSettings();
+        }
+
+        if (this.enabled && this.permission === 'granted') {
+            this._startTimer();
+        } else {
+            this._stopTimer();
+        }
+
+        if (emit) {
+            this._emitChange();
+        }
     }
 }
 

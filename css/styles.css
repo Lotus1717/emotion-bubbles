@@ -1280,13 +1280,13 @@ input:checked + .slider:before {
 }
 
 /* 主题选项 */
-.theme-options {
+.start-panel .theme-options {
     display: flex;
     gap: 1rem;
     justify-content: center;
 }
 
-.theme-btn {
+.start-panel .theme-btn {
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -1296,25 +1296,25 @@ input:checked + .slider:before {
     opacity: 0.6;
 }
 
-.theme-btn:hover {
+.start-panel .theme-btn:hover {
     opacity: 0.8;
     transform: scale(1.1);
 }
 
-.theme-btn.active {
+.start-panel .theme-btn.active {
     opacity: 1;
     border-color: rgba(255, 215, 0, 0.8);
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
 
 /* 时间选项 */
-.time-options {
+.start-panel .time-options {
     display: flex;
     gap: 0.5rem;
     justify-content: center;
 }
 
-.time-btn {
+.start-panel .time-btn {
     padding: 0.6rem 1.5rem;
     border-radius: 2rem;
     font-size: 0.9rem;
@@ -1353,6 +1353,11 @@ input:checked + .slider:before {
     border-radius: 0.4rem;
 }
 
+.btn-text:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 /* 提醒面板 */
 .reminder-panel {
     background: rgba(255, 255, 255, 0.03);
@@ -1383,4 +1388,10 @@ input:checked + .slider:before {
     width: 100%;
     justify-content: space-between;
     margin-bottom: 0.8rem;
+}
+
+.reminder-time-input:disabled,
+.reminder-panel .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
