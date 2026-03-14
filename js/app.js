@@ -4,7 +4,7 @@
  * 负责 DOM 初始化、事件绑定和状态管理
  */
 
-import { CONFIG } from './constants.js';
+import { CONFIG, STORAGE_KEYS } from './constants.js';
 import { gameController, GameState } from './game.js';
 import { shareManager } from './share.js';
 import { emotionStats } from './stats.js';
@@ -309,6 +309,22 @@ class App {
         // 加载当前设置
         const settings = reminderManager.getSettings();
         
+        // 检查通知支持状态
+        if (!settings.supported) {
+            // 不支持通知，隐藏提醒功能
+            if (elements.reminderSection) {
+                elements.reminderSection.style.display = 'none';
+            }
+            return;
+        }
+        
+        // 检查权限状态
+        if (settings.permission === 'denied') {
+            // 用户之前拒绝了，显示提示
+            reminderToggle.checked = false;
+            // 可以显示提示，但暂不处理
+        }
+        
         // 更新开关状态
         reminderToggle.checked = settings.enabled;
         
@@ -324,16 +340,29 @@ class App {
             const enabled = e.target.checked;
             
             if (enabled) {
-                const success = await reminderManager.setEnabled(true);
-                if (success) {
+                // 检查是否已有权限
+                const settings = reminderManager.getSettings();
+                if (settings.permission === 'granted') {
+                    // 已有权限，直接开启
+                    await reminderManager.setEnabled(true);
                     reminderTimeWrapper.style.display = 'flex';
                     testReminderBtn.style.display = 'inline-block';
-                } else {
+                } else if (settings.permission === 'denied') {
+                    // 之前被拒绝，提示用户
+                    alert('通知功能已被拒绝，请在浏览器设置中手动开启');
                     reminderToggle.checked = false;
+                } else {
+                    // 首次请求权限
+                    const success = await reminderManager.setEnabled(true);
+                    if (success) {
+                        reminderTimeWrapper.style.display = 'flex';
+                        testReminderBtn.style.display = 'inline-block';
+                    } else {
+                        reminderToggle.checked = false;
+                    }
                 }
             } else {
                 reminderManager.setEnabled(false);
-                // 不隐藏时间选择，让用户下次开启更方便
             }
         });
         
