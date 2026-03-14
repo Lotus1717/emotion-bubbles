@@ -9,6 +9,7 @@ import { audioManager } from './audio.js';
 import { physicsEngine } from './physics.js';
 import { bubbleManager } from './bubble.js';
 import { generateSuggestion } from './suggestions.js';
+import { emotionStats } from './stats.js';
 
 /**
  * 游戏状态枚举
