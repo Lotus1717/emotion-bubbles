@@ -7,7 +7,6 @@
 import { CONFIG } from './constants.js';
 import { gameController, GameState } from './game.js';
 import { shareManager } from './share.js';
-import { emotionStats } from './stats.js';
 import { reminderManager } from './reminder.js';
 
 /**
@@ -64,6 +63,12 @@ class App {
             
             // 统计面板
             statsList: document.getElementById('statsList'),
+            statTotalPopped: document.getElementById('statTotalPopped'),
+            statTotalDays: document.getElementById('statTotalDays'),
+            statAvgPerDay: document.getElementById('statAvgPerDay'),
+            categoryList: document.getElementById('categoryList'),
+            topList: document.getElementById('topList'),
+            trendChart: document.getElementById('trendChart'),
             
             // 按钮
             startBtn: document.getElementById('startBtn'),

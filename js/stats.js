@@ -6,6 +6,40 @@
 import { EMOTION_CATEGORIES } from './emotions.js';
 
 /**
+ * 将日期格式化为本地 YYYY-MM-DD
+ * @param {Date} date
+ * @returns {string}
+ */
+function formatDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * 解析历史记录中的日期（兼容旧版 toLocaleDateString）
+ * @param {string} raw
+ * @returns {Date|null}
+ */
+function parseHistoryDate(raw) {
+    if (!raw) return null;
+
+    const value = String(raw).trim();
+    if (!value) return null;
+
+    // 首选 ISO 日期键，避免各浏览器对本地日期字符串解析差异
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return new Date(`${value}T00:00:00`);
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+/**
  * 情绪统计管理器
  */
 class EmotionStats {
@@ -31,7 +65,8 @@ class EmotionStats {
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
         return this.history.filter(record => {
-            const recordDate = new Date(record.date);
+            const recordDate = parseHistoryDate(record.date);
+            if (!recordDate) return false;
             
             switch (range) {
                 case 'week':
@@ -132,14 +167,22 @@ class EmotionStats {
      */
     getTrendData(days = 7) {
         const now = new Date();
+        const recordMap = new Map();
+
+        this.history.forEach(record => {
+            const parsed = parseHistoryDate(record.date);
+            if (!parsed) return;
+            recordMap.set(formatDateKey(parsed), record);
+        });
+
         const trend = [];
         
         for (let i = days - 1; i >= 0; i--) {
             const date = new Date(now);
             date.setDate(date.getDate() - i);
-            const dateStr = date.toLocaleDateString();
+            const dateStr = formatDateKey(date);
             
-            const record = this.history.find(h => h.date === dateStr);
+            const record = recordMap.get(dateStr);
             
             let total = 0;
             if (record) {
@@ -175,12 +218,14 @@ class EmotionStats {
         previousStart.setDate(previousStart.getDate() - (range === 'week' ? 7 : 30));
         
         const currentData = this.history.filter(r => {
-            const d = new Date(r.date);
+            const d = parseHistoryDate(r.date);
+            if (!d) return false;
             return d >= currentStart && d <= today;
         });
         
         const previousData = this.history.filter(r => {
-            const d = new Date(r.date);
+            const d = parseHistoryDate(r.date);
+            if (!d) return false;
             return d >= previousStart && d < currentStart;
         });
         
