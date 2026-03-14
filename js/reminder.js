@@ -18,6 +18,7 @@ class ReminderManager {
         this.hasStoredTime = false;
         this.timer = null;
         this.permission = 'default';
+        this.listeners = new Set();
     }
 
     /**
@@ -33,6 +34,8 @@ class ReminderManager {
         } else {
             this._stopTimer();
         }
+
+        this._emitChange();
         
         // 页面可见性变化时重新检查
         document.addEventListener('visibilitychange', () => {
@@ -99,6 +102,7 @@ class ReminderManager {
         try {
             const permission = await Notification.requestPermission();
             this.permission = permission;
+            this._emitChange();
             return permission === 'granted';
         } catch (e) {
             console.error('Failed to request notification permission:', e);
@@ -126,6 +130,8 @@ class ReminderManager {
         } else {
             this._stopTimer();
         }
+
+        this._emitChange();
         
         return true;
     }
@@ -148,6 +154,7 @@ class ReminderManager {
             this._startTimer();
         }
 
+        this._emitChange();
         return true;
     }
 
@@ -162,6 +169,24 @@ class ReminderManager {
             hasStoredTime: this.hasStoredTime,
             permission: this.permission,
             supported: 'Notification' in window
+        };
+    }
+
+    /**
+     * 订阅设置变化
+     * @param {(settings: ReturnType<ReminderManager['getSettings']>) => void} listener
+     * @returns {() => void}
+     */
+    subscribe(listener) {
+        if (typeof listener !== 'function') {
+            return () => {};
+        }
+
+        this.listeners.add(listener);
+        listener(this.getSettings());
+
+        return () => {
+            this.listeners.delete(listener);
         };
     }
 
@@ -271,6 +296,7 @@ class ReminderManager {
     _syncTimerWithCurrentState(previousPermission) {
         if (!this.enabled) {
             this._stopTimer();
+            this._emitChange();
             return;
         }
 
@@ -278,6 +304,7 @@ class ReminderManager {
             if (previousPermission !== 'granted' || !this.timer) {
                 this._startTimer();
             }
+            this._emitChange();
             return;
         }
 
@@ -285,6 +312,7 @@ class ReminderManager {
         this.enabled = false;
         this._saveSettings();
         this._stopTimer();
+        this._emitChange();
     }
 
     /**
@@ -300,6 +328,21 @@ class ReminderManager {
         
         this._sendNotification();
         return true;
+    }
+
+    /**
+     * 广播设置变化
+     * @private
+     */
+    _emitChange() {
+        const snapshot = this.getSettings();
+        this.listeners.forEach(listener => {
+            try {
+                listener(snapshot);
+            } catch (e) {
+                console.warn('Reminder listener failed:', e);
+            }
+        });
     }
 }
 

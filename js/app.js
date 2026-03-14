@@ -86,6 +86,8 @@ class App {
             // 提醒
             reminderPanel: document.getElementById('reminderPanel'),
             reminderToggleBtn: document.getElementById('reminderToggleBtn'),
+            reminderToggle: document.getElementById('reminderToggle'),
+            reminderTimeWrapper: document.getElementById('reminderTimeWrapper'),
             reminderTime: document.getElementById('reminderTime'),
             testReminderBtn: document.getElementById('testReminderBtn'),
         };
@@ -306,10 +308,14 @@ class App {
         // 获取 DOM 元素
         const reminderPanel = elements.reminderPanel;
         const reminderToggleBtn = elements.reminderToggleBtn;
+        const reminderToggle = elements.reminderToggle;
+        const reminderTimeWrapper = elements.reminderTimeWrapper;
         const reminderTime = elements.reminderTime;
         const testReminderBtn = elements.testReminderBtn;
         
-        if (!reminderToggleBtn) return;
+        if (!reminderPanel || !reminderToggleBtn || !reminderToggle || !reminderTimeWrapper || !reminderTime || !testReminderBtn) {
+            return;
+        }
         
         // 加载当前设置
         const settings = reminderManager.getSettings();
@@ -317,33 +323,61 @@ class App {
         // 检查通知支持状态
         if (!settings.supported) {
             reminderToggleBtn.style.display = 'none';
+            reminderPanel.style.display = 'none';
             return;
         }
-        
-        // 同步状态
-        if (settings.enabled) {
-            reminderPanel.style.display = 'block';
-        }
-        if (reminderTime) {
-            reminderTime.value = settings.time;
-        }
-        
-        // 点击"每日提醒"按钮切换面板
-        reminderToggleBtn?.addEventListener('click', () => {
-            if (reminderPanel.style.display === 'none') {
-                reminderPanel.style.display = 'block';
-            } else {
-                reminderPanel.style.display = 'none';
+
+        let expanded = settings.enabled || settings.hasStoredTime;
+        const render = (state = reminderManager.getSettings()) => {
+            reminderToggle.checked = state.enabled;
+            reminderTime.value = state.time;
+            reminderTimeWrapper.style.display = (state.enabled || state.hasStoredTime) ? 'flex' : 'none';
+            testReminderBtn.style.display = state.enabled ? 'inline-block' : 'none';
+            reminderPanel.style.display = expanded ? 'block' : 'none';
+
+            reminderToggleBtn.setAttribute('aria-expanded', String(expanded));
+            reminderToggleBtn.textContent = expanded ? '收起提醒' : '每日提醒';
+        };
+
+        reminderManager.subscribe((state) => {
+            // 权限被回收后，若存在历史时间也保持面板可见，避免用户找不到入口
+            expanded = expanded || state.hasStoredTime || state.enabled;
+            render(state);
+        });
+
+        // 点击切换按钮展开/收起面板
+        reminderToggleBtn.addEventListener('click', () => {
+            expanded = !expanded;
+            render();
+        });
+
+        // 开关事件
+        reminderToggle.addEventListener('change', async (e) => {
+            const enabled = e.target.checked;
+            const success = await reminderManager.setEnabled(enabled);
+            const latest = reminderManager.getSettings();
+
+            if (!success && latest.permission === 'denied') {
+                alert('通知功能已被拒绝，请在浏览器设置中手动开启');
             }
+
+            expanded = expanded || enabled || latest.hasStoredTime;
+            render(latest);
         });
         
         // 时间选择事件
-        reminderTime?.addEventListener('change', (e) => {
-            reminderManager.setTime(e.target.value);
+        reminderTime.addEventListener('change', (e) => {
+            const updated = reminderManager.setTime(e.target.value);
+            if (!updated) {
+                reminderTime.value = reminderManager.getSettings().time;
+                alert('请选择有效时间（格式：HH:MM）');
+            }
+            expanded = true;
+            render();
         });
         
         // 测试通知事件
-        testReminderBtn?.addEventListener('click', async () => {
+        testReminderBtn.addEventListener('click', async () => {
             const success = await reminderManager.test();
             if (!success) {
                 const latest = reminderManager.getSettings();
@@ -352,10 +386,8 @@ class App {
                 }
             }
         });
-    }
-                }
-            }
-        });
+
+        render(settings);
     }
 }
 

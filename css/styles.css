@@ -1348,6 +1348,11 @@ input:checked + .slider:before {
     color: rgba(255, 215, 0, 0.8);
 }
 
+.btn-text:focus-visible {
+    outline: 1px solid rgba(255, 215, 0, 0.6);
+    border-radius: 0.4rem;
+}
+
 /* 提醒面板 */
 .reminder-panel {
     background: rgba(255, 255, 255, 0.03);
@@ -1368,4 +1373,14 @@ input:checked + .slider:before {
 .reminder-label {
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.85rem;
+}
+
+.reminder-toggle {
+    flex-shrink: 0;
+}
+
+.reminder-panel .reminder-time-wrapper {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
 }

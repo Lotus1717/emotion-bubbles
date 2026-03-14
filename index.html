@@ -61,10 +61,17 @@
             <!-- 提醒设置（默认隐藏） -->
             <div class="reminder-panel" id="reminderPanel" style="display: none;">
                 <div class="reminder-row">
+                    <span class="reminder-label">开启提醒</span>
+                    <label class="switch reminder-toggle">
+                        <input type="checkbox" id="reminderToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="reminder-time-wrapper" id="reminderTimeWrapper" style="display: none;">
                     <span class="reminder-label">提醒时间</span>
                     <input type="time" id="reminderTime" class="reminder-time-input" value="21:00">
                 </div>
-                <button class="btn btn-secondary btn-small" id="testReminderBtn">测试通知</button>
+                <button class="btn btn-secondary btn-small" id="testReminderBtn" style="display: none;">测试通知</button>
             </div>
         </div>
 
