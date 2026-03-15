@@ -70,7 +70,8 @@
 body {
     font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
     background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-light) 100%);
-    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
     overflow: hidden;
     position: relative;
     touch-action: manipulation;
@@ -157,7 +158,8 @@ body {
     position: relative;
     z-index: 1;
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -720,7 +722,8 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
+    height: -webkit-fill-available;
     background: rgba(10, 10, 26, 0.95);
     z-index: 100;
     display: none;
@@ -811,7 +814,8 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
+    height: -webkit-fill-available;
     background: rgba(10, 10, 26, 0.98);
     z-index: 100;
     display: none;
