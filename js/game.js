@@ -10,6 +10,7 @@ import { physicsEngine } from './physics.js';
 import { bubbleManager } from './bubble.js';
 import { generateSuggestion } from './suggestions.js';
 import { emotionStats } from './stats.js';
+import { achievementManager, calculateAchievementStats } from './achievements.js';
 
 /**
  * 游戏状态枚举
@@ -47,6 +48,7 @@ class GameController {
         // 回调
         this.onStateChange = null;
         this.onTimeUpdate = null;
+        this.onAchievementUnlock = null;
     }
 
     /**
@@ -57,6 +59,22 @@ class GameController {
         this.elements = elements;
         this._loadHistory();
         this._initBubbleManager();
+        this._initAchievements();
+    }
+
+    /**
+     * 初始化成就系统
+     * @private
+     */
+    _initAchievements() {
+        achievementManager.init();
+        
+        // 设置成就解锁回调
+        achievementManager.onUnlock = (newAchievements) => {
+            if (this.onAchievementUnlock) {
+                this.onAchievementUnlock(newAchievements);
+            }
+        };
     }
 
     /**
@@ -197,8 +215,28 @@ class GameController {
 
         this._saveHistory();
         this._showResult();
+        this._checkAchievements();
 
         this._setState(GameState.RESULT);
+    }
+
+    /**
+     * 检测成就解锁
+     * @private
+     */
+    _checkAchievements() {
+        // 计算累计统计数据
+        const stats = calculateAchievementStats(this.history);
+        
+        // 计算本次会话数据
+        const uniqueEmotions = new Set(this.poppedEmotions);
+        const sessionData = {
+            poppedCount: this.poppedEmotions.length,
+            uniqueCount: uniqueEmotions.size,
+        };
+        
+        // 检测并解锁成就
+        achievementManager.checkAndUnlock(stats, sessionData);
     }
 
     /**
@@ -254,7 +292,23 @@ class GameController {
     clearHistory() {
         this.history = [];
         localStorage.setItem(STORAGE_KEYS.HISTORY, '[]');
+        achievementManager.clear();
         this._updateStatsDisplay();
+    }
+
+    /**
+     * 获取成就统计数据
+     * @returns {Object}
+     */
+    getAchievementData() {
+        const stats = calculateAchievementStats(this.history);
+        return {
+            achievements: achievementManager.getAllAchievements(stats),
+            unlockedCount: achievementManager.getUnlockedCount(),
+            totalCount: achievementManager.getTotalCount(),
+            nextAchievement: achievementManager.getNextAchievement(stats),
+            stats: stats,
+        };
     }
 
     /**

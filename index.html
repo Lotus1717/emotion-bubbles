@@ -134,10 +134,14 @@
                     </div>
                 </div>
                 
-                <!-- 趋势图表 -->
-                <div class="stats-trend" id="statsTrend">
-                    <h3 class="stats-section-title">练习趋势</h3>
-                    <div class="trend-chart" id="trendChart"></div>
+                <!-- 成就徽章 -->
+                <div class="stats-achievements" id="statsAchievements">
+                    <h3 class="stats-section-title">成就徽章</h3>
+                    <div class="achievements-summary" id="achievementsSummary">
+                        <span class="achievements-count">已解锁 <strong id="unlockedCount">0</strong>/<span id="totalCount">0</span></span>
+                    </div>
+                    <div class="achievements-grid" id="achievementsGrid"></div>
+                    <div class="achievement-next" id="achievementNext"></div>
                 </div>
                 
                 <!-- Top 情绪 -->
@@ -175,6 +179,28 @@
             <button class="btn btn-primary" id="restartBtn">再来一轮</button>
             <button class="btn btn-secondary" id="shareBtn">📤 分享</button>
             <button class="btn btn-secondary" id="closeResultBtn">关闭</button>
+        </div>
+    </div>
+
+    <!-- 成就详情弹窗 -->
+    <div class="achievement-detail" id="achievementDetail">
+        <div class="achievement-detail-card">
+            <div class="achievement-detail-icon" id="detailIcon">🏅</div>
+            <div class="achievement-detail-name" id="detailName">成就名称</div>
+            <div class="achievement-detail-desc" id="detailDesc">成就描述</div>
+            <div class="achievement-detail-status" id="detailStatus">未解锁</div>
+            <button class="achievement-detail-close" id="closeDetailBtn">关闭</button>
+        </div>
+    </div>
+
+    <!-- 成就解锁通知 -->
+    <div class="achievement-toast" id="achievementToast">
+        <div class="achievement-toast-content">
+            <div class="achievement-toast-icon" id="toastIcon">🏅</div>
+            <div class="achievement-toast-text">
+                <div class="achievement-toast-title">成就解锁！</div>
+                <div class="achievement-toast-name" id="toastName"></div>
+            </div>
         </div>
     </div>
 

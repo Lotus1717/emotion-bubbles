@@ -90,6 +90,21 @@ class App {
             reminderTimeWrapper: document.getElementById('reminderTimeWrapper'),
             reminderTime: document.getElementById('reminderTime'),
             closeReminderBtn: document.getElementById('closeReminderBtn'),
+            
+            // 成就系统
+            achievementsGrid: document.getElementById('achievementsGrid'),
+            unlockedCount: document.getElementById('unlockedCount'),
+            totalCount: document.getElementById('totalCount'),
+            achievementNext: document.getElementById('achievementNext'),
+            achievementToast: document.getElementById('achievementToast'),
+            toastIcon: document.getElementById('toastIcon'),
+            toastName: document.getElementById('toastName'),
+            achievementDetail: document.getElementById('achievementDetail'),
+            detailIcon: document.getElementById('detailIcon'),
+            detailName: document.getElementById('detailName'),
+            detailDesc: document.getElementById('detailDesc'),
+            detailStatus: document.getElementById('detailStatus'),
+            closeDetailBtn: document.getElementById('closeDetailBtn'),
         };
     }
 
@@ -235,6 +250,17 @@ class App {
                 gameController.setDuration(parseInt(btn.dataset.time));
             });
         });
+        
+        // 成就详情关闭
+        elements.closeDetailBtn?.addEventListener('click', () => {
+            this._hideAchievementDetail();
+        });
+        
+        elements.achievementDetail?.addEventListener('click', (e) => {
+            if (e.target === elements.achievementDetail) {
+                this._hideAchievementDetail();
+            }
+        });
     }
 
     /**
@@ -247,6 +273,11 @@ class App {
         // 监听状态变化
         gameController.onStateChange = (state) => {
             this._updateUI(state);
+        };
+        
+        // 监听成就解锁
+        gameController.onAchievementUnlock = (newAchievements) => {
+            this._showAchievementToast(newAchievements);
         };
     }
 
@@ -287,6 +318,7 @@ class App {
                 
             case GameState.STATS:
                 elements.statsPanel.style.display = 'flex';
+                this._renderAchievements();
                 break;
         }
     }
@@ -377,6 +409,147 @@ class App {
         });
 
         render(settings);
+    }
+
+    /**
+     * 渲染成就系统
+     * @private
+     */
+    _renderAchievements() {
+        const { elements } = this;
+        if (!elements.achievementsGrid) return;
+        
+        const data = gameController.getAchievementData();
+        
+        // 更新计数
+        if (elements.unlockedCount) {
+            elements.unlockedCount.textContent = data.unlockedCount;
+        }
+        if (elements.totalCount) {
+            elements.totalCount.textContent = data.totalCount;
+        }
+        
+        // 渲染徽章网格
+        elements.achievementsGrid.innerHTML = data.achievements.map(achievement => `
+            <div class="achievement-badge ${achievement.unlocked ? 'unlocked' : 'locked'}" 
+                 data-id="${achievement.id}"
+                 title="${achievement.name}">
+                ${achievement.icon}
+                ${!achievement.unlocked ? '<span class="lock-icon">🔒</span>' : ''}
+            </div>
+        `).join('');
+        
+        // 绑定点击事件
+        elements.achievementsGrid.querySelectorAll('.achievement-badge').forEach(badge => {
+            badge.addEventListener('click', () => {
+                const id = badge.dataset.id;
+                const achievement = data.achievements.find(a => a.id === id);
+                if (achievement) {
+                    this._showAchievementDetail(achievement);
+                }
+            });
+        });
+        
+        // 渲染下一个成就进度
+        this._renderNextAchievement(data.nextAchievement);
+    }
+
+    /**
+     * 渲染下一个成就进度
+     * @private
+     */
+    _renderNextAchievement(nextAchievement) {
+        const { achievementNext } = this.elements;
+        if (!achievementNext) return;
+        
+        if (!nextAchievement) {
+            achievementNext.classList.remove('show');
+            return;
+        }
+        
+        achievementNext.classList.add('show');
+        achievementNext.innerHTML = `
+            <div class="achievement-next-header">
+                <span class="achievement-next-icon">${nextAchievement.icon}</span>
+                <div class="achievement-next-info">
+                    <div class="achievement-next-name">${nextAchievement.name}</div>
+                    <div class="achievement-next-desc">${nextAchievement.description}</div>
+                </div>
+            </div>
+            <div class="achievement-progress-bar">
+                <div class="achievement-progress-fill" style="width: ${nextAchievement.progress.percentage}%"></div>
+            </div>
+            <div class="achievement-progress-text">${nextAchievement.progress.current} / ${nextAchievement.progress.target}</div>
+        `;
+    }
+
+    /**
+     * 显示成就解锁通知
+     * @private
+     */
+    _showAchievementToast(achievements) {
+        const { achievementToast, toastIcon, toastName } = this.elements;
+        if (!achievementToast || achievements.length === 0) return;
+        
+        let index = 0;
+        
+        const showNext = () => {
+            if (index >= achievements.length) return;
+            
+            const achievement = achievements[index];
+            toastIcon.textContent = achievement.icon;
+            toastName.textContent = achievement.name;
+            
+            achievementToast.classList.add('show');
+            
+            setTimeout(() => {
+                achievementToast.classList.remove('show');
+                index++;
+                
+                if (index < achievements.length) {
+                    setTimeout(showNext, 500);
+                }
+            }, 3000);
+        };
+        
+        showNext();
+    }
+
+    /**
+     * 显示成就详情弹窗
+     * @private
+     */
+    _showAchievementDetail(achievement) {
+        const { achievementDetail, detailIcon, detailName, detailDesc, detailStatus } = this.elements;
+        if (!achievementDetail) return;
+        
+        detailIcon.textContent = achievement.icon;
+        detailName.textContent = achievement.name;
+        detailDesc.textContent = achievement.description;
+        
+        if (achievement.unlocked) {
+            const date = new Date(achievement.unlockedAt);
+            const dateStr = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+            detailStatus.textContent = `✓ 已于 ${dateStr} 解锁`;
+            detailStatus.classList.add('unlocked');
+        } else {
+            if (achievement.progress.showProgress) {
+                detailStatus.textContent = `进度: ${achievement.progress.current} / ${achievement.progress.target}`;
+            } else {
+                detailStatus.textContent = '尚未解锁';
+            }
+            detailStatus.classList.remove('unlocked');
+        }
+        
+        achievementDetail.classList.add('show');
+    }
+
+    /**
+     * 隐藏成就详情弹窗
+     * @private
+     */
+    _hideAchievementDetail() {
+        this.elements.achievementDetail?.classList.remove('show');
     }
 }
 
