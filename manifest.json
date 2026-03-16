@@ -1,0 +1,29 @@
+{
+  "name": "念起 - 情绪觉察",
+  "short_name": "念起",
+  "description": "念起即觉，觉已不随。戳破情绪的泡影，让念头自然流过。",
+  "id": "./",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "orientation": "portrait",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "health", "mental wellness"],
+  "lang": "zh-CN",
+  "dir": "ltr"
+}
