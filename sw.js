@@ -1,59 +1,135 @@
-const CACHE_NAME = 'nianqi-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/styles.css',
-  '/js/app.js',
-  '/js/game.js',
-  '/js/achievements.js',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+const CACHE_VERSION = 'v2';
+const STATIC_CACHE = `nianqi-static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `nianqi-runtime-${CACHE_VERSION}`;
+
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './css/styles.css',
+  './js/app.js',
+  './js/pwa.js',
+  './js/constants.js',
+  './js/game.js',
+  './js/share.js',
+  './js/reminder.js',
+  './js/audio.js',
+  './js/physics.js',
+  './js/bubble.js',
+  './js/emotions.js',
+  './js/suggestions.js',
+  './js/stats.js',
+  './js/achievements.js',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
-// 安装 Service Worker
+const OFFLINE_FALLBACK = './index.html';
+
+const resolveAssetUrl = (assetPath) => new URL(assetPath, self.registration.scope).toString();
+
+// 安装阶段预缓存核心资源，确保首轮在线访问后即可离线运行
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
+    (async () => {
+      const cache = await caches.open(STATIC_CACHE);
+      const requests = CORE_ASSETS.map((assetPath) =>
+        new Request(resolveAssetUrl(assetPath), { cache: 'reload' })
+      );
+      await cache.addAll(requests);
+      await self.skipWaiting();
+    })()
   );
-  self.skipWaiting();
 });
 
-// 激活 Service Worker
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .filter((cacheName) => ![STATIC_CACHE, RUNTIME_CACHE].includes(cacheName))
+          .map((cacheName) => caches.delete(cacheName))
       );
-    })
+      await self.clients.claim();
+    })()
   );
-  self.clients.claim();
 });
 
-// 拦截请求
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+const cacheRuntimeResponse = async (request, response) => {
+  if (!response || response.status !== 200 || response.type !== 'basic') {
+    return response;
+  }
+
+  const cache = await caches.open(RUNTIME_CACHE);
+  await cache.put(request, response.clone());
+  return response;
+};
+
+const handleNavigationRequest = async (event) => {
+  try {
+    const preloadResponse = await event.preloadResponse;
+    if (preloadResponse) {
+      return preloadResponse;
+    }
+
+    const networkResponse = await fetch(event.request);
+    return cacheRuntimeResponse(event.request, networkResponse);
+  } catch (error) {
+    const cachedPage = await caches.match(event.request);
+    if (cachedPage) {
+      return cachedPage;
+    }
+
+    const offlinePage = await caches.match(resolveAssetUrl(OFFLINE_FALLBACK));
+    if (offlinePage) {
+      return offlinePage;
+    }
+
+    throw error;
+  }
+};
+
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(handleNavigationRequest(event));
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
+    (async () => {
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) {
+        return cachedResponse;
       }
-      return fetch(event.request).then((response) => {
-        // 不缓存非正常响应
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+
+      try {
+        const networkResponse = await fetch(event.request);
+        return cacheRuntimeResponse(event.request, networkResponse);
+      } catch (error) {
+        if (event.request.destination === 'document') {
+          const offlinePage = await caches.match(resolveAssetUrl(OFFLINE_FALLBACK));
+          if (offlinePage) {
+            return offlinePage;
+          }
         }
-        // 缓存请求的资源
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return response;
-      });
-    })
+        throw error;
+      }
+    })()
   );
 });

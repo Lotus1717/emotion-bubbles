@@ -2,12 +2,13 @@
   "name": "念起 - 情绪觉察",
   "short_name": "念起",
   "description": "念起即觉，觉已不随。戳破情绪的泡影，让念头自然流过。",
-  "start_url": "/",
+  "id": "./",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0a0a1a",
   "theme_color": "#0a0a1a",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "./",
   "icons": [
     {
       "src": "icons/icon-192.png",
