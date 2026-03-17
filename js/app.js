@@ -6,6 +6,7 @@
 
 import { CONFIG } from './constants.js';
 import { gameController, GameState } from './game.js';
+import { audioManager } from './audio.js';
 import { shareManager } from './share.js';
 import { reminderManager } from './reminder.js';
 
@@ -23,6 +24,7 @@ class App {
     init() {
         this._cacheElements();
         this._initStars();
+        this._bindAudioUnlock();
         this._bindEvents();
         this._initGameController();
         
@@ -34,6 +36,22 @@ class App {
         this._initReminderUI();
         
         console.log('🫧 念起已加载');
+    }
+
+    /**
+     * 绑定一次性音频解锁（用户手势）
+     * @private
+     */
+    _bindAudioUnlock() {
+        let unlocked = false;
+        const unlockAudio = () => {
+            if (unlocked) return;
+            unlocked = true;
+            audioManager.primeOnUserGesture();
+        };
+
+        window.addEventListener('pointerdown', unlockAudio, { once: true, passive: true });
+        window.addEventListener('keydown', unlockAudio, { once: true });
     }
 
     /**

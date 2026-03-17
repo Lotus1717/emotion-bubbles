@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'nianqi-';
-const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CACHE_NAME = `${CACHE_PREFIX}v5`;
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -38,6 +38,10 @@ function getCacheKey(request, { ignoreSearch = false } = {}) {
     url.search = '';
   }
   return url.toString();
+}
+
+function shouldBypassCache(request) {
+  return request.cache === 'no-store';
 }
 
 async function precacheCoreAssets(cache) {
@@ -88,13 +92,26 @@ async function handleNavigateRequest(event) {
   }
 }
 
-async function handleStaticRequest(request) {
+async function updateStaticCacheInBackground(cache, request, exactKey) {
+  try {
+    const networkResponse = await fetch(request);
+    if (isCacheableResponse(networkResponse)) {
+      await cache.put(exactKey, networkResponse.clone());
+    }
+  } catch (error) {
+    // 后台更新失败不影响本次响应
+  }
+}
+
+async function handleStaticRequest(event) {
+  const { request } = event;
   const cache = await caches.open(CACHE_NAME);
   const exactKey = getCacheKey(request);
   const fuzzyKey = getCacheKey(request, { ignoreSearch: true });
 
   const cached = (await cache.match(exactKey)) || (await cache.match(fuzzyKey));
   if (cached) {
+    event.waitUntil(updateStaticCacheInBackground(cache, request, exactKey));
     return cached;
   }
 
@@ -142,6 +159,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') {
     return;
   }
+  if (shouldBypassCache(request)) {
+    return;
+  }
 
   const requestUrl = new URL(request.url);
   if (!['http:', 'https:'].includes(requestUrl.protocol)) {
@@ -156,5 +176,5 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(handleStaticRequest(request));
+  event.respondWith(handleStaticRequest(event));
 });

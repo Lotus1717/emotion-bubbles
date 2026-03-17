@@ -6,6 +6,15 @@
 
 import { CONFIG } from './constants.js';
 
+const SUPPORTED_AMBIENT_THEMES = new Set(['healing', 'forest', 'sunset']);
+const AMBIENT_TIMER_KEYS = [
+    'birdTimer',
+    'cricketTimer',
+    'gullTimer',
+    'birdBootstrapTimer',
+    'gullBootstrapTimer',
+];
+
 class AudioManager {
     constructor() {
         this.context = null;
@@ -41,14 +50,53 @@ class AudioManager {
     }
 
     /**
+     * 在用户手势中预热音频上下文，避免首次播放被自动播放策略拦截
+     */
+    primeOnUserGesture() {
+        try {
+            const ctx = this.init();
+            if (ctx.state === 'suspended') {
+                ctx.resume().catch(() => {});
+            }
+        } catch (e) {
+            console.warn('Failed to prime audio context:', e);
+        }
+    }
+
+    /**
+     * 归一化主题名称
+     * @private
+     */
+    _normalizeTheme(theme) {
+        return SUPPORTED_AMBIENT_THEMES.has(theme) ? theme : 'healing';
+    }
+
+    /**
+     * 清理单个定时器
+     * @private
+     */
+    _clearTimer(timerKey) {
+        if (this[timerKey]) {
+            clearTimeout(this[timerKey]);
+            this[timerKey] = null;
+        }
+    }
+
+    /**
+     * 清理所有环境音相关定时器
+     * @private
+     */
+    _clearAmbientTimers() {
+        AMBIENT_TIMER_KEYS.forEach((key) => this._clearTimer(key));
+    }
+
+    /**
      * 播放背景 Ambient 音乐
      * 根据主题播放不同的背景音效
      * @param {string} theme - 主题名称：healing | forest | sunset
      */
     startAmbient(theme = 'healing') {
-        const normalizedTheme = ['healing', 'forest', 'sunset'].includes(theme)
-            ? theme
-            : 'healing';
+        const normalizedTheme = this._normalizeTheme(theme);
 
         if (this.isAmbientPlaying && this.currentTheme === normalizedTheme) {
             return;
@@ -59,6 +107,9 @@ class AudioManager {
 
         try {
             const ctx = this.init();
+            if (ctx.state === 'suspended') {
+                ctx.resume().catch(() => {});
+            }
             
             // 创建主增益节点
             this.ambientGain = ctx.createGain();
@@ -662,26 +713,7 @@ class AudioManager {
      */
     stopAmbient() {
         // 停止所有定时器
-        if (this.birdTimer) {
-            clearTimeout(this.birdTimer);
-            this.birdTimer = null;
-        }
-        if (this.cricketTimer) {
-            clearTimeout(this.cricketTimer);
-            this.cricketTimer = null;
-        }
-        if (this.gullTimer) {
-            clearTimeout(this.gullTimer);
-            this.gullTimer = null;
-        }
-        if (this.birdBootstrapTimer) {
-            clearTimeout(this.birdBootstrapTimer);
-            this.birdBootstrapTimer = null;
-        }
-        if (this.gullBootstrapTimer) {
-            clearTimeout(this.gullBootstrapTimer);
-            this.gullBootstrapTimer = null;
-        }
+        this._clearAmbientTimers();
 
         const gainToFade = this.ambientGain;
         const oscillatorsToStop = this.ambientOscillators;
