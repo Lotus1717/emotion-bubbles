@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'nianqi-';
-const CACHE_NAME = `${CACHE_PREFIX}v5`;
+const CACHE_NAME = `${CACHE_PREFIX}v6`;
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -26,6 +26,7 @@ const BASE_URL = new URL(self.registration.scope);
 const CORE_URLS = CORE_ASSETS.map((path) => new URL(path, BASE_URL).toString());
 const OPTIONAL_URLS = OPTIONAL_ASSETS.map((path) => new URL(path, BASE_URL).toString());
 const OFFLINE_PAGE_URL = new URL('./index.html', BASE_URL).toString();
+const CACHE_BYPASS_MODES = new Set(['no-store', 'reload', 'no-cache']);
 
 function isCacheableResponse(response) {
   return Boolean(response && response.ok && (response.type === 'basic' || response.type === 'default'));
@@ -41,7 +42,20 @@ function getCacheKey(request, { ignoreSearch = false } = {}) {
 }
 
 function shouldBypassCache(request) {
-  return request.cache === 'no-store';
+  return CACHE_BYPASS_MODES.has(request.cache);
+}
+
+function isVersionedStaticRequest(requestUrl) {
+  return requestUrl.search.length > 0;
+}
+
+async function fetchAndCache(cache, request, cacheKey, { forceFresh = false } = {}) {
+  const networkRequest = forceFresh ? new Request(request, { cache: 'no-store' }) : request;
+  const networkResponse = await fetch(networkRequest);
+  if (isCacheableResponse(networkResponse)) {
+    await cache.put(cacheKey, networkResponse.clone());
+  }
+  return networkResponse;
 }
 
 async function precacheCoreAssets(cache) {
@@ -94,10 +108,7 @@ async function handleNavigateRequest(event) {
 
 async function updateStaticCacheInBackground(cache, request, exactKey) {
   try {
-    const networkResponse = await fetch(request);
-    if (isCacheableResponse(networkResponse)) {
-      await cache.put(exactKey, networkResponse.clone());
-    }
+    await fetchAndCache(cache, request, exactKey, { forceFresh: true });
   } catch (error) {
     // 后台更新失败不影响本次响应
   }
@@ -106,21 +117,26 @@ async function updateStaticCacheInBackground(cache, request, exactKey) {
 async function handleStaticRequest(event) {
   const { request } = event;
   const cache = await caches.open(CACHE_NAME);
+  const requestUrl = new URL(request.url);
   const exactKey = getCacheKey(request);
-  const fuzzyKey = getCacheKey(request, { ignoreSearch: true });
 
-  const cached = (await cache.match(exactKey)) || (await cache.match(fuzzyKey));
+  // 带查询参数的静态资源优先走网络，避免版本参数被旧缓存“吞掉”。
+  if (isVersionedStaticRequest(requestUrl)) {
+    try {
+      return await fetchAndCache(cache, request, exactKey, { forceFresh: true });
+    } catch (error) {
+      return (await cache.match(exactKey)) || Response.error();
+    }
+  }
+
+  const cached = await cache.match(exactKey);
   if (cached) {
     event.waitUntil(updateStaticCacheInBackground(cache, request, exactKey));
     return cached;
   }
 
   try {
-    const networkResponse = await fetch(request);
-    if (isCacheableResponse(networkResponse)) {
-      await cache.put(exactKey, networkResponse.clone());
-    }
-    return networkResponse;
+    return await fetchAndCache(cache, request, exactKey, { forceFresh: true });
   } catch (error) {
     return Response.error();
   }
