@@ -116,6 +116,12 @@ class GameController {
         if (primaryRgb) {
             document.documentElement.style.setProperty('--primary-rgb', primaryRgb);
         }
+
+        // 游戏进行中切换主题时，实时切换背景音效
+        if (this.state === GameState.PLAYING) {
+            audioManager.resume().catch(() => {});
+            audioManager.startAmbient(theme);
+        }
     }
 
     /**
@@ -177,9 +183,9 @@ class GameController {
         this._updateTimerDisplay();
         this._updateProgress();
 
-        // 启动音频
-        audioManager.resume();
-        audioManager.startAmbient();
+        // 启动音频（传递当前主题）
+        audioManager.resume().catch(() => {});
+        audioManager.startAmbient(this.currentTheme);
 
         // 启动物理引擎
         physicsEngine.start(() => bubbleManager.getAllBubbles());
