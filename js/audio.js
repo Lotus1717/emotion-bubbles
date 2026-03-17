@@ -13,6 +13,11 @@ class AudioManager {
         this.ambientOscillators = [];
         this.isAmbientPlaying = false;
         this.currentTheme = 'healing';
+        this.birdTimer = null;
+        this.cricketTimer = null;
+        this.gullTimer = null;
+        this.birdBootstrapTimer = null;
+        this.gullBootstrapTimer = null;
     }
 
     /**
@@ -41,12 +46,18 @@ class AudioManager {
      * @param {string} theme - 主题名称：healing | forest | sunset
      */
     startAmbient(theme = 'healing') {
-        if (this.isAmbientPlaying) return;
-        
-        this.currentTheme = theme;
-        
+        const normalizedTheme = ['healing', 'forest', 'sunset'].includes(theme)
+            ? theme
+            : 'healing';
+
+        if (this.isAmbientPlaying && this.currentTheme === normalizedTheme) {
+            return;
+        }
+
+        this.stopAmbient();
+        this.currentTheme = normalizedTheme;
+
         try {
-            this.stopAmbient();
             const ctx = this.init();
             
             // 创建主增益节点
@@ -55,7 +66,7 @@ class AudioManager {
             this.ambientGain.connect(ctx.destination);
 
             // 根据主题播放不同的背景音效
-            switch (theme) {
+            switch (normalizedTheme) {
                 case 'forest':
                     this._createForestAmbient();
                     break;
@@ -185,7 +196,10 @@ class AudioManager {
             }, delay);
         };
         
-        setTimeout(() => scheduleChirp(), 3000 + Math.random() * 2000);
+        this.birdBootstrapTimer = setTimeout(() => {
+            this.birdBootstrapTimer = null;
+            scheduleChirp();
+        }, 3000 + Math.random() * 2000);
     }
 
     /**
@@ -197,30 +211,31 @@ class AudioManager {
         
         const ctx = this.context;
         const now = ctx.currentTime;
+        const volume = 0.012;
         
         // 森林里不同的鸟：布谷鸟、猫头鹰、啄木鸟等
         const birdType = Math.floor(Math.random() * 4);
         
         if (birdType === 0) {
             // 布谷鸟叫声
-            this._createChirpNote(400, 0.15, now);
-            this._createChirpNote(400, 0.15, now + 0.4);
-            this._createChirpNote(400, 0.2, now + 0.8);
+            this._createChirpNote(400, 0.15, now, volume);
+            this._createChirpNote(400, 0.15, now + 0.4, volume);
+            this._createChirpNote(400, 0.2, now + 0.8, volume);
         } else if (birdType === 1) {
             // 森林深处不清楚的鸟叫
-            this._createChirpNote(1200 + Math.random() * 300, 0.1, now);
-            this._createChirpNote(1400 + Math.random() * 300, 0.08, now + 0.15);
-            this._createChirpNote(1100 + Math.random() * 200, 0.12, now + 0.25);
+            this._createChirpNote(1200 + Math.random() * 300, 0.1, now, volume);
+            this._createChirpNote(1400 + Math.random() * 300, 0.08, now + 0.15, volume);
+            this._createChirpNote(1100 + Math.random() * 200, 0.12, now + 0.25, volume);
         } else if (birdType === 2) {
             // 啄木鸟节奏
             for (let i = 0; i < 3; i++) {
-                this._createChirpNote(800 + Math.random() * 200, 0.03, now + i * 0.15);
+                this._createChirpNote(800 + Math.random() * 200, 0.03, now + i * 0.15, volume);
             }
         } else {
             // 夜莺风格的延绵叫声
-            this._createChirpNote(1800, 0.2, now);
-            this._createChirpNote(2100, 0.15, now + 0.25);
-            this._createChirpNote(1900, 0.25, now + 0.45);
+            this._createChirpNote(1800, 0.2, now, volume);
+            this._createChirpNote(2100, 0.15, now + 0.25, volume);
+            this._createChirpNote(1900, 0.25, now + 0.45, volume);
         }
     }
 
@@ -299,21 +314,19 @@ class AudioManager {
      * @private
      */
     _createOceanWaves() {
-        const ctx = this.context;
-        
         // 使用多个层次的噪音模拟海浪
         // 第一层：主海浪
-        this._createWaveLayer(0.12, 8, 0.15);
+        this._createWaveLayer(0.11, 7, 900, 220);
         
         // 第二层：远海浪（更慢、更柔和）
-        this._createWaveLayer(0.06, 12, 0.08);
+        this._createWaveLayer(0.06, 11, 560, 150);
     }
 
     /**
      * 创建单层海浪
      * @private
      */
-    _createWaveLayer(volume, waveFreq, filterFreq) {
+    _createWaveLayer(volume, waveCycleSeconds, baseFilterFreq, filterSweep) {
         const ctx = this.context;
         const bufferSize = 4 * ctx.sampleRate;
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -335,26 +348,35 @@ class AudioManager {
         // 低通滤波
         const lowpass = ctx.createBiquadFilter();
         lowpass.type = 'lowpass';
-        lowpass.frequency.value = filterFreq * 100;
+        lowpass.frequency.value = baseFilterFreq;
 
-        // 海浪起伏 LFO（慢速）
-        const lfo = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        lfo.frequency.value = waveFreq; // 海浪周期
-        lfoGain.gain.value = volume * 0.7;
-        lfo.connect(lfoGain);
-        lfoGain.connect(lowpass.frequency);
+        // 海浪起伏 LFO（以秒为周期，避免过快震荡）
+        const filterLfo = ctx.createOscillator();
+        const filterLfoGain = ctx.createGain();
+        filterLfo.frequency.value = 1 / waveCycleSeconds;
+        filterLfoGain.gain.value = filterSweep;
+        filterLfo.connect(filterLfoGain);
+        filterLfoGain.connect(lowpass.frequency);
         
         const gain = ctx.createGain();
-        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.setValueAtTime(volume * 0.75, ctx.currentTime);
+
+        // 轻微音量摆动，模拟海浪层次
+        const swellLfo = ctx.createOscillator();
+        const swellLfoGain = ctx.createGain();
+        swellLfo.frequency.value = 1 / (waveCycleSeconds * 1.5);
+        swellLfoGain.gain.value = volume * 0.45;
+        swellLfo.connect(swellLfoGain);
+        swellLfoGain.connect(gain.gain);
         
         noise.connect(lowpass);
         lowpass.connect(gain);
         gain.connect(this.ambientGain);
         noise.start();
-        lfo.start();
+        filterLfo.start();
+        swellLfo.start();
 
-        this.ambientOscillators.push(noise, lfo);
+        this.ambientOscillators.push(noise, filterLfo, swellLfo);
     }
 
     /**
@@ -375,7 +397,10 @@ class AudioManager {
             }, delay);
         };
         
-        setTimeout(() => scheduleGull(), 4000 + Math.random() * 3000);
+        this.gullBootstrapTimer = setTimeout(() => {
+            this.gullBootstrapTimer = null;
+            scheduleGull();
+        }, 4000 + Math.random() * 3000);
     }
 
     /**
@@ -607,10 +632,11 @@ class AudioManager {
      * 创建单个鸟鸣音符
      * @private
      */
-    _createChirpNote(freq, duration, startTime, volume) {
+    _createChirpNote(freq, duration, startTime, volume = 0.02) {
         const ctx = this.context;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
+        const safeVolume = Number.isFinite(volume) && volume > 0 ? volume : 0.02;
         
         osc.connect(gain);
         gain.connect(this.ambientGain);
@@ -620,7 +646,7 @@ class AudioManager {
         osc.frequency.exponentialRampToValueAtTime(freq * 0.95, startTime + duration);
         
         gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(volume, startTime + 0.01);
+        gain.gain.linearRampToValueAtTime(safeVolume, startTime + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
         
         osc.type = 'sine';
@@ -644,6 +670,14 @@ class AudioManager {
         if (this.gullTimer) {
             clearTimeout(this.gullTimer);
             this.gullTimer = null;
+        }
+        if (this.birdBootstrapTimer) {
+            clearTimeout(this.birdBootstrapTimer);
+            this.birdBootstrapTimer = null;
+        }
+        if (this.gullBootstrapTimer) {
+            clearTimeout(this.gullBootstrapTimer);
+            this.gullBootstrapTimer = null;
         }
         
         if (this.ambientGain && this.context) {

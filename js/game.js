@@ -116,6 +116,12 @@ class GameController {
         if (primaryRgb) {
             document.documentElement.style.setProperty('--primary-rgb', primaryRgb);
         }
+
+        // 游戏进行中切换主题时，实时切换背景音效
+        if (this.state === GameState.PLAYING) {
+            audioManager.resume().catch(() => {});
+            audioManager.startAmbient(theme);
+        }
     }
 
     /**
