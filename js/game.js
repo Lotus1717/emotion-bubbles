@@ -184,7 +184,7 @@ class GameController {
         this._updateProgress();
 
         // 启动音频（传递当前主题）
-        audioManager.resume();
+        audioManager.resume().catch(() => {});
         audioManager.startAmbient(this.currentTheme);
 
         // 启动物理引擎
