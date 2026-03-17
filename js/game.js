@@ -177,9 +177,9 @@ class GameController {
         this._updateTimerDisplay();
         this._updateProgress();
 
-        // 启动音频
+        // 启动音频（传递当前主题）
         audioManager.resume();
-        audioManager.startAmbient();
+        audioManager.startAmbient(this.currentTheme);
 
         // 启动物理引擎
         physicsEngine.start(() => bubbleManager.getAllBubbles());
