@@ -585,7 +585,10 @@ class AudioManager {
         };
         
         // 首次延迟 2-4 秒后开始
-        setTimeout(() => scheduleChirp(), 2000 + Math.random() * 2000);
+        this.birdBootstrapTimer = setTimeout(() => {
+            this.birdBootstrapTimer = null;
+            scheduleChirp();
+        }, 2000 + Math.random() * 2000);
     }
 
     /**
@@ -679,26 +682,32 @@ class AudioManager {
             clearTimeout(this.gullBootstrapTimer);
             this.gullBootstrapTimer = null;
         }
-        
-        if (this.ambientGain && this.context) {
+
+        const gainToFade = this.ambientGain;
+        const oscillatorsToStop = this.ambientOscillators;
+        this.ambientOscillators = [];
+
+        if (gainToFade && this.context) {
             try {
                 // 渐出效果
-                this.ambientGain.gain.exponentialRampToValueAtTime(
+                gainToFade.gain.exponentialRampToValueAtTime(
                     0.001, 
                     this.context.currentTime + 0.8
                 );
-                
-                // 停止所有振荡器
-                setTimeout(() => {
-                    this.ambientOscillators.forEach(osc => {
-                        try { osc.stop(); } catch (e) {}
-                    });
-                    this.ambientOscillators = [];
-                }, 800);
             } catch (e) {
                 console.warn('Failed to stop ambient sound:', e);
             }
         }
+
+        // 延后停止，保留淡出阶段；使用快照避免误停新主题音效
+        setTimeout(() => {
+            oscillatorsToStop.forEach((osc) => {
+                try { osc.stop(); } catch (e) {}
+                try { osc.disconnect?.(); } catch (e) {}
+            });
+            try { gainToFade?.disconnect(); } catch (e) {}
+        }, 800);
+
         this.ambientGain = null;
         this.isAmbientPlaying = false;
     }
