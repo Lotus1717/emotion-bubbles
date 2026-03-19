@@ -819,19 +819,19 @@ body {
 @keyframes breathingTextFade {
     0% {
         opacity: 0;
-        transform: translateY(4px);
+        transform: translateX(-50%) translateY(4px);
     }
     20% {
         opacity: 0.92;
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
     }
     75% {
         opacity: 0.88;
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
     }
     100% {
         opacity: 0;
-        transform: translateY(-2px);
+        transform: translateX(-50%) translateY(-2px);
     }
 }
 
