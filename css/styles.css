@@ -78,25 +78,6 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-html,
-body {
-    min-height: 100%;
-    background-color: var(--bg-dark);
-}
-
-/* 让主题背景延伸至全面屏安全区外 */
-body::before {
-    content: '';
-    position: fixed;
-    z-index: -2;
-    pointer-events: none;
-    top: calc(0px - env(safe-area-inset-top));
-    right: 0;
-    bottom: calc(0px - env(safe-area-inset-bottom));
-    left: 0;
-    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-light) 100%);
-}
-
 /* ===========================================
    3. 背景效果 (星空/光晕)
    =========================================== */
@@ -179,8 +160,6 @@ body::before {
     width: 100%;
     height: 100dvh;
     height: -webkit-fill-available;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
     display: flex;
     flex-direction: column;
     align-items: center;
