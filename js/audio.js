@@ -9,10 +9,12 @@ class AudioManager {
     constructor() {
         this.context = null;
         this.ambientGain = null;
+        this.ambientToneFilter = null;
         this.ambientOscillators = [];
         this.isAmbientPlaying = false;
         this.birdTimer = null;
         this.twilightTimer = null;
+        this.insectTimer = null;
         this.currentTheme = 'healing';
         this.currentAccentVolume = 0.02;
     }
@@ -53,7 +55,14 @@ class AudioManager {
             // 创建主增益节点
             this.ambientGain = ctx.createGain();
             this.ambientGain.gain.setValueAtTime(CONFIG.AUDIO.AMBIENT_VOLUME, ctx.currentTime);
-            this.ambientGain.connect(ctx.destination);
+
+            // 主题总线滤波：降低高频毛刺，让整体更自然/空灵
+            this.ambientToneFilter = ctx.createBiquadFilter();
+            this.ambientToneFilter.type = 'lowpass';
+            this.ambientToneFilter.frequency.value = profile.masterLowpass || 12000;
+            this.ambientToneFilter.Q.value = 0.3;
+            this.ambientGain.connect(this.ambientToneFilter);
+            this.ambientToneFilter.connect(ctx.destination);
 
             if (profile.stream.enabled) {
                 this._createStreamSound(profile.stream);
@@ -62,12 +71,18 @@ class AudioManager {
                 this._createWindSound(profile.wind);
             }
             this._createDeepPad(profile.pad);
+            if (profile.shimmer?.enabled) {
+                this._createShimmerLayer(profile.shimmer);
+            }
 
             this.currentAccentVolume = profile.accent.volume;
             if (profile.accent.type === 'birds') {
                 this._startBirdChirps(profile.accent);
             } else if (profile.accent.type === 'twilight') {
                 this._startTwilightChimes(profile.accent);
+            }
+            if (profile.insects?.enabled) {
+                this._startInsectChirps(profile.insects);
             }
             
             this.isAmbientPlaying = true;
@@ -79,22 +94,31 @@ class AudioManager {
     _getAmbientProfile(theme) {
         const profiles = {
             healing: {
-                stream: { enabled: true, bandpassFreq: 800, lfoFreq: 0.3, lfoDepth: 200, gain: 0.15 },
-                wind: { enabled: true, lowpassFreq: 150, baseGain: 0.04, lfoFreq: 0.08, lfoDepth: 0.02 },
-                pad: { frequencies: [110, 130.81, 164.81], gain: 0.03, vibratoBase: 0.2, vibratoDepth: 1 },
-                accent: { type: 'birds', minDelay: 3000, maxDelay: 8000, volume: 0.02 },
+                masterLowpass: 7600,
+                stream: { enabled: true, bandpassFreq: 620, bandpassQ: 0.75, lfoFreq: 0.18, lfoDepth: 95, gain: 0.09 },
+                wind: { enabled: true, lowpassFreq: 120, baseGain: 0.03, lfoFreq: 0.05, lfoDepth: 0.012 },
+                pad: { frequencies: [130.81, 164.81, 196], gain: 0.038, vibratoBase: 0.1, vibratoDepth: 0.28, waveType: 'triangle', detuneSpread: 2 },
+                shimmer: { enabled: true, frequencies: [520, 780], gain: 0.004, lfoFreq: 0.045, lfoDepth: 0.0018 },
+                accent: { type: 'birds', minDelay: 9000, maxDelay: 18000, volume: 0.011 },
+                insects: { enabled: false },
             },
             forest: {
-                stream: { enabled: true, bandpassFreq: 1000, lfoFreq: 0.45, lfoDepth: 260, gain: 0.2 },
-                wind: { enabled: true, lowpassFreq: 180, baseGain: 0.05, lfoFreq: 0.1, lfoDepth: 0.025 },
-                pad: { frequencies: [98, 123.47, 146.83], gain: 0.032, vibratoBase: 0.25, vibratoDepth: 1.2 },
-                accent: { type: 'birds', minDelay: 2200, maxDelay: 5200, volume: 0.026 },
+                masterLowpass: 7600,
+                stream: { enabled: true, bandpassFreq: 900, bandpassQ: 0.45, lfoFreq: 0.32, lfoDepth: 170, gain: 0.16 },
+                wind: { enabled: true, lowpassFreq: 180, baseGain: 0.052, lfoFreq: 0.085, lfoDepth: 0.02 },
+                pad: { frequencies: [98, 123.47, 164.81], gain: 0.026, vibratoBase: 0.17, vibratoDepth: 0.55, waveType: 'sine', detuneSpread: 4 },
+                shimmer: { enabled: true, frequencies: [620, 930], gain: 0.0022, lfoFreq: 0.07, lfoDepth: 0.0012 },
+                accent: { type: 'birds', minDelay: 4200, maxDelay: 9000, volume: 0.017 },
+                insects: { enabled: true, minDelay: 1800, maxDelay: 4200, volume: 0.0065 },
             },
             sunset: {
-                stream: { enabled: true, bandpassFreq: 500, lfoFreq: 0.18, lfoDepth: 120, gain: 0.08 },
-                wind: { enabled: true, lowpassFreq: 130, baseGain: 0.05, lfoFreq: 0.06, lfoDepth: 0.018 },
-                pad: { frequencies: [130.81, 155.56, 196], gain: 0.038, vibratoBase: 0.12, vibratoDepth: 0.8 },
-                accent: { type: 'twilight', minDelay: 6000, maxDelay: 12000, volume: 0.018 },
+                masterLowpass: 5600,
+                stream: { enabled: true, bandpassFreq: 360, bandpassQ: 0.28, lfoFreq: 0.11, lfoDepth: 75, gain: 0.058 },
+                wind: { enabled: true, lowpassFreq: 95, baseGain: 0.038, lfoFreq: 0.04, lfoDepth: 0.012 },
+                pad: { frequencies: [130.81, 164.81, 207.65], gain: 0.04, vibratoBase: 0.06, vibratoDepth: 0.24, waveType: 'triangle', detuneSpread: 8 },
+                shimmer: { enabled: true, frequencies: [680, 980], gain: 0.0065, lfoFreq: 0.04, lfoDepth: 0.0022 },
+                accent: { type: 'twilight', minDelay: 7000, maxDelay: 13000, volume: 0.02 },
+                insects: { enabled: false },
             },
         };
         return profiles[theme] || profiles.healing;
@@ -128,7 +152,7 @@ class AudioManager {
         const bandpass = ctx.createBiquadFilter();
         bandpass.type = 'bandpass';
         bandpass.frequency.value = options.bandpassFreq || 800;
-        bandpass.Q.value = 0.5;
+        bandpass.Q.value = options.bandpassQ || 0.5;
 
         // LFO 调制滤波频率，产生水流起伏感
         const lfo = ctx.createOscillator();
@@ -204,13 +228,18 @@ class AudioManager {
         const gainLevel = options.gain || 0.03;
         const vibratoBase = options.vibratoBase || 0.2;
         const vibratoDepth = options.vibratoDepth || 1;
+        const waveType = options.waveType || 'sine';
+        const detuneSpread = options.detuneSpread || 0;
         
         frequencies.forEach((freq, i) => {
             const osc = ctx.createOscillator();
             const oscGain = ctx.createGain();
             
             osc.frequency.value = freq;
-            osc.type = 'sine';
+            osc.type = waveType;
+            if (detuneSpread > 0) {
+                osc.detune.value = (i - 1) * detuneSpread;
+            }
             oscGain.gain.setValueAtTime(gainLevel, ctx.currentTime); // 非常轻
             
             // 轻微的颤音效果
@@ -227,6 +256,37 @@ class AudioManager {
             osc.start();
             
             this.ambientOscillators.push(osc, vibrato);
+        });
+    }
+
+    _createShimmerLayer(options = {}) {
+        const ctx = this.context;
+        const frequencies = options.frequencies || [720, 1080];
+        const baseGain = options.gain || 0.005;
+        const lfoFreq = options.lfoFreq || 0.06;
+        const lfoDepth = options.lfoDepth || 0.003;
+
+        frequencies.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const lfo = ctx.createOscillator();
+            const lfoGain = ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(baseGain * (1 - i * 0.15), ctx.currentTime);
+
+            lfo.frequency.value = lfoFreq + i * 0.02;
+            lfoGain.gain.value = lfoDepth;
+            lfo.connect(lfoGain);
+            lfoGain.connect(gain.gain);
+
+            osc.connect(gain);
+            gain.connect(this.ambientGain);
+            lfo.start();
+            osc.start();
+
+            this.ambientOscillators.push(osc, lfo);
         });
     }
 
@@ -300,6 +360,59 @@ class AudioManager {
 
         osc.start(now);
         osc.stop(now + 0.8);
+    }
+
+    _startInsectChirps(config = {}) {
+        const scheduleInsect = () => {
+            if (!this.isAmbientPlaying) return;
+
+            const minDelay = config.minDelay || 1800;
+            const maxDelay = config.maxDelay || 4200;
+            const delay = minDelay + Math.random() * (maxDelay - minDelay);
+
+            this.insectTimer = setTimeout(() => {
+                if (this.isAmbientPlaying) {
+                    this._playInsectChirp(config.volume || 0.006);
+                    scheduleInsect();
+                }
+            }, delay);
+        };
+
+        setTimeout(() => scheduleInsect(), 1200 + Math.random() * 1200);
+    }
+
+    _playInsectChirp(volume = 0.006) {
+        if (!this.context || !this.ambientGain) return;
+
+        const ctx = this.context;
+        const now = ctx.currentTime;
+        const pulses = 2 + Math.floor(Math.random() * 3);
+
+        for (let i = 0; i < pulses; i++) {
+            const start = now + i * (0.045 + Math.random() * 0.02);
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const band = ctx.createBiquadFilter();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(3400 + Math.random() * 1100, start);
+            osc.frequency.exponentialRampToValueAtTime(2900 + Math.random() * 700, start + 0.03);
+
+            band.type = 'bandpass';
+            band.frequency.value = 3800;
+            band.Q.value = 8;
+
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(volume, start + 0.006);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.035);
+
+            osc.connect(band);
+            band.connect(gain);
+            gain.connect(this.ambientGain);
+
+            osc.start(start);
+            osc.stop(start + 0.04);
+        }
     }
 
     /**
@@ -380,6 +493,10 @@ class AudioManager {
             clearTimeout(this.twilightTimer);
             this.twilightTimer = null;
         }
+        if (this.insectTimer) {
+            clearTimeout(this.insectTimer);
+            this.insectTimer = null;
+        }
         
         if (this.ambientGain && this.context) {
             try {
@@ -401,6 +518,7 @@ class AudioManager {
             }
         }
         this.ambientGain = null;
+        this.ambientToneFilter = null;
         this.isAmbientPlaying = false;
     }
 

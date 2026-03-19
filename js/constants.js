@@ -65,7 +65,7 @@ export const CONFIG = {
     
     // 音频配置
     AUDIO: {
-        AMBIENT_VOLUME: 0.08,
+        AMBIENT_VOLUME: 0.11,
         POP_VOLUME: 0.3,
         TICK_VOLUME: 0.08,
         END_VOLUME: 0.15,
