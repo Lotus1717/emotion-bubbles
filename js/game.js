@@ -149,25 +149,68 @@ class GameController {
      * @private
      */
     _startCountdown() {
-        let count = CONFIG.COUNTDOWN_SECONDS;
+        const steps = [
+            { text: '', number: '', cue: 'neutral', duration: 700 },
+            { text: '吸气，慢慢吸满这一口气', number: '吸', cue: 'inhale', duration: 3200 },
+            { text: '呼气，慢慢把紧绷放下', number: '呼', cue: 'exhale', duration: 3200 },
+            { text: '', number: '', cue: 'settle', duration: 900 },
+        ];
 
-        if (this.elements.countdownText) {
-            this.elements.countdownText.textContent = count;
-        }
-
-        this.countdownTimer = setInterval(() => {
-            count--;
-            audioManager.playTick();
-
-            if (count > 0) {
-                if (this.elements.countdownText) {
-                    this.elements.countdownText.textContent = count;
-                }
-            } else {
-                clearInterval(this.countdownTimer);
+        const runStage = (index) => {
+            if (this.state !== GameState.COUNTDOWN) return;
+            if (index >= steps.length) {
+                this.countdownTimer = null;
                 this._startPlay();
+                return;
             }
-        }, 1000);
+
+            const stage = steps[index];
+            this._updateCountdownStage(stage);
+            this.countdownTimer = setTimeout(() => runStage(index + 1), stage.duration);
+        };
+
+        runStage(0);
+    }
+
+    _updateCountdownStage(stage) {
+        const { countdownText, countdownBreathingText, countdownHalo } = this.elements;
+
+        if (countdownText) {
+            countdownText.textContent = stage.number || '';
+        }
+        if (countdownBreathingText) {
+            countdownBreathingText.textContent = stage.text;
+            const textDuration = Math.max(500, Number(stage.duration) || 1000);
+            countdownBreathingText.style.setProperty('--breath-duration', `${textDuration}ms`);
+            countdownBreathingText.classList.remove('breathing-fade');
+            void countdownBreathingText.offsetWidth;
+            countdownBreathingText.classList.add('breathing-fade');
+        }
+        if (countdownHalo) {
+            const duration = Math.max(300, Number(stage.duration) || 900);
+            countdownHalo.style.setProperty('--halo-duration', `${duration}ms`);
+            const ease = stage.cue === 'inhale'
+                ? 'cubic-bezier(0.25, 0.7, 0.2, 1)'
+                : 'cubic-bezier(0.4, 0.05, 0.35, 1)';
+            countdownHalo.style.setProperty('--halo-ease', ease);
+            countdownHalo.classList.remove('halo-neutral', 'halo-inhale', 'halo-exhale', 'halo-settle');
+            if (stage.cue === 'inhale') {
+                countdownHalo.classList.add('halo-inhale');
+            } else if (stage.cue === 'exhale') {
+                countdownHalo.classList.add('halo-exhale');
+            } else if (stage.cue === 'neutral') {
+                countdownHalo.classList.add('halo-neutral');
+            } else {
+                countdownHalo.classList.add('halo-settle');
+            }
+        }
+    }
+
+    skipCountdown() {
+        if (this.state !== GameState.COUNTDOWN) return;
+        clearInterval(this.countdownTimer);
+        this.countdownTimer = null;
+        this._startPlay();
     }
 
     /**

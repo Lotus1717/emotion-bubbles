@@ -547,14 +547,57 @@ class AudioManager {
     }
 
     /**
-     * 播放倒计时滴答声
+     * 播放倒计时呼吸引导音
      */
-    playTick() {
+    playBreathCue(cue = 'inhale') {
         try {
-            this._playTone(800, 800, 0.1, 'sine', CONFIG.AUDIO.TICK_VOLUME);
+            const baseVolume = CONFIG.AUDIO.TICK_VOLUME;
+            if (cue === 'inhale') {
+                // 吸气：轻柔上行
+                this._playTone(320, 520, 0.75, 'sine', baseVolume * 0.7);
+                this._playBreathAir(true, 0.75, baseVolume * 0.35);
+            } else if (cue === 'exhale') {
+                // 呼气：缓慢下行
+                this._playTone(430, 240, 0.85, 'triangle', baseVolume * 0.62);
+                this._playBreathAir(false, 0.85, baseVolume * 0.4);
+            } else {
+                // 收束：很轻的提示
+                this._playTone(700, 560, 0.22, 'sine', baseVolume * 0.55);
+            }
         } catch (e) {
-            console.warn('Failed to play tick sound:', e);
+            console.warn('Failed to play breath cue:', e);
         }
+    }
+
+    _playBreathAir(rising, duration, volume) {
+        const ctx = this.init();
+        const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = (Math.random() * 2 - 1) * 0.25;
+        }
+
+        const source = ctx.createBufferSource();
+        source.buffer = noiseBuffer;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(rising ? 500 : 450, ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(rising ? 1300 : 260, ctx.currentTime + duration);
+        filter.Q.value = 0.9;
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + duration * 0.35);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start(ctx.currentTime);
+        source.stop(ctx.currentTime + duration);
     }
 
     /**

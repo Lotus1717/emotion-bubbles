@@ -56,6 +56,8 @@ class App {
             timerDisplay: document.getElementById('timerDisplay'),
             progressBar: document.getElementById('progressBar'),
             countdownText: document.getElementById('countdownText'),
+            countdownBreathingText: document.getElementById('countdownBreathingText'),
+            countdownHalo: document.getElementById('countdownHalo'),
             
             // 结果面板
             emotionTags: document.getElementById('emotionTags'),
@@ -79,6 +81,7 @@ class App {
             clearStatsBtn: document.getElementById('clearStatsBtn'),
             backBtn: document.getElementById('backBtn'),
             endEarlyBtn: document.getElementById('endEarlyBtn'),
+            skipCountdownBtn: document.getElementById('skipCountdownBtn'),
             
             // 星空
             stars: document.getElementById('stars'),
@@ -231,6 +234,11 @@ class App {
         // 提前结束按钮
         elements.endEarlyBtn?.addEventListener('click', () => {
             gameController.endEarly();
+        });
+
+        // 跳过倒计时
+        elements.skipCountdownBtn?.addEventListener('click', () => {
+            gameController.skipCountdown();
         });
 
         // 主题选择
