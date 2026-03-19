@@ -11,6 +11,10 @@ class AudioManager {
         this.ambientGain = null;
         this.ambientOscillators = [];
         this.isAmbientPlaying = false;
+        this.birdTimer = null;
+        this.twilightTimer = null;
+        this.currentTheme = 'healing';
+        this.currentAccentVolume = 0.02;
     }
 
     /**
@@ -37,29 +41,34 @@ class AudioManager {
      * 播放背景 Ambient 音乐
      * 自然风格：溪流声 + 轻风 + 偶尔的鸟鸣 + 柔和和弦
      */
-    startAmbient() {
+    startAmbient(theme = 'healing') {
         if (this.isAmbientPlaying) return;
         
         try {
             this.stopAmbient();
             const ctx = this.init();
+            this.currentTheme = theme;
+            const profile = this._getAmbientProfile(theme);
             
             // 创建主增益节点
             this.ambientGain = ctx.createGain();
             this.ambientGain.gain.setValueAtTime(CONFIG.AUDIO.AMBIENT_VOLUME, ctx.currentTime);
             this.ambientGain.connect(ctx.destination);
 
-            // 1. 溪流声（过滤噪音 + 轻微调制）
-            this._createStreamSound();
-            
-            // 2. 轻风声（极低频噪音）
-            this._createWindSound();
-            
-            // 3. 深沉的环境和弦（非常轻柔）
-            this._createDeepPad();
-            
-            // 4. 偶尔的鸟鸣点缀
-            this._startBirdChirps();
+            if (profile.stream.enabled) {
+                this._createStreamSound(profile.stream);
+            }
+            if (profile.wind.enabled) {
+                this._createWindSound(profile.wind);
+            }
+            this._createDeepPad(profile.pad);
+
+            this.currentAccentVolume = profile.accent.volume;
+            if (profile.accent.type === 'birds') {
+                this._startBirdChirps(profile.accent);
+            } else if (profile.accent.type === 'twilight') {
+                this._startTwilightChimes(profile.accent);
+            }
             
             this.isAmbientPlaying = true;
         } catch (e) {
@@ -67,11 +76,35 @@ class AudioManager {
         }
     }
 
+    _getAmbientProfile(theme) {
+        const profiles = {
+            healing: {
+                stream: { enabled: true, bandpassFreq: 800, lfoFreq: 0.3, lfoDepth: 200, gain: 0.15 },
+                wind: { enabled: true, lowpassFreq: 150, baseGain: 0.04, lfoFreq: 0.08, lfoDepth: 0.02 },
+                pad: { frequencies: [110, 130.81, 164.81], gain: 0.03, vibratoBase: 0.2, vibratoDepth: 1 },
+                accent: { type: 'birds', minDelay: 3000, maxDelay: 8000, volume: 0.02 },
+            },
+            forest: {
+                stream: { enabled: true, bandpassFreq: 1000, lfoFreq: 0.45, lfoDepth: 260, gain: 0.2 },
+                wind: { enabled: true, lowpassFreq: 180, baseGain: 0.05, lfoFreq: 0.1, lfoDepth: 0.025 },
+                pad: { frequencies: [98, 123.47, 146.83], gain: 0.032, vibratoBase: 0.25, vibratoDepth: 1.2 },
+                accent: { type: 'birds', minDelay: 2200, maxDelay: 5200, volume: 0.026 },
+            },
+            sunset: {
+                stream: { enabled: true, bandpassFreq: 500, lfoFreq: 0.18, lfoDepth: 120, gain: 0.08 },
+                wind: { enabled: true, lowpassFreq: 130, baseGain: 0.05, lfoFreq: 0.06, lfoDepth: 0.018 },
+                pad: { frequencies: [130.81, 155.56, 196], gain: 0.038, vibratoBase: 0.12, vibratoDepth: 0.8 },
+                accent: { type: 'twilight', minDelay: 6000, maxDelay: 12000, volume: 0.018 },
+            },
+        };
+        return profiles[theme] || profiles.healing;
+    }
+
     /**
      * 创建溪流声效果
      * @private
      */
-    _createStreamSound() {
+    _createStreamSound(options = {}) {
         const ctx = this.context;
         const bufferSize = 2 * ctx.sampleRate;
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -94,20 +127,20 @@ class AudioManager {
         // 带通滤波 - 模拟水流的频率特征
         const bandpass = ctx.createBiquadFilter();
         bandpass.type = 'bandpass';
-        bandpass.frequency.value = 800;
+        bandpass.frequency.value = options.bandpassFreq || 800;
         bandpass.Q.value = 0.5;
 
         // LFO 调制滤波频率，产生水流起伏感
         const lfo = ctx.createOscillator();
         const lfoGain = ctx.createGain();
-        lfo.frequency.value = 0.3; // 很慢的调制
-        lfoGain.gain.value = 200;
+        lfo.frequency.value = options.lfoFreq || 0.3; // 很慢的调制
+        lfoGain.gain.value = options.lfoDepth || 200;
         lfo.connect(lfoGain);
         lfoGain.connect(bandpass.frequency);
         lfo.start();
 
         const streamGain = ctx.createGain();
-        streamGain.gain.setValueAtTime(0.15, ctx.currentTime);
+        streamGain.gain.setValueAtTime(options.gain || 0.15, ctx.currentTime);
 
         streamNoise.connect(bandpass);
         bandpass.connect(streamGain);
@@ -121,7 +154,7 @@ class AudioManager {
      * 创建轻风声效果
      * @private
      */
-    _createWindSound() {
+    _createWindSound(options = {}) {
         const ctx = this.context;
         const bufferSize = 2 * ctx.sampleRate;
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -138,17 +171,17 @@ class AudioManager {
         // 极低通滤波 - 模拟远处的风声
         const lowpass = ctx.createBiquadFilter();
         lowpass.type = 'lowpass';
-        lowpass.frequency.value = 150;
+        lowpass.frequency.value = options.lowpassFreq || 150;
 
         // 缓慢的音量起伏
         const windGain = ctx.createGain();
-        windGain.gain.setValueAtTime(0.04, ctx.currentTime);
+        windGain.gain.setValueAtTime(options.baseGain || 0.04, ctx.currentTime);
 
         // LFO 调制音量，产生风的起伏
         const volumeLfo = ctx.createOscillator();
         const volumeLfoGain = ctx.createGain();
-        volumeLfo.frequency.value = 0.08; // 非常慢
-        volumeLfoGain.gain.value = 0.02;
+        volumeLfo.frequency.value = options.lfoFreq || 0.08; // 非常慢
+        volumeLfoGain.gain.value = options.lfoDepth || 0.02;
         volumeLfo.connect(volumeLfoGain);
         volumeLfoGain.connect(windGain.gain);
         volumeLfo.start();
@@ -165,10 +198,12 @@ class AudioManager {
      * 创建深沉的环境和弦垫
      * @private
      */
-    _createDeepPad() {
+    _createDeepPad(options = {}) {
         const ctx = this.context;
-        // 使用很低的频率，营造深沉感 (A2, C3, E3)
-        const frequencies = [110, 130.81, 164.81];
+        const frequencies = options.frequencies || [110, 130.81, 164.81];
+        const gainLevel = options.gain || 0.03;
+        const vibratoBase = options.vibratoBase || 0.2;
+        const vibratoDepth = options.vibratoDepth || 1;
         
         frequencies.forEach((freq, i) => {
             const osc = ctx.createOscillator();
@@ -176,13 +211,13 @@ class AudioManager {
             
             osc.frequency.value = freq;
             osc.type = 'sine';
-            oscGain.gain.setValueAtTime(0.03, ctx.currentTime); // 非常轻
+            oscGain.gain.setValueAtTime(gainLevel, ctx.currentTime); // 非常轻
             
             // 轻微的颤音效果
             const vibrato = ctx.createOscillator();
             const vibratoGain = ctx.createGain();
-            vibrato.frequency.value = 0.2 + i * 0.1;
-            vibratoGain.gain.value = 1;
+            vibrato.frequency.value = vibratoBase + i * 0.1;
+            vibratoGain.gain.value = vibratoDepth;
             vibrato.connect(vibratoGain);
             vibratoGain.connect(osc.frequency);
             vibrato.start();
@@ -199,13 +234,14 @@ class AudioManager {
      * 启动偶尔的鸟鸣声
      * @private
      */
-    _startBirdChirps() {
+    _startBirdChirps(config = {}) {
         // 随机间隔播放鸟鸣
         const scheduleChirp = () => {
             if (!this.isAmbientPlaying) return;
             
-            // 随机延迟 3-8 秒
-            const delay = 3000 + Math.random() * 5000;
+            const minDelay = config.minDelay || 3000;
+            const maxDelay = config.maxDelay || 8000;
+            const delay = minDelay + Math.random() * (maxDelay - minDelay);
             
             this.birdTimer = setTimeout(() => {
                 if (this.isAmbientPlaying) {
@@ -215,8 +251,55 @@ class AudioManager {
             }, delay);
         };
         
-        // 首次延迟 2-4 秒后开始
-        setTimeout(() => scheduleChirp(), 2000 + Math.random() * 2000);
+        // 首次延迟后开始
+        setTimeout(() => scheduleChirp(), 1500 + Math.random() * 1500);
+    }
+
+    _startTwilightChimes(config = {}) {
+        const scheduleChime = () => {
+            if (!this.isAmbientPlaying) return;
+
+            const minDelay = config.minDelay || 6000;
+            const maxDelay = config.maxDelay || 12000;
+            const delay = minDelay + Math.random() * (maxDelay - minDelay);
+
+            this.twilightTimer = setTimeout(() => {
+                if (this.isAmbientPlaying) {
+                    this._playTwilightChime();
+                    scheduleChime();
+                }
+            }, delay);
+        };
+
+        setTimeout(() => scheduleChime(), 2000 + Math.random() * 2000);
+    }
+
+    _playTwilightChime() {
+        if (!this.context || !this.ambientGain) return;
+
+        const ctx = this.context;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(660 + Math.random() * 120, now);
+        osc.frequency.exponentialRampToValueAtTime(480 + Math.random() * 80, now + 0.5);
+
+        filter.type = 'lowpass';
+        filter.frequency.value = 1200;
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(this.currentAccentVolume, now + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ambientGain);
+
+        osc.start(now);
+        osc.stop(now + 0.8);
     }
 
     /**
@@ -245,7 +328,7 @@ class AudioManager {
             
             osc.frequency.setValueAtTime(2200, now);
             osc.frequency.exponentialRampToValueAtTime(1600, now + 0.15);
-            gain.gain.setValueAtTime(0.015, now);
+            gain.gain.setValueAtTime(this.currentAccentVolume * 0.75, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
             
             osc.type = 'sine';
@@ -276,7 +359,7 @@ class AudioManager {
         osc.frequency.exponentialRampToValueAtTime(freq * 0.95, startTime + duration);
         
         gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.02, startTime + 0.01);
+        gain.gain.linearRampToValueAtTime(this.currentAccentVolume, startTime + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
         
         osc.type = 'sine';
@@ -292,6 +375,10 @@ class AudioManager {
         if (this.birdTimer) {
             clearTimeout(this.birdTimer);
             this.birdTimer = null;
+        }
+        if (this.twilightTimer) {
+            clearTimeout(this.twilightTimer);
+            this.twilightTimer = null;
         }
         
         if (this.ambientGain && this.context) {
