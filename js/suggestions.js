@@ -5,6 +5,20 @@
 
 // AI 建议模板库 - 按情绪类别分组
 const SUGGESTION_TEMPLATES = {
+    // 未戳破任何气泡
+    emptySession: [
+        '你今天只是安静地待在这里，也很棒。觉察不一定要“做很多”，停下来本身就是练习。',
+        '如果此刻还没准备好触碰任何情绪，也没关系。先深呼吸三次，感受身体慢慢放松。',
+        '没有戳破任何气泡，不代表没有收获。你愿意停下来看见自己，这已经是温柔的开始。',
+        '今天先陪自己待一会儿就好。等你准备好了，我们再一起继续。'
+    ],
+    emptySessionFollowup: [
+        '下一次你可以先从最轻的一颗开始，慢慢来，不用着急。',
+        '如果你愿意，给自己一个小目标：只触碰一颗气泡，也算一次很好地练习。',
+        '先照顾好呼吸和身体感受，再决定要不要继续，这样就已经很棒了。',
+        '不需要表现得很好，只要对自己诚实一点点，就已经足够。'
+    ],
+
     // 焦虑类
     anxiety: [
         '深呼吸几次，感受当下的平静。你已经很努力了。',
@@ -379,6 +393,10 @@ function getRandomSuggestion(category) {
  * @returns {string} - 生成的建议文本
  */
 export function generateSuggestion(emotions) {
+    if (!Array.isArray(emotions) || emotions.length === 0) {
+        return `${getRandomSuggestion('emptySession')}\n\n${getRandomSuggestion('emptySessionFollowup')}`;
+    }
+
     const suggestions = [];
     const usedCategories = new Set();
 
