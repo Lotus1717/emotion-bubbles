@@ -107,6 +107,7 @@ class App {
             reminderTimeWrapper: document.getElementById('reminderTimeWrapper'),
             reminderTime: document.getElementById('reminderTime'),
             closeReminderBtn: document.getElementById('closeReminderBtn'),
+            reminderUnsupportedNote: document.getElementById('reminderUnsupportedNote'),
             
             // 成就系统
             achievementsGrid: document.getElementById('achievementsGrid'),
@@ -576,23 +577,30 @@ class App {
         if (!reminderPanel || !reminderToggleBtn || !reminderToggle || !reminderTime) {
             return;
         }
-        
-        // 加载当前设置
+
+        const unsupportedNote = elements.reminderUnsupportedNote;
         const settings = reminderManager.getSettings();
-        
-        // 检查通知支持状态，支持时才显示按钮（避免闪烁）
-        if (!settings.supported) {
-            return;
-        }
-        reminderToggleBtn.classList.add('supported');
 
         const render = (state = reminderManager.getSettings()) => {
-            reminderToggle.checked = state.enabled;
-            reminderTime.value = state.time;
-            // 时间选择器始终显示，但未开启时降低透明度
+            const { supported, enabled, time } = state;
+
+            if (unsupportedNote) {
+                unsupportedNote.hidden = supported;
+            }
+            reminderToggle.disabled = !supported;
+            reminderTime.disabled = !supported;
+
+            reminderToggle.checked = enabled;
+            reminderTime.value = time;
+
             if (reminderTimeWrapper) {
-                reminderTimeWrapper.style.opacity = state.enabled ? '1' : '0.5';
-                reminderTimeWrapper.style.pointerEvents = state.enabled ? 'auto' : 'none';
+                if (!supported) {
+                    reminderTimeWrapper.style.opacity = '0.35';
+                    reminderTimeWrapper.style.pointerEvents = 'none';
+                } else {
+                    reminderTimeWrapper.style.opacity = enabled ? '1' : '0.5';
+                    reminderTimeWrapper.style.pointerEvents = enabled ? 'auto' : 'none';
+                }
             }
         };
 

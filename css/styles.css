@@ -2085,11 +2085,11 @@ input:checked + .slider:before {
     letter-spacing: 0.12em;
 }
 
-/* 辅助按钮组：置于底部，轻分隔、易扫读（序列效应 / 拇指可达区） */
+/* 辅助按钮组：底部链接，间距分隔（无竖线，避免窄屏折行时错位） */
 .start-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 0;
+    gap: 0.5rem 1.1rem;
     justify-content: center;
     align-items: center;
     margin-bottom: 0;
@@ -2097,15 +2097,9 @@ input:checked + .slider:before {
 }
 
 .start-actions .btn-text {
-    padding: 0.55rem 0.65rem;
+    padding: 0.55rem 0.35rem;
     font-size: 0.82rem;
     color: rgba(255, 255, 255, 0.42);
-}
-
-.start-actions .btn-text:not(:last-child) {
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    padding-right: 0.85rem;
-    margin-right: 0.85rem;
 }
 
 .btn-text {
@@ -2125,14 +2119,6 @@ input:checked + .slider:before {
 .btn-text:focus-visible {
     outline: 1px solid rgba(255, 215, 0, 0.6);
     border-radius: 0.4rem;
-}
-
-#reminderToggleBtn {
-    display: none;
-}
-
-#reminderToggleBtn.supported {
-    display: inline-block;
 }
 
 /* 提醒模态框 */
@@ -2197,8 +2183,16 @@ input:checked + .slider:before {
 .reminder-modal-desc {
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.4);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     line-height: 1.8;
+}
+
+.reminder-unsupported-note {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.48);
+    line-height: 1.55;
+    margin: 0 0 1.25rem;
+    text-align: center;
 }
 
 .reminder-settings {
