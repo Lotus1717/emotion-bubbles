@@ -1014,15 +1014,16 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
-/* 统计头部 */
+/* 统计头部（避开刘海 / 灵动岛；与设置页 header 一致） */
 .stats-header {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.2rem 1rem;
     position: relative;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
+    padding: 1.2rem 1rem;
+    padding-top: calc(1.2rem + env(safe-area-inset-top, 0px));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stats-title {
