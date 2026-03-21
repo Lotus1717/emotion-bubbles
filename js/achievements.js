@@ -204,6 +204,51 @@ class AchievementManager {
     }
 
     /**
+     * 成就条件类型：仅依赖 history 聚合统计即可从 CSV 还原
+     * （时段、单次会话类 CSV 无字段，不在这里重算，保留本地原解锁状态）
+     */
+    static get RECALCULABLE_CONDITION_TYPES() {
+        return new Set(['total_popped', 'total_days', 'unique_emotions', 'category_popped']);
+    }
+
+    /**
+     * 根据历史记录重新校准「可统计类」成就（导入 CSV 后调用）
+     * @param {Array<{ date: string, emotions: Record<string, number> }>} history
+     */
+    recalculateFromHistory(history) {
+        const stats = calculateAchievementStats(Array.isArray(history) ? history : []);
+        const prev = this.unlockedAchievements || {};
+
+        /** @type {Record<string, { unlocked: boolean, unlockedAt?: string }>} */
+        const next = {};
+
+        for (const achievement of ACHIEVEMENTS) {
+            const type = achievement.condition.type;
+            const id = achievement.id;
+
+            if (!AchievementManager.RECALCULABLE_CONDITION_TYPES.has(type)) {
+                if (prev[id]?.unlocked) {
+                    next[id] = {
+                        unlocked: true,
+                        unlockedAt: prev[id].unlockedAt || new Date().toISOString(),
+                    };
+                }
+                continue;
+            }
+
+            if (this._checkCondition(achievement, stats, {})) {
+                next[id] = {
+                    unlocked: true,
+                    unlockedAt: prev[id]?.unlockedAt || new Date().toISOString(),
+                };
+            }
+        }
+
+        this.unlockedAchievements = next;
+        this._saveProgress();
+    }
+
+    /**
      * 检查并解锁成就
      * @param {Object} stats - 统计数据
      * @param {Object} sessionData - 本次会话数据

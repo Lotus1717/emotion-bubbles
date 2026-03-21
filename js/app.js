@@ -90,7 +90,6 @@ class App {
             closeSettingsBtn: document.getElementById('closeSettingsBtn'),
             clearStatsBtn: document.getElementById('clearStatsBtn'),
             exportCsvBtn: document.getElementById('exportCsvBtn'),
-            exportJsonBtn: document.getElementById('exportJsonBtn'),
             importHistoryBtn: document.getElementById('importHistoryBtn'),
             importHistoryInput: document.getElementById('importHistoryInput'),
             backBtn: document.getElementById('backBtn'),
@@ -369,7 +368,7 @@ class App {
         elements.clearStatsBtn?.addEventListener('click', () => {
             if (
                 confirm(
-                    '确定清空所有历史记录与成就进度？\n\n此操作不可恢复，建议先导出 JSON 备份。'
+                    '确定清空所有历史记录与成就进度？\n\n此操作不可恢复，建议先导出 CSV 备份。'
                 )
             ) {
                 gameController.clearHistory();
@@ -377,25 +376,12 @@ class App {
             }
         });
 
-        // 导出 CSV / JSON：优先 Web Share，否则下载
-        elements.exportCsvBtn?.addEventListener('click', async () => {
+        elements.exportCsvBtn?.addEventListener('click', () => {
             try {
-                const r = await gameController.exportHistoryCsv();
-                if (r === 'shared') shareManager.showToast('export_shared');
-                else if (r === 'downloaded') shareManager.showToast('export_downloaded');
+                gameController.exportHistoryCsv();
             } catch (err) {
                 console.error(err);
-                shareManager.showToast('error');
-            }
-        });
-        elements.exportJsonBtn?.addEventListener('click', async () => {
-            try {
-                const r = await gameController.exportFullBackup();
-                if (r === 'shared') shareManager.showToast('export_shared');
-                else if (r === 'downloaded') shareManager.showToast('export_downloaded');
-            } catch (err) {
-                console.error(err);
-                shareManager.showToast('error');
+                alert('导出失败，请重试');
             }
         });
         elements.importHistoryBtn?.addEventListener('click', () => {
@@ -417,7 +403,7 @@ class App {
             }
 
             const merge = confirm(
-                '「确定」= 与现有记录合并（同一天同一情绪次数会相加）\n\n「取消」= 用文件替换本地记录（JSON 若含成就也会按此规则处理成就）'
+                '「确定」= 与现有记录合并（同一天同一情绪次数会相加）\n\n「取消」= 用 CSV 完全替换本地记录'
             );
             const mode = merge ? 'merge' : 'replace';
             const result = gameController.importHistoryFromFile(text, file.name, mode);

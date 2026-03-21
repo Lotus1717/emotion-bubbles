@@ -14,9 +14,7 @@ import { achievementManager, calculateAchievementStats } from './achievements.js
 import {
     historyToCsv,
     csvToHistory,
-    buildBackupJson,
-    parseBackupJson,
-    shareOrDownloadTextFile,
+    downloadTextFile,
     mergeHistoryRecords,
     sanitizeHistoryArray,
     detectImportFormat,
@@ -410,41 +408,19 @@ class GameController {
     }
 
     /**
-     * 导出 CSV（Notion / 表格软件友好；仅当前筛选：本周/本月/全部）
-     * 移动端优先调起系统分享，否则下载
-     * @returns {Promise<'shared'|'downloaded'|'cancelled'>}
+     * 导出 CSV 到本机下载（仅当前筛选：本周/本月/全部）
      */
-    async exportHistoryCsv() {
+    exportHistoryCsv() {
         const slice = this._getExportHistorySlice();
         const csv = historyToCsv(slice);
         const stamp = new Date().toISOString().slice(0, 10);
         const tag = this._exportRangeFileTag();
         const filename = `念起-情绪记录-${tag}-${stamp}.csv`;
-        return shareOrDownloadTextFile(filename, csv, 'text/csv;charset=utf-8', {
-            title: '念起 · 情绪记录',
-            text: `CSV（${tag}），可导入表格或 Notion`,
-        });
+        downloadTextFile(filename, csv, 'text/csv;charset=utf-8');
     }
 
     /**
-     * 导出 JSON 备份：history 为当前筛选范围；achievements 仍为完整进度（便于换机恢复徽章）
-     * @returns {Promise<'shared'|'downloaded'|'cancelled'>}
-     */
-    async exportFullBackup() {
-        const slice = this._getExportHistorySlice();
-        const achievements = achievementManager.getProgressSnapshot();
-        const json = buildBackupJson(slice, achievements, { exportRange: this.statsRange || 'week' });
-        const stamp = new Date().toISOString().slice(0, 10);
-        const tag = this._exportRangeFileTag();
-        const filename = `念起-备份-${tag}-${stamp}.json`;
-        return shareOrDownloadTextFile(filename, json, 'application/json;charset=utf-8', {
-            title: '念起 · 完整备份',
-            text: `JSON（${tag}），含成就进度，可保存或发到文件 App`,
-        });
-    }
-
-    /**
-     * 从文件内容导入
+     * 从 CSV 文件内容导入（仅支持本站导出的 CSV）
      * @param {string} text
      * @param {string} filename
      * @param {'merge'|'replace'} mode
@@ -452,30 +428,20 @@ class GameController {
      */
     importHistoryFromFile(text, filename, mode) {
         const fmt = detectImportFormat(filename, text);
-        if (!fmt) {
-            return { ok: false, error: '无法识别格式，请使用本站导出的 .csv 或 .json' };
+        if (fmt !== 'csv') {
+            return { ok: false, error: '请使用 CSV 文件（可先用本页的「导出 CSV」生成）' };
         }
-
-        if (fmt === 'csv') {
-            const parsed = csvToHistory(text);
-            if (!parsed.ok) return parsed;
-            return this._applyImportedHistory(parsed.history, mode, { achievementsPayload: null });
-        }
-
-        const parsed = parseBackupJson(text);
+        const parsed = csvToHistory(text);
         if (!parsed.ok) return parsed;
-        return this._applyImportedHistory(parsed.history, mode, {
-            achievementsPayload: parsed.achievements,
-        });
+        return this._applyImportedHistory(parsed.history, mode);
     }
 
     /**
      * @private
      * @param {Array<{date:string,emotions:Record<string,number>}>} incoming
      * @param {'merge'|'replace'} mode
-     * @param {{ achievementsPayload: Object|null }} options - null 表示不修改成就；对象表示按模式写入
      */
-    _applyImportedHistory(incoming, mode, options) {
+    _applyImportedHistory(incoming, mode) {
         const merge = mode === 'merge';
         let next;
         if (merge) {
@@ -487,10 +453,8 @@ class GameController {
         this.history = next;
         localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(this.history));
 
-        const ach = options?.achievementsPayload;
-        if (ach && typeof ach === 'object') {
-            achievementManager.importProgress(ach, { merge });
-        }
+        // 成就：可由 CSV 还原的累计类从 history 重算；时段/单次会话类 CSV 无数据，保留导入前的解锁状态
+        achievementManager.recalculateFromHistory(this.history);
 
         this._updateStatsDisplay();
         return { ok: true };

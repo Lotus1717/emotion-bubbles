@@ -1,7 +1,6 @@
 /**
- * 情绪记录导入/导出
- * - CSV：便于 Notion / Excel / Google 表格 导入导出
- * - JSON：本站完整备份（含成就进度）
+ * 情绪记录 CSV 导出与解析（设置页使用）
+ * - buildBackupJson / parseBackupJson：保留供测试与将来扩展
  */
 
 import { getEmotionCategory } from './emotions.js';
@@ -311,56 +310,6 @@ export function downloadTextFile(filename, content, mime = 'text/plain;charset=u
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-}
-
-/**
- * 优先用 Web Share API 分享单个文本文件（零服务器）；不支持或用户取消则回退为下载
- * 需在安全上下文（HTTPS 或 localhost）下，部分桌面浏览器仅支持下载回退
- * @param {string} filename
- * @param {string} content
- * @param {string} mime
- * @param {{ title?: string, text?: string }} [meta] - 分享面板标题与说明
- * @returns {Promise<'shared'|'downloaded'|'cancelled'>}
- */
-export async function shareOrDownloadTextFile(
-    filename,
-    content,
-    mime = 'text/plain;charset=utf-8',
-    meta = {}
-) {
-    const blob = new Blob([content], { type: mime });
-    const fileType = (mime.split(';')[0] || 'text/plain').trim();
-
-    let file;
-    try {
-        file = new File([blob], filename, { type: fileType, lastModified: Date.now() });
-    } catch {
-        downloadTextFile(filename, content, mime);
-        return 'downloaded';
-    }
-
-    const payload = {
-        files: [file],
-        title: meta.title || '念起导出',
-        text: meta.text || filename,
-    };
-
-    if (typeof navigator.share === 'function' && typeof navigator.canShare === 'function') {
-        try {
-            if (navigator.canShare(payload)) {
-                await navigator.share(payload);
-                return 'shared';
-            }
-        } catch (e) {
-            if (e && (e.name === 'AbortError' || e.name === 'NotAllowedError')) {
-                return 'cancelled';
-            }
-            console.warn('[念起] 分享文件失败，改为下载', e);
-        }
-    }
-
-    downloadTextFile(filename, content, mime);
-    return 'downloaded';
 }
 
 /**

@@ -124,8 +124,10 @@
             <!-- 头部 -->
             <div class="stats-header">
                 <button type="button" class="stats-settings-btn" id="statsSettingsBtn" title="设置" aria-label="设置">
-                    <svg class="stats-settings-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M4 7h16M4 12h10M4 17h13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                    <svg class="stats-settings-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M4 7h16M4 12h10M4 17h13" stroke="currentColor" stroke-width="1.75"
+                            stroke-linecap="round" />
                     </svg>
                 </button>
                 <h2 class="stats-title">情绪记录</h2>
@@ -191,7 +193,7 @@
             <div class="settings-content">
                 <section class="settings-section">
                     <h3 class="settings-section-title">导出范围</h3>
-                    <p class="settings-section-desc">与统计页共用同一筛选；导出 CSV / JSON 仅包含该范围内的练习记录。</p>
+                    <p class="settings-section-desc">与统计页共用同一筛选；导出 CSV 仅包含该范围内的练习记录。</p>
                     <div class="stats-filter settings-range-filter">
                         <button type="button" class="filter-btn active" data-range="week">本周</button>
                         <button type="button" class="filter-btn" data-range="month">本月</button>
@@ -200,23 +202,20 @@
                 </section>
 
                 <section class="settings-section">
-                    <h3 class="settings-section-title">备份与恢复</h3>
+                    <h3 class="settings-section-title">导出 / 导入 CSV</h3>
                     <p class="settings-section-desc">
-                        <strong>CSV</strong> 便于导入 Notion / Excel；<strong>JSON</strong> 含完整成就进度，换机可恢复。<br>
-                        选择「全部」可导出整库。手机端会优先打开<strong>系统分享</strong>（存文件、发微信等）；不支持时自动改为下载。
+                        <strong>导出</strong>下载 CSV；<strong>导入</strong>选同格式文件（合并或替换）。选「全部」导出全库。导入后会按记录<strong>自动重算</strong>累计类徽章；CSV 不含练习时刻，「夜间/清晨」「单次练习」类徽章无法从 CSV 推断，仅保留你本机原先已解锁的。
                     </p>
                     <div class="settings-actions-row">
-                        <button type="button" class="btn btn-secondary btn-small" id="exportCsvBtn">分享 / 保存 CSV</button>
-                        <button type="button" class="btn btn-secondary btn-small" id="exportJsonBtn">分享 / 保存
-                            JSON</button>
-                        <button type="button" class="btn btn-secondary btn-small" id="importHistoryBtn">导入文件</button>
+                        <button type="button" class="btn btn-secondary btn-small" id="exportCsvBtn">导出 CSV</button>
+                        <button type="button" class="btn btn-secondary btn-small" id="importHistoryBtn">导入 CSV</button>
                     </div>
-                    <input type="file" id="importHistoryInput" accept=".csv,.json,text/csv,application/json" hidden />
+                    <input type="file" id="importHistoryInput" accept=".csv,text/csv" hidden />
                 </section>
 
                 <section class="settings-section settings-section-danger">
                     <h3 class="settings-section-title">数据</h3>
-                    <p class="settings-section-desc">清空后无法恢复，请先导出备份。</p>
+                    <p class="settings-section-desc">清空后无法恢复，请先导出 CSV。</p>
                     <button type="button" class="btn-text-danger settings-clear-btn"
                         id="clearStatsBtn">清空所有历史记录</button>
                 </section>

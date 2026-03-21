@@ -4,6 +4,7 @@ import {
     achievementManager,
     calculateAchievementStats
 } from '../js/achievements.js';
+import { STORAGE_KEYS } from '../js/constants.js';
 
 function createLocalStorageMock() {
     const store = new Map();
@@ -92,6 +93,53 @@ test('checkAndUnlock 可解锁累计/会话类成就并持久化', () => {
 
         assert.equal(achievementManager.isUnlocked('pop_100'), true);
         assert.ok(achievementManager.getUnlockedCount() > 0);
+    });
+});
+
+test('recalculateFromHistory 从 history 重算可统计类成就', () => {
+    withMockedEnv(() => {
+        achievementManager.clear();
+        achievementManager.init();
+        const history = Array.from({ length: 3 }, (_, i) => ({
+            date: `2026-03-${10 + i}`,
+            emotions: { 开心: 40 },
+        }));
+        achievementManager.recalculateFromHistory(history);
+        assert.ok(achievementManager.isUnlocked('pop_100'));
+        assert.ok(achievementManager.isUnlocked('days_3'));
+        assert.ok(!achievementManager.isUnlocked('focus_master'));
+    });
+});
+
+test('recalculateFromHistory 记录变少时会收回可统计类成就', () => {
+    withMockedEnv(() => {
+        achievementManager.clear();
+        achievementManager.init();
+        achievementManager.recalculateFromHistory([
+            { date: '2026-03-01', emotions: { 开心: 120 } },
+        ]);
+        assert.ok(achievementManager.isUnlocked('pop_100'));
+        achievementManager.recalculateFromHistory([
+            { date: '2026-03-01', emotions: { 开心: 1 } },
+        ]);
+        assert.ok(!achievementManager.isUnlocked('pop_100'));
+        assert.ok(achievementManager.isUnlocked('first_pop'));
+    });
+});
+
+test('recalculateFromHistory 保留时段/单次会话类已解锁状态', () => {
+    withMockedEnv(() => {
+        achievementManager.clear();
+        globalThis.localStorage.setItem(
+            STORAGE_KEYS.ACHIEVEMENTS,
+            JSON.stringify({
+                night_owl: { unlocked: true, unlockedAt: '2026-01-01T00:00:00.000Z' },
+            })
+        );
+        achievementManager.init();
+        achievementManager.recalculateFromHistory([]);
+        assert.ok(achievementManager.isUnlocked('night_owl'));
+        assert.ok(!achievementManager.isUnlocked('pop_100'));
     });
 });
 

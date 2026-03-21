@@ -775,15 +775,13 @@ body {
     opacity: 0.16;
     transform: scale(0.98);
     box-shadow: 0 0 12px rgba(var(--primary-rgb), 0.14);
-    background: conic-gradient(
-        from 120deg,
-        rgba(var(--primary-rgb), 0) 0deg,
-        rgba(var(--primary-rgb), 0.18) 56deg,
-        rgba(var(--primary-rgb), 0.03) 120deg,
-        rgba(var(--primary-rgb), 0) 220deg,
-        rgba(var(--primary-rgb), 0.16) 300deg,
-        rgba(var(--primary-rgb), 0) 360deg
-    );
+    background: conic-gradient(from 120deg,
+            rgba(var(--primary-rgb), 0) 0deg,
+            rgba(var(--primary-rgb), 0.18) 56deg,
+            rgba(var(--primary-rgb), 0.03) 120deg,
+            rgba(var(--primary-rgb), 0) 220deg,
+            rgba(var(--primary-rgb), 0.16) 300deg,
+            rgba(var(--primary-rgb), 0) 360deg);
     transition: transform var(--halo-duration) var(--halo-ease),
         opacity var(--halo-duration) var(--halo-ease),
         box-shadow var(--halo-duration) var(--halo-ease);
@@ -860,14 +858,17 @@ body {
         opacity: 0;
         transform: translateX(-50%) translateY(4px);
     }
+
     20% {
         opacity: 0.92;
         transform: translateX(-50%) translateY(0);
     }
+
     75% {
         opacity: 0.88;
         transform: translateX(-50%) translateY(0);
     }
+
     100% {
         opacity: 0;
         transform: translateX(-50%) translateY(-2px);
@@ -1276,9 +1277,12 @@ body {
 }
 
 @keyframes badgeGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.2);
     }
+
     50% {
         box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.4);
     }
@@ -1454,8 +1458,15 @@ body {
 }
 
 @keyframes toastBounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.3); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
 }
 
 .achievement-toast-text {
@@ -1885,6 +1896,7 @@ body.theme-minimal .hint-top {
         font-size: 0.8rem;
     }
 }
+
 /* ===========================================
    每日提醒
    =========================================== */
@@ -1943,11 +1955,11 @@ body.theme-minimal .hint-top {
     border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: rgba(255, 215, 0, 0.6);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(22px);
 }
 
@@ -2281,7 +2293,7 @@ input:checked + .slider:before {
     text-align: center;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    box-shadow: 
+    box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.5),
         0 0 40px rgba(102, 126, 234, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -2298,6 +2310,7 @@ input:checked + .slider:before {
         opacity: 0;
         transform: scale(0.8) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -2309,6 +2322,7 @@ input:checked + .slider:before {
         opacity: 1;
         transform: scale(1) translateY(0);
     }
+
     to {
         opacity: 0;
         transform: scale(0.9) translateY(-10px);
@@ -2326,9 +2340,11 @@ input:checked + .slider:before {
     from {
         transform: scale(0);
     }
+
     50% {
         transform: scale(1.2);
     }
+
     to {
         transform: scale(1);
     }
@@ -2368,6 +2384,11 @@ input:checked + .slider:before {
 }
 
 @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
