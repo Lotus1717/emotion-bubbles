@@ -27,12 +27,13 @@
             <div class="start-header">
                 <h1 class="title">念起</h1>
                 <p class="subtitle">念起即觉，觉已不随</p>
+                <p class="theme-swipe-hint">在首页左右滑动可切换主题</p>
             </div>
             
             <!-- 设置区 -->
             <div class="start-settings">
-                <!-- 主题选择 -->
-                <div class="setting-group">
+                <!-- 主题：桌面显示圆点；手机端隐藏，靠整页左右滑切换（见标题下提示） -->
+                <div class="setting-group home-theme-picker">
                     <div class="setting-label">主题</div>
                     <div class="theme-options">
                         <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
@@ -57,6 +58,7 @@
             <!-- 辅助按钮 -->
             <div class="start-actions">
                 <button class="btn-text" id="statsBtn">查看历史</button>
+                <button class="btn-text" id="settingsBtn">设置</button>
                 <button class="btn-text" id="reminderToggleBtn">每日提醒</button>
             </div>
         </div>
@@ -110,6 +112,7 @@
         <div class="stats-panel" id="statsPanel">
             <!-- 头部 -->
             <div class="stats-header">
+                <button type="button" class="stats-settings-btn" id="statsSettingsBtn" title="设置">⚙</button>
                 <h2 class="stats-title">情绪记录</h2>
                 <button class="stats-close-btn" id="backBtn">✕</button>
             </div>
@@ -161,10 +164,49 @@
                     <div class="category-list" id="categoryList"></div>
                 </div>
             </div>
-            
-            <!-- 底部按钮 -->
-            <div class="stats-footer">
-                <button class="btn-text-danger" id="clearStatsBtn">清空历史</button>
+        </div>
+
+        <!-- 设置页：数据、备份与后续扩展入口 -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-header">
+                <h2 class="settings-title">设置</h2>
+                <button type="button" class="settings-close-btn" id="closeSettingsBtn" aria-label="关闭">✕</button>
+            </div>
+            <div class="settings-content">
+                <section class="settings-section">
+                    <h3 class="settings-section-title">导出范围</h3>
+                    <p class="settings-section-desc">与统计页共用同一筛选；导出 CSV / JSON 仅包含该范围内的练习记录。</p>
+                    <div class="stats-filter settings-range-filter">
+                        <button type="button" class="filter-btn active" data-range="week">本周</button>
+                        <button type="button" class="filter-btn" data-range="month">本月</button>
+                        <button type="button" class="filter-btn" data-range="all">全部</button>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3 class="settings-section-title">备份与恢复</h3>
+                    <p class="settings-section-desc">
+                        <strong>CSV</strong> 便于导入 Notion / Excel；<strong>JSON</strong> 含完整成就进度，换机可恢复。<br>
+                        选择「全部」可导出整库。手机端会优先打开<strong>系统分享</strong>（存文件、发微信等）；不支持时自动改为下载。
+                    </p>
+                    <div class="settings-actions-row">
+                        <button type="button" class="btn btn-secondary btn-small" id="exportCsvBtn">分享 / 保存 CSV</button>
+                        <button type="button" class="btn btn-secondary btn-small" id="exportJsonBtn">分享 / 保存 JSON</button>
+                        <button type="button" class="btn btn-secondary btn-small" id="importHistoryBtn">导入文件</button>
+                    </div>
+                    <input type="file" id="importHistoryInput" accept=".csv,.json,text/csv,application/json" hidden />
+                </section>
+
+                <section class="settings-section settings-section-danger">
+                    <h3 class="settings-section-title">数据</h3>
+                    <p class="settings-section-desc">清空后无法恢复，请先导出备份。</p>
+                    <button type="button" class="btn-text-danger settings-clear-btn" id="clearStatsBtn">清空所有历史记录</button>
+                </section>
+
+                <section class="settings-section settings-section-placeholder">
+                    <h3 class="settings-section-title">更多</h3>
+                    <p class="settings-section-desc muted">后续扩展功能会出现在这里。</p>
+                </section>
             </div>
         </div>
     </div>

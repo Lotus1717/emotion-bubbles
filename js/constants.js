@@ -112,8 +112,14 @@ export const THEMES = {
 // 本地存储键名
 export const STORAGE_KEYS = {
     HISTORY: 'emotionBubbleHistory',
+    /** 与 achievements.js 成就进度一致 */
+    ACHIEVEMENTS: 'emotionBubbleAchievements',
     REMINDER: {
         ENABLED: 'reminderEnabled',
         TIME: 'reminderTime',
     },
 };
+
+/** 念起备份文件标识（JSON） */
+export const BACKUP_FORMAT_ID = 'nianqi-emotion-backup';
+export const BACKUP_VERSION = 1;

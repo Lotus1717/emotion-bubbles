@@ -393,6 +393,16 @@ class ShareManager {
                 icon: '🫧',
                 title: '还没有情绪哦',
                 message: '先戳破一些情绪气泡再来分享吧～'
+            },
+            export_shared: {
+                icon: '📤',
+                title: '已打开系统分享',
+                message: '选择<strong>备忘录、文件、微信</strong>等即可保存或转发；导入时仍用本页的「导入文件」'
+            },
+            export_downloaded: {
+                icon: '📥',
+                title: '已保存到本地',
+                message: '当前环境无法调起分享面板，已改为<strong>浏览器下载</strong>，请在下载目录查看文件'
             }
         };
         

@@ -12,9 +12,13 @@ import { reminderManager } from './reminder.js';
 /**
  * 应用初始化
  */
+const THEME_ORDER = ['healing', 'forest', 'sunset'];
+
 class App {
     constructor() {
         this.elements = {};
+        /** 滑动切换主题后短暂忽略圆点点击，避免误触 */
+        this._suppressThemeClickUntil = 0;
     }
 
     /**
@@ -25,7 +29,9 @@ class App {
         this._initStars();
         this._bindEvents();
         this._initGameController();
-        
+        this._initThemeSwipe();
+        this._syncStatsRangeFilterUI(gameController.statsRange);
+
         // 初始化分享管理器
         shareManager.init();
         
@@ -48,6 +54,7 @@ class App {
             countdownPanel: document.getElementById('countdownPanel'),
             resultPanel: document.getElementById('resultPanel'),
             statsPanel: document.getElementById('statsPanel'),
+            settingsPanel: document.getElementById('settingsPanel'),
             
             // 气泡容器
             bubbleContainer: document.getElementById('bubbleContainer'),
@@ -78,7 +85,14 @@ class App {
             closeResultBtn: document.getElementById('closeResultBtn'),
             shareBtn: document.getElementById('shareBtn'),
             statsBtn: document.getElementById('statsBtn'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            statsSettingsBtn: document.getElementById('statsSettingsBtn'),
+            closeSettingsBtn: document.getElementById('closeSettingsBtn'),
             clearStatsBtn: document.getElementById('clearStatsBtn'),
+            exportCsvBtn: document.getElementById('exportCsvBtn'),
+            exportJsonBtn: document.getElementById('exportJsonBtn'),
+            importHistoryBtn: document.getElementById('importHistoryBtn'),
+            importHistoryInput: document.getElementById('importHistoryInput'),
             backBtn: document.getElementById('backBtn'),
             endEarlyBtn: document.getElementById('endEarlyBtn'),
             skipCountdownBtn: document.getElementById('skipCountdownBtn'),
@@ -109,6 +123,125 @@ class App {
             detailStatus: document.getElementById('detailStatus'),
             closeDetailBtn: document.getElementById('closeDetailBtn'),
         };
+    }
+
+    /**
+     * 应用主题并同步圆点 UI
+     * @private
+     * @param {string} themeId
+     */
+    _applyTheme(themeId) {
+        if (!themeId) return;
+        document.querySelectorAll('.theme-btn').forEach((b) => {
+            b.classList.toggle('active', b.dataset.theme === themeId);
+        });
+        gameController.setTheme(themeId);
+    }
+
+    /**
+     * 首页整屏左右滑动切换主题（触摸）
+     * 从按钮、链接、输入框等开始的滑动不触发，避免误操作
+     * @private
+     */
+    _initThemeSwipe() {
+        const panel = this.elements.startPanel;
+        if (!panel) return;
+
+        let startX = 0;
+        let startY = 0;
+        let tracking = false;
+        let horizontal = false;
+        let ignoreGesture = false;
+
+        const isExcludedTarget = (target) => {
+            if (!target || typeof target.closest !== 'function') return false;
+            return Boolean(
+                target.closest(
+                    'button, a, input, textarea, select, label, [data-no-theme-swipe]'
+                )
+            );
+        };
+
+        panel.addEventListener(
+            'touchstart',
+            (e) => {
+                if (e.touches.length !== 1) return;
+                ignoreGesture = isExcludedTarget(e.target);
+                if (ignoreGesture) {
+                    tracking = false;
+                    return;
+                }
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                tracking = true;
+                horizontal = false;
+            },
+            { passive: true }
+        );
+
+        panel.addEventListener(
+            'touchmove',
+            (e) => {
+                if (!tracking || ignoreGesture || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 0.65) {
+                    horizontal = true;
+                }
+            },
+            { passive: true }
+        );
+
+        const resetGesture = () => {
+            tracking = false;
+            horizontal = false;
+            ignoreGesture = false;
+        };
+
+        panel.addEventListener(
+            'touchend',
+            (e) => {
+                if (ignoreGesture) {
+                    resetGesture();
+                    return;
+                }
+                if (!tracking) return;
+                tracking = false;
+                if (!horizontal || e.changedTouches.length !== 1) return;
+
+                const dx = e.changedTouches[0].clientX - startX;
+                const dy = e.changedTouches[0].clientY - startY;
+                if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
+
+                const current = gameController.currentTheme || 'healing';
+                let idx = THEME_ORDER.indexOf(current);
+                if (idx < 0) idx = 0;
+
+                if (dx < 0) {
+                    idx = (idx + 1) % THEME_ORDER.length;
+                } else {
+                    idx = (idx - 1 + THEME_ORDER.length) % THEME_ORDER.length;
+                }
+
+                const next = THEME_ORDER[idx];
+                this._suppressThemeClickUntil = Date.now() + 380;
+                this._applyTheme(next);
+
+                try {
+                    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+                    if (!reduceMotion && typeof navigator.vibrate === 'function') {
+                        navigator.vibrate(10);
+                    }
+                } catch {
+                    /* ignore */
+                }
+
+                e.preventDefault();
+            },
+            { passive: false }
+        );
+
+        panel.addEventListener('touchcancel', resetGesture, { passive: true });
     }
 
     /**
@@ -209,20 +342,94 @@ class App {
             gameController.showStats();
         });
 
-        // 时间筛选按钮
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        // 设置（首页 / 统计页）
+        elements.settingsBtn?.addEventListener('click', () => {
+            gameController.openSettings();
+        });
+        elements.statsSettingsBtn?.addEventListener('click', () => {
+            gameController.openSettings();
+        });
+        elements.closeSettingsBtn?.addEventListener('click', () => {
+            gameController.closeSettings();
+        });
+
+        // 时间筛选（统计页与设置页两组按钮保持同步）
+        document.querySelectorAll('.filter-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
                 const range = btn.dataset.range;
+                document.querySelectorAll('.filter-btn').forEach((b) => {
+                    b.classList.toggle('active', b.dataset.range === range);
+                });
                 gameController.updateStatsRange(range);
             });
         });
 
-        // 清空历史按钮
+        // 清空历史（设置页）
         elements.clearStatsBtn?.addEventListener('click', () => {
-            if (confirm('确定清空所有历史记录？')) {
+            if (
+                confirm(
+                    '确定清空所有历史记录与成就进度？\n\n此操作不可恢复，建议先导出 JSON 备份。'
+                )
+            ) {
                 gameController.clearHistory();
+                alert('已清空');
+            }
+        });
+
+        // 导出 CSV / JSON：优先 Web Share，否则下载
+        elements.exportCsvBtn?.addEventListener('click', async () => {
+            try {
+                const r = await gameController.exportHistoryCsv();
+                if (r === 'shared') shareManager.showToast('export_shared');
+                else if (r === 'downloaded') shareManager.showToast('export_downloaded');
+            } catch (err) {
+                console.error(err);
+                shareManager.showToast('error');
+            }
+        });
+        elements.exportJsonBtn?.addEventListener('click', async () => {
+            try {
+                const r = await gameController.exportFullBackup();
+                if (r === 'shared') shareManager.showToast('export_shared');
+                else if (r === 'downloaded') shareManager.showToast('export_downloaded');
+            } catch (err) {
+                console.error(err);
+                shareManager.showToast('error');
+            }
+        });
+        elements.importHistoryBtn?.addEventListener('click', () => {
+            elements.importHistoryInput?.click();
+        });
+        elements.importHistoryInput?.addEventListener('change', async (e) => {
+            const input = e.target;
+            const file = input.files?.[0];
+            input.value = '';
+            if (!file) return;
+
+            let text;
+            try {
+                text = await file.text();
+            } catch (err) {
+                console.error(err);
+                alert('读取文件失败');
+                return;
+            }
+
+            const merge = confirm(
+                '「确定」= 与现有记录合并（同一天同一情绪次数会相加）\n\n「取消」= 用文件替换本地记录（JSON 若含成就也会按此规则处理成就）'
+            );
+            const mode = merge ? 'merge' : 'replace';
+            const result = gameController.importHistoryFromFile(text, file.name, mode);
+            if (!result.ok) {
+                alert(result.error || '导入失败');
+                return;
+            }
+            alert('导入成功');
+            if (
+                gameController.state === GameState.STATS ||
+                gameController.state === GameState.SETTINGS
+            ) {
+                this._renderAchievements();
             }
         });
 
@@ -241,12 +448,11 @@ class App {
             gameController.skipCountdown();
         });
 
-        // 主题选择
-        document.querySelectorAll('.theme-btn').forEach(btn => {
+        // 主题选择（点击圆点）
+        document.querySelectorAll('.theme-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                gameController.setTheme(btn.dataset.theme);
+                if (Date.now() < this._suppressThemeClickUntil) return;
+                this._applyTheme(btn.dataset.theme);
             });
         });
 
@@ -303,6 +509,7 @@ class App {
         elements.resultPanel.style.display = 'none';
         elements.resultPanel.classList.remove('show');
         elements.statsPanel.style.display = 'none';
+        if (elements.settingsPanel) elements.settingsPanel.style.display = 'none';
 
         // 根据状态显示对应面板
         switch (state) {
@@ -327,8 +534,28 @@ class App {
             case GameState.STATS:
                 elements.statsPanel.style.display = 'flex';
                 this._renderAchievements();
+                this._syncStatsRangeFilterUI(gameController.statsRange);
+                break;
+
+            case GameState.SETTINGS:
+                if (elements.settingsPanel) {
+                    elements.settingsPanel.style.display = 'flex';
+                    this._syncStatsRangeFilterUI(gameController.statsRange);
+                }
                 break;
         }
+    }
+
+    /**
+     * 统计页与设置页的「本周/本月/全部」按钮同步高亮
+     * @private
+     * @param {string} range
+     */
+    _syncStatsRangeFilterUI(range) {
+        const r = range || 'week';
+        document.querySelectorAll('.filter-btn').forEach((b) => {
+            b.classList.toggle('active', b.dataset.range === r);
+        });
     }
 
     /**

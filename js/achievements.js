@@ -4,6 +4,7 @@
  */
 
 import { EMOTION_TREE } from './emotions.js';
+import { STORAGE_KEYS } from './constants.js';
 
 // 成就类别
 export const ACHIEVEMENT_CATEGORIES = {
@@ -160,9 +161,6 @@ export const ACHIEVEMENTS = [
     },
 ];
 
-// 本地存储键
-const STORAGE_KEY = 'emotionBubbleAchievements';
-
 /**
  * 成就管理器
  */
@@ -185,7 +183,7 @@ class AchievementManager {
      */
     _loadProgress() {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+            const saved = localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS);
             this.unlockedAchievements = saved ? JSON.parse(saved) : {};
         } catch (e) {
             console.warn('Failed to load achievements:', e);
@@ -199,7 +197,7 @@ class AchievementManager {
      */
     _saveProgress() {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.unlockedAchievements));
+            localStorage.setItem(STORAGE_KEYS.ACHIEVEMENTS, JSON.stringify(this.unlockedAchievements));
         } catch (e) {
             console.warn('Failed to save achievements:', e);
         }
@@ -293,6 +291,14 @@ class AchievementManager {
      */
     isUnlocked(achievementId) {
         return !!this.unlockedAchievements[achievementId]?.unlocked;
+    }
+
+    /**
+     * 导出成就进度（用于 JSON 备份）
+     * @returns {Record<string, { unlocked: boolean, unlockedAt?: string }>}
+     */
+    getProgressSnapshot() {
+        return JSON.parse(JSON.stringify(this.unlockedAchievements || {}));
     }
 
     /**
@@ -407,7 +413,43 @@ class AchievementManager {
      */
     clear() {
         this.unlockedAchievements = {};
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEYS.ACHIEVEMENTS);
+    }
+
+    /**
+     * 从备份恢复成就（合并或整表替换）
+     * @param {Object} data - localStorage 中同款结构 { [id]: { unlocked, unlockedAt } }
+     * @param {{ merge?: boolean }} options
+     */
+    importProgress(data, options = {}) {
+        const merge = Boolean(options.merge);
+        if (!data || typeof data !== 'object') return;
+
+        if (!merge) {
+            this.unlockedAchievements = {};
+            for (const [id, entry] of Object.entries(data)) {
+                if (entry && entry.unlocked) {
+                    this.unlockedAchievements[id] = {
+                        unlocked: true,
+                        unlockedAt: entry.unlockedAt || new Date().toISOString(),
+                    };
+                }
+            }
+            this._saveProgress();
+            return;
+        }
+
+        for (const [id, entry] of Object.entries(data)) {
+            if (!entry?.unlocked) continue;
+            const existing = this.unlockedAchievements[id];
+            if (!existing?.unlocked) {
+                this.unlockedAchievements[id] = {
+                    unlocked: true,
+                    unlockedAt: entry.unlockedAt || new Date().toISOString(),
+                };
+            }
+        }
+        this._saveProgress();
     }
 }
 
