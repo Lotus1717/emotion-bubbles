@@ -9,13 +9,13 @@
   "theme_color": "#0a0a1a",
   "icons": [
     {
-      "src": "nianqi-icon-v1.png",
+      "src": "nianqi-icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "nianqi-icon-v1.png",
+      "src": "nianqi-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

@@ -97,7 +97,7 @@ python3 -m http.server 8080
 
 - **iOS Safari**：依赖 `<link rel="apple-touch-icon" href="…">`（建议 **180×180** 正方形 **PNG**）。已写在 `index.html`。
 - **Android Chrome**：依赖根目录 `site.webmanifest` 里的 `icons`（常用 **192×192**、**512×512**）。需通过 **HTTPS** 或 **localhost** 访问，manifest 才能被正常读取。
-- 替换图标时：同步更新 `nianqi-icon-v1.png`（或改路径），并保证 `manifest` 与 `apple-touch-icon` 指向同一套资源。
+- 替换图标时：同步更新 `nianqi-icon.png`（或改路径），并保证 `manifest` 与 `apple-touch-icon` 指向同一套资源；白底可跑 `python3 scripts/make-icon-transparent.py nianqi-icon.png`。
 
 ## 📁 项目结构
 
