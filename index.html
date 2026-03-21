@@ -6,8 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="念起 - 念起即觉，觉已不随。戳破情绪的泡影，让念头自然流过。">
     <meta name="theme-color" content="#0a0a1a">
-    <link rel="icon" type="image/png" href="nianqi-icon.png">
-    <link rel="apple-touch-icon" href="nianqi-icon.png">
+    <!-- 主屏幕 / 安装图标：iOS 读 apple-touch-icon；Android Chrome 读 manifest icons -->
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="icon" type="image/png" href="nianqi-icon-v1.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="nianqi-icon-v1.png" sizes="192x192">
+    <!-- 须为正方形 PNG；推荐导出 180×180 专用图，暂用主图标由系统缩放 -->
+    <link rel="apple-touch-icon" href="nianqi-icon-v1.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="念起">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>念起 - 念起即觉，觉已不随</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -23,44 +30,47 @@
 
         <!-- 开始面板 -->
         <div class="start-panel" id="startPanel">
-            <!-- 标题区 -->
-            <div class="start-header">
-                <h1 class="title">念起</h1>
-                <p class="subtitle">念起即觉，觉已不随</p>
-                <p class="theme-swipe-hint">在首页左右滑动可切换主题</p>
-            </div>
-            
-            <!-- 设置区 -->
-            <div class="start-settings">
-                <!-- 主题：桌面显示圆点；手机端隐藏，靠整页左右滑切换（见标题下提示） -->
-                <div class="setting-group home-theme-picker">
-                    <div class="setting-label">主题</div>
-                    <div class="theme-options">
-                        <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
-                        <div class="theme-btn forest" data-theme="forest" title="森林"></div>
-                        <div class="theme-btn sunset" data-theme="sunset" title="日落"></div>
+            <!-- 上区：品牌与偏好（配置先于行动，降低认知负荷） -->
+            <div class="start-panel-upper">
+                <div class="start-header">
+                    <h1 class="title">念起</h1>
+                    <p class="subtitle">念起即觉，觉已不随</p>
+                    <p class="theme-swipe-hint">在首页左右滑动可切换主题</p>
+                </div>
+
+                <div class="start-settings">
+                    <div class="setting-group home-theme-picker">
+                        <div class="setting-label">主题</div>
+                        <div class="theme-options">
+                            <div class="theme-btn healing active" data-theme="healing" title="治愈系"></div>
+                            <div class="theme-btn forest" data-theme="forest" title="森林"></div>
+                            <div class="theme-btn sunset" data-theme="sunset" title="日落"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-label">时长</div>
+                        <div class="time-options">
+                            <button class="time-btn active" data-time="60">1分钟</button>
+                            <button class="time-btn" data-time="180">3分钟</button>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- 时间选择 -->
-                <div class="setting-group">
-                    <div class="setting-label">时长</div>
-                    <div class="time-options">
-                        <button class="time-btn active" data-time="60">1分钟</button>
-                        <button class="time-btn" data-time="180">3分钟</button>
-                    </div>
+            </div>
+
+            <!-- 中区：唯一主行动，留白形成「呼吸区」 -->
+            <div class="start-panel-body">
+                <button class="btn btn-primary btn-large" id="startBtn">开始</button>
+            </div>
+
+            <!-- 下区：次要入口，靠近拇指与安全区 -->
+            <footer class="start-panel-footer">
+                <div class="start-actions">
+                    <button class="btn-text" id="statsBtn">查看历史</button>
+                    <button class="btn-text" id="settingsBtn">设置</button>
+                    <button class="btn-text" id="reminderToggleBtn">每日提醒</button>
                 </div>
-            </div>
-            
-            <!-- 主按钮 -->
-            <button class="btn btn-primary btn-large" id="startBtn">开始</button>
-            
-            <!-- 辅助按钮 -->
-            <div class="start-actions">
-                <button class="btn-text" id="statsBtn">查看历史</button>
-                <button class="btn-text" id="settingsBtn">设置</button>
-                <button class="btn-text" id="reminderToggleBtn">每日提醒</button>
-            </div>
+            </footer>
         </div>
 
         <!-- 提醒设置模态框 -->
@@ -69,7 +79,7 @@
                 <button class="reminder-close-btn" id="closeReminderBtn">✕</button>
                 <h3 class="reminder-modal-title">每日提醒</h3>
                 <p class="reminder-modal-desc">设置一个固定时间<br>提醒自己觉察情绪</p>
-                
+
                 <div class="reminder-settings">
                     <div class="reminder-row">
                         <span class="reminder-label">开启提醒</span>
@@ -78,7 +88,7 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    
+
                     <div class="reminder-time-wrapper" id="reminderTimeWrapper">
                         <span class="reminder-label">提醒时间</span>
                         <input type="time" id="reminderTime" class="reminder-time-input" value="21:00">
@@ -112,11 +122,15 @@
         <div class="stats-panel" id="statsPanel">
             <!-- 头部 -->
             <div class="stats-header">
-                <button type="button" class="stats-settings-btn" id="statsSettingsBtn" title="设置">⚙</button>
+                <button type="button" class="stats-settings-btn" id="statsSettingsBtn" title="设置" aria-label="设置">
+                    <svg class="stats-settings-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M4 7h16M4 12h10M4 17h13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                    </svg>
+                </button>
                 <h2 class="stats-title">情绪记录</h2>
                 <button class="stats-close-btn" id="backBtn">✕</button>
             </div>
-            
+
             <!-- 可滚动内容区 -->
             <div class="stats-content">
                 <!-- 时间筛选 -->
@@ -125,7 +139,7 @@
                     <button class="filter-btn" data-range="month">本月</button>
                     <button class="filter-btn" data-range="all">全部</button>
                 </div>
-                
+
                 <!-- 概览统计 -->
                 <div class="stats-overview" id="statsOverview">
                     <div class="stat-card">
@@ -141,23 +155,24 @@
                         <div class="stat-label">日均戳破</div>
                     </div>
                 </div>
-                
+
                 <!-- 成就徽章 -->
                 <div class="stats-achievements" id="statsAchievements">
                     <h3 class="stats-section-title">成就徽章</h3>
                     <div class="achievements-summary" id="achievementsSummary">
-                        <span class="achievements-count">已解锁 <strong id="unlockedCount">0</strong>/<span id="totalCount">0</span></span>
+                        <span class="achievements-count">已解锁 <strong id="unlockedCount">0</strong>/<span
+                                id="totalCount">0</span></span>
                     </div>
                     <div class="achievements-grid" id="achievementsGrid"></div>
                     <div class="achievement-next" id="achievementNext"></div>
                 </div>
-                
+
                 <!-- Top 情绪 -->
                 <div class="stats-top" id="statsTop">
                     <h3 class="stats-section-title">高频情绪</h3>
                     <div class="top-list" id="topList"></div>
                 </div>
-                
+
                 <!-- 分类统计 -->
                 <div class="stats-category" id="statsCategory">
                     <h3 class="stats-section-title">情绪分类</h3>
@@ -191,7 +206,8 @@
                     </p>
                     <div class="settings-actions-row">
                         <button type="button" class="btn btn-secondary btn-small" id="exportCsvBtn">分享 / 保存 CSV</button>
-                        <button type="button" class="btn btn-secondary btn-small" id="exportJsonBtn">分享 / 保存 JSON</button>
+                        <button type="button" class="btn btn-secondary btn-small" id="exportJsonBtn">分享 / 保存
+                            JSON</button>
                         <button type="button" class="btn btn-secondary btn-small" id="importHistoryBtn">导入文件</button>
                     </div>
                     <input type="file" id="importHistoryInput" accept=".csv,.json,text/csv,application/json" hidden />
@@ -200,7 +216,8 @@
                 <section class="settings-section settings-section-danger">
                     <h3 class="settings-section-title">数据</h3>
                     <p class="settings-section-desc">清空后无法恢复，请先导出备份。</p>
-                    <button type="button" class="btn-text-danger settings-clear-btn" id="clearStatsBtn">清空所有历史记录</button>
+                    <button type="button" class="btn-text-danger settings-clear-btn"
+                        id="clearStatsBtn">清空所有历史记录</button>
                 </section>
 
                 <section class="settings-section settings-section-placeholder">

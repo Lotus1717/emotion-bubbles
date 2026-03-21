@@ -57,6 +57,7 @@
     --radius-xl: 50px;
     --radius-full: 50%;
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-top: env(safe-area-inset-top, 0px);
 }
 
 /* ===========================================
@@ -211,12 +212,12 @@ body {
 
 .subtitle {
     color: var(--text-muted);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     text-align: center;
-    max-width: 350px;
+    max-width: 22rem;
     font-size: 1rem;
-    line-height: 1.8;
-    letter-spacing: 0.1em;
+    line-height: 1.85;
+    letter-spacing: 0.08em;
 }
 
 .subtitle-hint {
@@ -625,11 +626,48 @@ body {
     display: none;
 }
 
-/* 开始面板 */
+/* 开始面板：上（身份/配置）— 中（主行动/呼吸区）— 下（次要入口/拇指区） */
 .start-panel {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+    align-self: center;
+    width: 100%;
+    max-width: 420px;
+    min-height: 100dvh;
+    min-height: 100svh;
+    box-sizing: border-box;
+    padding-top: max(1.25rem, calc(var(--safe-area-top) + 0.5rem));
+    padding-bottom: max(1rem, calc(var(--safe-area-bottom) + 0.75rem));
+    padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.start-panel-upper {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    width: 100%;
+}
+
+/* 占据竖向剩余空间，主按钮在视觉「稳定带」内垂直居中（非整页几何中心） */
+.start-panel-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: clamp(7rem, 18vh, 11rem);
+    padding: clamp(0.75rem, 3vh, 2rem) 0;
+}
+
+.start-panel-footer {
+    flex: 0 0 auto;
+    width: 100%;
+    padding-top: 0.25rem;
 }
 
 /* 游戏面板 */
@@ -1016,11 +1054,12 @@ body {
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     color: rgba(255, 255, 255, 0.45);
-    font-size: 1.15rem;
-    line-height: 1;
     cursor: pointer;
     padding: 0.5rem;
     transition: color 0.3s ease;
@@ -1028,6 +1067,11 @@ body {
 
 .stats-settings-btn:hover {
     color: rgba(255, 255, 255, 0.9);
+}
+
+.stats-settings-icon {
+    display: block;
+    flex-shrink: 0;
 }
 
 /* 可滚动内容区 */
@@ -1723,6 +1767,13 @@ body.theme-minimal .hint-top {
 
     .title {
         font-size: 2rem;
+        letter-spacing: 0.38em;
+        padding-left: 0.38em;
+    }
+
+    /* 首页略放宽可用宽度，减少挤压感 */
+    .start-panel {
+        max-width: 100%;
     }
 
     .timer-display {
@@ -1926,20 +1977,39 @@ input:checked + .slider:before {
    首页布局优化
    =========================================== */
 
-/* 开始面板头部 */
+/* 开始面板头部：略收紧与下方的距离，整体作为「引入」区块 */
 .start-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
-/* 设置区域 */
+/*
+ * 标题 vs 主旨：二者首字重复（念起 / 念起即觉…），若间距过小易产生「念错了」的错觉。
+ * 略增留白 + 顶部分隔线，区分「名」与「句」，减轻重复字带来的别扭感。
+ */
+.start-header .title {
+    margin-bottom: 0;
+}
+
+.start-header .subtitle {
+    margin-top: 1.35rem;
+    margin-bottom: 1rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+    font-size: 0.92rem;
+    line-height: 2;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.1em;
+}
+
+/* 设置区域：与主按钮分离，形成清晰两段式任务流 */
 .start-settings {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.35rem;
     width: 100%;
-    max-width: 300px;
-    margin-bottom: 2rem;
+    max-width: 320px;
+    margin-bottom: 0;
 }
 
 .setting-group {
@@ -2006,20 +2076,36 @@ input:checked + .slider:before {
     font-size: 0.9rem;
 }
 
-/* 大按钮 */
+/* 大按钮：主行动略加重对比，减少与次要链的视觉竞争 */
 .btn-large {
-    padding: 1rem 3rem;
+    padding: 1.05rem 3.25rem;
     font-size: 1.2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    box-shadow: 0 6px 28px rgba(102, 126, 234, 0.35);
+    letter-spacing: 0.12em;
 }
 
-/* 辅助按钮组 */
+/* 辅助按钮组：置于底部，轻分隔、易扫读（序列效应 / 拇指可达区） */
 .start-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem 1.25rem;
+    gap: 0.5rem 0;
     justify-content: center;
-    margin-bottom: 1rem;
+    align-items: center;
+    margin-bottom: 0;
+    padding-top: 0.35rem;
+}
+
+.start-actions .btn-text {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.start-actions .btn-text:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding-right: 0.85rem;
+    margin-right: 0.85rem;
 }
 
 .btn-text {

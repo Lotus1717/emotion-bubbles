@@ -93,11 +93,18 @@ python3 -m http.server 8080
 
 🌐 **GitHub Pages**: https://Lotus1717.github.io/emotion-bubbles/
 
+### 添加到主屏幕（图标）
+
+- **iOS Safari**：依赖 `<link rel="apple-touch-icon" href="…">`（建议 **180×180** 正方形 **PNG**）。已写在 `index.html`。
+- **Android Chrome**：依赖根目录 `site.webmanifest` 里的 `icons`（常用 **192×192**、**512×512**）。需通过 **HTTPS** 或 **localhost** 访问，manifest 才能被正常读取。
+- 替换图标时：同步更新 `nianqi-icon-v1.png`（或改路径），并保证 `manifest` 与 `apple-touch-icon` 指向同一套资源。
+
 ## 📁 项目结构
 
 ```
 emotion-bubbles/
 ├── index.html              # 主页面入口
+├── site.webmanifest        # PWA /「添加到主屏幕」名称与图标（Android）
 ├── css/
 │   └── styles.css          # 样式表（动画、主题、响应式）
 ├── js/
